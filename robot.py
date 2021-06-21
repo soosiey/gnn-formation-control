@@ -140,11 +140,10 @@ class Robot():
         self.xid.transform()
         self.updateNeighbors()
 
-    def propagate(self):
+    def propagate(self,omega1,omega2):
         if self.scene.vrepConnected == False:
             self.xi.propagate(self.control)
         else:
-            omega1, omega2 = self.control()
             vrep.simxSetJointTargetVelocity(self.scene.clientID,
                                             self.motorLeftHandle,
                                             omega1, vrep.simx_opmode_oneshot)
@@ -152,6 +151,12 @@ class Robot():
                                             self.motorRightHandle,
                                             omega2, vrep.simx_opmode_oneshot)
 
+    def setControl(self,omlist,i):
+        if self.scene.vrepConnected == False:
+            self.xi.propagate(self.control)
+        else:
+            omega1, omega2 = self.control(omlist,i)
+            return omega1,omega2
     def updateNeighbors(self):
         self.neighbors = []
         self.leader = None
@@ -164,8 +169,11 @@ class Robot():
                 if self.leader is not None:
                     raise Exception('There cannot be more than two leaders in a scene!')
                 self.leader = robot
+    def getDataObs(self):
+        observation, action_1 = self.data.getObservation(-12)
+        return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
 
-    def control(self):
+    def control(self,omlist,index):
 
         ############## MODEL-BASED CONTROLLER (Most frequently used dynamics model) ##########
         ######################################################################################
@@ -271,7 +279,8 @@ class Robot():
             #if observation is None:
             #    action = np.array([[0, 0]])
             #else:
-            action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
+            action = self.learnedController(omlist,index)
+            #action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
             #action = np.array([[0, 0]])
             action = action[0].cpu().detach().numpy()
             v1nn = action[0][0]
@@ -413,6 +422,8 @@ class Robot():
             omega1 = v1 * 10.25
             omega2 = v2 * 10.25
             # return angular speeds of the two wheels
+            self.nnv1 = omega1
+            self.nnv2 = omega2
             return omega1, omega2
         else:
             # return linear speeds of the two wheels

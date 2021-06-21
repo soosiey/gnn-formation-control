@@ -369,12 +369,17 @@ class Scene():
         self.ts.append(self.t)
         self.propagateXid()
         countReachedGoal = 0
+        omlist = []
         for robot in self.robots:
             robot.precompute()
         for robot in self.robots:
             robot.readSensorData()
             robot.propagateDesired()
-            robot.propagate()
+            o,g,r,a = robot.getDataObs()
+            omlist.append((o,g,r,a))
+        for i in range(len(self.robots)):
+            o1,o2 = self.robots[i].setControl(omlist,i)
+            self.robots[i].propagate(o1, o2)
             if robot.reachedGoal:
                 countReachedGoal += 1
         self.calcCOG()

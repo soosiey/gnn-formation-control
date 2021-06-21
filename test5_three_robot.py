@@ -137,7 +137,7 @@ def generateData(i):
         tf = 60 # must be greater than 1
         errorCheckerEnabled = False
         initRef(sc, i)
-        sc.resetPosition(2) # Random initial position
+        sc.resetPosition(10) # Random initial position
         #sc.resetPosition(None)
 
         #sc.robots[0].setPosition([.0, .0, .0])

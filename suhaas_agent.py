@@ -26,7 +26,35 @@ class Agent():
         self.epoch = -1
         self.lr_schedule = {0:.0001, 10:.0001, 20:.0001}
         self.currentAgent = -1
-    def test(self, x, S, refs, alphas):
+    def test(self,omlist,index):
+        self.currentAgent += 1
+        self.currentAgent = self.currentAgent % 3
+        x = np.zeros((1,3,self.inW,self.inH))
+        S = omlist[index][1]
+        r = np.zeros((1,3,1))
+        a = np.zeros((1,3,1))
+        for i in range(self.nA):
+            x[0,i,:,:] = omlist[i][0].reshape((self.inW, self.inH))
+            r[0,i,0] = omlist[i][2]
+            a[0,i,0] = omlist[i][3]
+        xin = torch.from_numpy(x).double()
+        xin = xin.to('cuda')
+        S = np.array(S)
+        S = S.reshape((3,3))
+        S = torch.from_numpy(S)
+        S = S.unsqueeze(0)
+        S = S.to('cuda')
+
+        r = torch.from_numpy(r).double()
+        r = r.to('cuda')
+
+        a = torch.from_numpy(a).double()
+        a = a.to('cuda')
+        self.model.eval()
+        self.model.addGSO(S)
+        outs = [self.model(xin,r,a)[index]]
+        return outs
+    def test1(self, x, S, refs, alphas):
 
         self.currentAgent += 1
         self.currentAgent = self.currentAgent % 3
