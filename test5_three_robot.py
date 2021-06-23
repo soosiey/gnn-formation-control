@@ -19,7 +19,8 @@ from suhaas_agent import Agent
 import torch
 
 TRAIN = False
-fcl = Agent(inW = 100, inH = 100)
+numAgents = 5
+fcl = Agent(inW = 100, inH = 100, nA = numAgents)
 if(not TRAIN):
     fcl.model.to('cpu')
     fcl.model.load_state_dict(torch.load('models/v8/suhaas_model_v8_dagger_final.pth'))
@@ -94,6 +95,8 @@ def generateData(i):
         sc.addRobot(np.float32([[-2, 0, 0], [0.0, 0.0, 0.0]]), role = sc.ROLE_PEER,learnedController = fcl.test)
         sc.addRobot(np.float32([[1, 3, 0], [-2.0/2, 0.0, 0.0]]), role = sc.ROLE_PEER,learnedController = fcl.test)
         sc.addRobot(np.float32([[2, 3, 0], [-1.0/2, 1.732/2, 0.0]]), role = sc.ROLE_PEER,learnedController = fcl.test)
+        sc.addRobot(np.float32([[1, 3, 0], [-2.0/2, 0.0, 0.0]]), role = sc.ROLE_PEER,learnedController = fcl.test)
+        sc.addRobot(np.float32([[2, 3, 0], [-1.0/2, 1.732/2, 0.0]]), role = sc.ROLE_PEER,learnedController = fcl.test)
 #==============================================================================
 #         sc.addRobot(np.float32([[1, 3, 0], [0, -1, 0]]),
 #                     dynamics = sc.DYNAMICS_LEARNED,
@@ -101,7 +104,7 @@ def generateData(i):
 #==============================================================================
 
         # No leader
-        sc.setADjMatrix(np.uint8([[0, 1, 1], [1, 0, 1], [1, 1, 0]]))
+        sc.setADjMatrix(np.uint8([[0, 1, 1, 1, 1], [1, 0, 1, 1, 1], [1, 1, 0, 1, 1], [1, 1, 1, 0, 1], [1, 1, 1, 1, 0]]))
         # Set robot 0 as the leader.
 
         # vrep related
@@ -126,6 +129,8 @@ def generateData(i):
             sc.setVrepHandles(0, '')
             sc.setVrepHandles(1, '#0')
             sc.setVrepHandles(2, '#1')
+            sc.setVrepHandles(3, '#2')
+            sc.setVrepHandles(4, '#3')
         elif sc.SENSOR_TYPE == "kinect":
             sc.objectNames.append('kinect_depth')
             sc.objectNames.append('kinect_rgb')

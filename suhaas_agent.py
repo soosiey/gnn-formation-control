@@ -26,13 +26,14 @@ class Agent():
         self.epoch = -1
         self.lr_schedule = {0:.0001, 10:.0001, 20:.0001}
         self.currentAgent = -1
+
     def test(self,omlist,index):
         self.currentAgent += 1
-        self.currentAgent = self.currentAgent % 3
-        x = np.zeros((1,3,self.inW,self.inH))
+        self.currentAgent = self.currentAgent % self.nA
+        x = np.zeros((1,self.nA,self.inW,self.inH))
         S = omlist[index][1]
-        r = np.zeros((1,3,1))
-        a = np.zeros((1,3,1))
+        r = np.zeros((1,self.nA,1))
+        a = np.zeros((1,self.nA,1))
         for i in range(self.nA):
             x[0,i,:,:] = omlist[i][0].reshape((self.inW, self.inH))
             r[0,i,0] = omlist[i][2]
@@ -40,7 +41,7 @@ class Agent():
         xin = torch.from_numpy(x).double()
         xin = xin.to('cuda')
         S = np.array(S)
-        S = S.reshape((3,3))
+        S = S.reshape((self.nA,self.nA))
         S = torch.from_numpy(S)
         S = S.unsqueeze(0)
         S = S.to('cuda')
@@ -54,6 +55,7 @@ class Agent():
         self.model.addGSO(S)
         outs = [self.model(xin,r,a)[index]]
         return outs
+
     def test1(self, x, S, refs, alphas):
 
         self.currentAgent += 1
@@ -125,7 +127,7 @@ class Agent():
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
-            total += inputs.size(0)*3
+            total += inputs.size(0)*self.nA
         print('Average training loss:', total_loss / total)
         return total_loss / total
 
