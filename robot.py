@@ -33,14 +33,14 @@ def saturate(dxp, dyp, dxypMax):
     return dxp, dyp
 
 class Robot():
-    def __init__(self, scene):
+    def __init__(self, scene,numRobots):
         self.scene = scene
         self.dynamics = 1
         self.numNN = 0
         self.numMod = 0
         # dynamics parameters
         self.l = 0.331
-
+        self.nr = numRobots
         # state
         self.xi = State(0, 0, 0, self)
         #self.xi = State(random.random()*100, random.random()*100,2*math.pi*random.random(),self)
@@ -191,9 +191,9 @@ class Robot():
             K1 = 0 # Reference position information is forbidden
             K2 = 1
         elif self.role == self.scene.ROLE_PEER:
-            K1 = 1
+            K1 = 0
             K2 = 0
-            K3 = 0.15  # interaction between i and j
+            K3 = 1  # interaction between i and j
             dxypMax = 0.7
 
 
@@ -216,11 +216,10 @@ class Robot():
         tauiy = 0
         # neighbors sorted by distances in descending order
         lsd = self.listSortedDistance
-        jList = [lsd[0][0], lsd[1][0]]
-        m = 2
-        while m < len(lsd) and lsd[m][1] < 1.414 * lsd[1][1]:
-            jList.append(lsd[m][0])
-            m += 1
+        jList = []
+        for i in range(len(lsd)):
+            if lsd[i][1] < 8: #3: # r=1.5*d
+                jList.append(lsd[i][0])
         #print(self.listSortedDistance)
         for j in jList:
             robot = self.scene.robots[j]
@@ -231,9 +230,30 @@ class Robot():
                 pijd0 = self.scene.alpha
             else:
                 pijd0 = self.xid.distancepTo(robot.xid)
-            tauij0 = 2 * (pij0**4 - pijd0**4) / pij0**3
-            tauix += tauij0 * pijx / pij0
-            tauiy += tauij0 * pijy / pij0
+            tauij0 = (pij0 - pijd0) / pij0
+            tauix += tauij0 * pijx
+            tauiy += tauij0 * pijy
+            #tauij0 = 2 * (pij0**4 - pijd0**4) / pij0**3
+            #tauix += tauij0 * pijx / pij0
+            #tauiy += tauij0 * pijy / pij0
+        #jList = [lsd[0][0], lsd[1][0]]
+        #m = 2
+        #while m < len(lsd) and lsd[m][1] < 1.414 * lsd[1][1]:
+        #    jList.append(lsd[m][0])
+        #    m += 1
+        ##print(self.listSortedDistance)
+        #for j in jList:
+        #    robot = self.scene.robots[j]
+        #    pijx = self.xi.xp - robot.xi.xp
+        #    pijy = self.xi.yp - robot.xi.yp
+        #    pij0 = self.xi.distancepTo(robot.xi)
+        #    if self.dynamics == 18:
+        #        pijd0 = self.scene.alpha
+        #    else:
+        #        pijd0 = self.xid.distancepTo(robot.xid)
+        #    tauij0 = 2 * (pij0**4 - pijd0**4) / pij0**3
+        #    tauix += tauij0 * pijx / pij0
+        #    tauiy += tauij0 * pijy / pij0
 
         # Achieve and keep formation
         #tauix, tauiy = saturate(tauix, tauiy, dxypMax)
@@ -401,12 +421,12 @@ class Robot():
         ####### TO ADD THE CONTROLLER SELECTION MECHANISM HERE #############
         # use binomial distribution with probability \beta
         p = 0.8 # can be tweaked
-        exp = (self.scene.runNum - 100) // 15
+        exp = (self.scene.runNum - 70) // 15
         exp = max(0,exp)
         beta = p**(exp)  # Dagger algorithm paper, page 4
         model_controller = np.random.binomial(1, beta)
         TRAIN = False
-        DAGGER = True
+        DAGGER = False
         if (model_controller and TRAIN) or (not DAGGER):
             #print('\n Model-based control seleceted')
             self.numMod += 1

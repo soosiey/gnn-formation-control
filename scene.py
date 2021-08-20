@@ -87,9 +87,9 @@ class Scene():
         self.runNum = runNum
         self.log('A new scene is created for run #' + str(runNum))
 
-    def addRobot(self, arg, arg2 = np.float32([.5, .5]),
+    def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),
                  role = 1, learnedController = None):
-        robot = Robot(self)
+        robot = Robot(self,nr)
         robot.index = len(self.robots)
 
         robot.role = role
@@ -239,8 +239,8 @@ class Scene():
                 self.robots[i].setPosition(None)
             return
 
-        #MIN_DISTANCE = 1
-        MIN_DISTANCE = 0
+        MIN_DISTANCE = 4
+        MAX_DISTANCE = 8
         if self.dynamics == 5:
             xbar = 0
             ybar = 0
@@ -290,10 +290,16 @@ class Scene():
                             minDij = dij # find the smallest dij for all j
                     print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
                     # if the smallest dij is greater than allowed,
-                    if minDij >= MIN_DISTANCE:
+                    if i==0:
                         self.robots[i].setPosition([x1, y1, theta1])
-                        print((x1,y1,theta1))
                         break # i++
+                    elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
+                        self.robots[i].setPosition([x1, y1, theta1])
+                        break # i++
+                    #if minDij >= MIN_DISTANCE:
+                    #    self.robots[i].setPosition([x1, y1, theta1])
+                    #    print((x1,y1,theta1))
+                    #    break # i++
                 xbar += x1
                 ybar += y1
             self.xi.x = xbar / len(self.robots)

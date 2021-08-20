@@ -30,16 +30,17 @@ class Data():
         elif dynamics == 16:
             self.d['obs2'] = np.zeros((0, 2), dtype = np.float32)
         elif dynamics == 17:
-            self.d['obs2'] = np.zeros((0, 10), dtype = np.float32)
-            #self.d['obs2'] = np.zeros((0, 8), dtype = np.float32)
+            #self.d['obs2'] = np.zeros((0, 10), dtype = np.float32)
+            self.d['obs2'] = np.zeros((0, 8), dtype = np.float32)
         elif dynamics == 18:
-            self.d['obs2'] = np.zeros((0, 6), dtype = np.float32)
+            #self.d['obs2'] = np.zeros((0, 6), dtype = np.float32)
+            self.d['obs2'] = np.zeros((0,robot.nr + 5),dtype = np.float32)
         else:
             raise Exception("Undefined robot dynamics for data recording", dynamics)
         self.d['actions'] = np.zeros((0, 2), dtype = np.float32)
         # add communication graph for gnn
         #self.d['graph'] = np.zeros((0, 9), dtype = np.float32) # 9: n by n where n is the # of robots
-        self.d['graph'] = np.zeros((0,25), dtype=np.float32)
+        self.d['graph'] = np.zeros((0,robot.nr**2), dtype=np.float32)
     def getObservation(self, mode):
         # This function can not run after scene has been saved as a pickle file
         if mode == 0:
@@ -126,7 +127,7 @@ class Data():
 
         if self.robot.scene.dynamics == 5:
             pass
-        elif self.robot.scene.dynamics == 16 or self.robot.scene.dynamics == 17:
+        elif self.robot.scene.dynamics == 16 or self.robot.scene.dynamics == 17 or self.robot.scene.dynamics == 18:
             peer = self.robot
             psi = peer.xid.theta - peer.xi.theta
             if psi > math.pi:

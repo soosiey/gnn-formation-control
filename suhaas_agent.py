@@ -107,7 +107,7 @@ class Agent():
         #np.save('actions.npy', actions)
         #np.save('inputs.npy', inputs)
         #np.save('graphs.npy', graphs)
-        trainset = custom_dataset.RobotDataset(inputs,actions,graphs,refs,alphas,inW = self.inW, inH = self.inH,transform = self.transform)
+        trainset = custom_dataset.RobotDataset(inputs,actions,graphs,refs,alphas,self.nA,inW = self.inW, inH = self.inH,transform = self.transform)
         trainloader = DataLoader(trainset, batch_size = 16, shuffle = True, drop_last = True)
         self.model.train()
         total_loss = 0

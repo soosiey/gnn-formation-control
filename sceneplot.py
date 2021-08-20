@@ -122,7 +122,7 @@ class ScenePlot():
                             ejid = np.array([xid - xjd, yid - yjd])
                         else:
                             ejid = self.sc.alpha
-                        error = np.linalg.norm(eji) - np.linalg.norm(ejid)
+                        error = np.linalg.norm(eji) #- np.linalg.norm(ejid)
 
                         # If this is the first time this type of plot is drawn
                         if k not in self.sc.ydict[type].keys():
@@ -136,7 +136,7 @@ class ScenePlot():
                 errors = self.sc.ydict[type]
                 legends = self.sc.ydict2[type]
                 curves = []
-                plt.figure()
+                plt.figure(type)
                 for k in range(0, len(self.sc.ydict[type])):
                     curve, = plt.plot(self.sc.ts, errors[k], '-', label = str(legends[k]))
                     curves.append(curve)
@@ -369,7 +369,7 @@ class ScenePlot():
 
             # Show Figure
             if self.sc.t > tf:
-                plt.figure()
+                plt.figure(type)
                 curves = []
                 if self.sc.dynamics == 5:
                     style = 3
@@ -389,33 +389,33 @@ class ScenePlot():
                                  color=c, fillstyle="none")
                 if int(matplotlib.__version__[0]) == 2:
                     plt.legend(handles = curves)
-                for k in range(len(self.sc.tss)):
-                    for i in range(len(self.sc.robots)):
-                        x1 = self.sc.ydict[type][i][k, 0]
-                        y1 = self.sc.ydict[type][i][k, 1]
-                        for j in range(0, len(self.sc.robots)):
-                            if self.sc.adjMatrix[i, j] == 0:
-                                continue
-                            if i > j and self.sc.adjMatrix[j, i] != 0:
-                                continue
-                            x2 = self.sc.ydict[type][j][k, 0]
-                            y2 = self.sc.ydict[type][j][k, 1]
-                            plt.plot([x1, x2], [y1, y2], ':', color = (0, 0, 0))
+                # for k in range(len(self.sc.tss)):
+                #     for i in range(len(self.sc.robots)):
+                #         x1 = self.sc.ydict[type][i][k, 0]
+                #         y1 = self.sc.ydict[type][i][k, 1]
+                #         for j in range(0, len(self.sc.robots)):
+                #             if self.sc.adjMatrix[i, j] == 0:
+                #                 continue
+                #             if i > j and self.sc.adjMatrix[j, i] != 0:
+                #                 continue
+                #             x2 = self.sc.ydict[type][j][k, 0]
+                #             y2 = self.sc.ydict[type][j][k, 1]
+                #             plt.plot([x1, x2], [y1, y2], ':', color = (0, 0, 0))
 
 
 
-                # Plot center trajectory
-                for k in range(len(self.sc.tss)):
-                    plt.plot(self.sc.centerTrajS[k, 0],
-                             self.sc.centerTrajS[k, 1],
-                             'o',
-                             markersize=10, linestyle='None',
-                             color = (0, 0, 0))
+                # # Plot center trajectory
+                # for k in range(len(self.sc.tss)):
+                #     plt.plot(self.sc.centerTrajS[k, 0],
+                #              self.sc.centerTrajS[k, 1],
+                #              'o',
+                #              markersize=10, linestyle='None',
+                #              color = (0, 0, 0))
 
-                plt.plot(self.sc.centerTraj[:, 0],
-                         self.sc.centerTraj[:, 1],
-                         '-',
-                         color = (0, 0, 0))
+                # plt.plot(self.sc.centerTraj[:, 0],
+                #          self.sc.centerTraj[:, 1],
+                #          '-',
+                #          color = (0, 0, 0))
 
                 plt.xlabel('x (m)')
                 plt.ylabel('y (m)')
@@ -467,7 +467,7 @@ class ScenePlot():
                     self.sc.ydict[type][i].append(vDesired1)
                     self.sc.ydict2[type][i].append(vDesired2)
             if self.sc.t > tf:
-                plt.figure()
+                plt.figure(type)
                 for i in range(j1, len(self.sc.robots)): # Show only the follower
                 #for i in range(len(self.sc.robots)): # Show both the follower and the leader
                     c = self.getRobotColor(i)
@@ -566,15 +566,16 @@ class ScenePlot():
             plt.grid(True)
             if self.saveEnabled == True:
                 # Save plot as eps file
-                path = os.path.join(self.directory, 'fig2' + str(type).zfill(2) + '.eps')
+                path = os.path.join(self.directory, 'fig' + str(type).zfill(2) + '.eps')
                 plt.savefig(path, format='eps', dpi=1000)
                 message = "Plot saved to " + str(path)
                 self.sc.log(message)
                 print(message)
                 #plt.show()
+                plt.close('all')
             else:
-                #plt.show()
                 pass
+                #plt.show()
             self.sc.ploted[type] = True
 
 
