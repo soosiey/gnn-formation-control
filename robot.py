@@ -73,6 +73,8 @@ class Robot():
         self.ctrl1_sm = []
         self.ctrl2_sm = []
 
+        self.position_hist = []
+
     def propagateDesired(self):
         if self.dynamics == 5:
             pass
@@ -172,6 +174,13 @@ class Robot():
     def getDataObs(self):
         observation, action_1 = self.data.getObservation(-12)
         return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
+
+    def checkMove(self,hist,num = 1,thresh = .01):
+        moving = False
+        for i in range(1,len(hist)):
+            if(abs(hist[i] - hist[i - 1]) > thresh):
+                moving = True
+        return moving
 
     def control(self,omlist,index):
 
@@ -315,6 +324,28 @@ class Robot():
                 v1nn = sum(self.ctrl1_sm[len(self.ctrl1_sm)-10:len(self.ctrl1_sm)]) / 10
                 v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm)-10:len(self.ctrl2_sm)]) / 10
 
+            # stopping condition
+
+            current_position = (self.xi.xp**2 + self.xi.yp**2)**0.5
+            self.position_hist.append(current_position)
+            hist_len = len(self.position_hist)
+            lcheck = 10
+            if(hist_len > 100):
+                currhist = self.position_hist[-1*lcheck:]
+                if(not self.checkMove(currhist,num=lcheck,thresh=.001)):
+                    v1nn = 0
+                    v2nn = 0
+                #for pos in range(1,len(currhist)):
+                #    if(abs(currhist[pos] - currhist[pos - 1]) > .005):
+                #        moving = True
+                #if(not moving):
+
+                #        print('stopped')
+                #        v1nn = 0
+                #        v2nn = 0
+                #if(abs(self.position_hist[hist_len - 1] - self.position_hist[hist_len-2]) / self.position_hist[hist_len-1] < .0001):
+                #    v1nn = 0
+                #    v2nn = 0
             ### post-processing ###
             vm = 0.7 # wheel's max linear speed in m/s
             # Find the factor for converting linear speed to angular speed
@@ -426,7 +457,7 @@ class Robot():
         beta = p**(exp)  # Dagger algorithm paper, page 4
         model_controller = np.random.binomial(1, beta)
         TRAIN = False
-        DAGGER = False
+        DAGGER = True
         if (model_controller and TRAIN) or (not DAGGER):
             #print('\n Model-based control seleceted')
             self.numMod += 1
@@ -435,7 +466,6 @@ class Robot():
             v2 = v2nn
             #print('\n NN control selected')
             self.numNN += 1
-
 
 
         if self.scene.vrepConnected:

@@ -459,8 +459,8 @@ class ScenePlot():
                 j1 = 0
             if not self.sc.ploted[type]:
                 for i in range(len(self.sc.robots)):
-                    vDesired1 = self.sc.robots[i].v1Desired
-                    vDesired2 = self.sc.robots[i].v2Desired
+                    vDesired1 = self.sc.robots[i].v1Desirednn
+                    vDesired2 = self.sc.robots[i].v2Desirednn
                     if i not in self.sc.ydict[type].keys():
                         self.sc.ydict[type][i] = []
                         self.sc.ydict2[type][i] = []
@@ -567,7 +567,7 @@ class ScenePlot():
             if self.saveEnabled == True:
                 # Save plot as eps file
                 path = os.path.join(self.directory, 'fig' + str(type).zfill(2) + '.eps')
-                plt.savefig(path, format='eps', dpi=1000)
+                plt.savefig(path, format='eps')#, dpi=1000)
                 message = "Plot saved to " + str(path)
                 self.sc.log(message)
                 print(message)

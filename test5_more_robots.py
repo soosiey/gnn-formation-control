@@ -20,7 +20,7 @@ import torch
 
 TRAIN = False
 CONTINUE = False
-robotNum = 8
+robotNum = 5
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
@@ -213,7 +213,7 @@ def generateData(i):
 
 # main
 import saver
-numRun = 251 if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
+numRun = 251 if TRAIN else 10 # This is to set the number of iterations of the Dagger algorithm
 dataList = [] # This is where the training data will be stored
 sc = None
 #fcl.init_test()
