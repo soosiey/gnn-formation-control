@@ -20,7 +20,8 @@ import torch
 
 TRAIN = False
 CONTINUE = False
-robotNum = 5
+expert = False
+robotNum = 9
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
@@ -73,19 +74,19 @@ def initRef(sc, i):
     sc.log(message)
     print(message)
 
-def plot(sp, tf): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
+def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     if sp.sc.dynamics == 14:
         sp.plot(21, tf) # Formation Orientation
     if sp.sc.dynamics == 16:
         sp.plot(23, tf) # distance from goal
     elif sp.sc.dynamics == 14:
         sp.plot(22, tf) # distances from goals
-    sp.plot(2,tf)
-    sp.plot(4, tf)
+    sp.plot(2,tf,expert=expert)
+    sp.plot(4, tf,expert=expert)
     #sp.plot(5, tf)
-    sp.plot(6, tf)
+    sp.plot(6, tf,expert=expert)
 
-def generateData(i):
+def generateData(i,expert):
     sc = Scene(fileName = __file__, recordData = True, runNum = i)
     sp = ScenePlot(sc)
     sp.saveEnabled = True # save plots?
@@ -149,7 +150,7 @@ def generateData(i):
         tf = 15 # must be greater than 1
         errorCheckerEnabled = False
         initRef(sc, i)
-        sc.resetPosition(5*np.sqrt(2)) # Random initial position
+        sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
         #sc.resetPosition(None)
 
         #sc.robots[0].setPosition([.0, .0, .0])
@@ -163,7 +164,7 @@ def generateData(i):
         # Fixed initial position
         #sc.robots[0].setPosition([0.0, 0.0, math.pi/2])
         #sc.robots[1].setPosition([-2.2, -1.0, 0.3])
-        sp.plot(4, tf)
+        sp.plot(4, tf,expert=expert)
         while sc.simulate():
             #sc.renderScene(waitTime = int(sc.dt * 1000))
             #sc.showOccupancyMap(waitTime = int(sc.dt * 1000))
@@ -181,7 +182,7 @@ def generateData(i):
                     errorCheckerEnabled = False
                     print('Ending in ', str(tExtra), ' seconds...')
 
-            plot(sp, tf)
+            plot(sp, tf,expert=expert)
             if sc.t > tf:
                 message = "maxAbsError = {0:.3f} m".format(maxAbsError)
                 sc.log(message)
@@ -213,7 +214,9 @@ def generateData(i):
 
 # main
 import saver
-numRun = 251 if TRAIN else 10 # This is to set the number of iterations of the Dagger algorithm
+numRun = 251 if TRAIN else 3 # This is to set the number of iterations of the Dagger algorithm
+if(expert):
+    numRun = 1
 dataList = [] # This is where the training data will be stored
 sc = None
 #fcl.init_test()
@@ -226,7 +229,7 @@ for i in range(0, numRun):
 
     dataListEpisode = []
     # First episode
-    sc0 = generateData(i)
+    sc0 = generateData(i,expert)
     if sc0 is not None:
         # if the list is not empty
         sc = sc0

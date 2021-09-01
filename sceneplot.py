@@ -40,7 +40,7 @@ class ScenePlot():
 
 
 
-    def plot(self, type = 0, tf = 0):
+    def plot(self, type = 0, tf = 0,expert=False):
         # type 0: (t, x_i - x_id)
         # type 1: (t, y_i - y_id)
         # type 2: (t, e_i - e_id) (formation error)
@@ -459,8 +459,12 @@ class ScenePlot():
                 j1 = 0
             if not self.sc.ploted[type]:
                 for i in range(len(self.sc.robots)):
-                    vDesired1 = self.sc.robots[i].v1Desirednn
-                    vDesired2 = self.sc.robots[i].v2Desirednn
+                    if(expert):
+                        vDesired1 = self.sc.robots[i].v1Desired
+                        vDesired2 = self.sc.robots[i].v2Desired
+                    else:
+                        vDesired1 = self.sc.robots[i].v1Desirednn
+                        vDesired2 = self.sc.robots[i].v2Desirednn
                     if i not in self.sc.ydict[type].keys():
                         self.sc.ydict[type][i] = []
                         self.sc.ydict2[type][i] = []
