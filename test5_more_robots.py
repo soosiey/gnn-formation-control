@@ -21,7 +21,7 @@ import torch
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 9
+robotNum = 3
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
@@ -214,13 +214,14 @@ def generateData(i,expert):
 
 # main
 import saver
-numRun = 251 if TRAIN else 3 # This is to set the number of iterations of the Dagger algorithm
+numRun = 251 if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
 if(expert):
     numRun = 1
 dataList = [] # This is where the training data will be stored
 sc = None
 #fcl.init_test()
 lossList = []
+positionList = [[] for i in range(numRun)]
 for i in range(0, numRun):
     print('Episode:', i+1)
     ##########################################################################
@@ -262,6 +263,20 @@ for i in range(0, numRun):
     print('Number of times expert model was selected:', nm)
     if(i % 50 == 0 and TRAIN):
         fcl.save('v10/suhaas_model_v10_dagger_' + str(i) + '.pth')
+
+    ###################### STATS ###########################
+    xt = 0
+    yt = 0
+    for r in range(len(sc.robots)):
+        xt += sc.robots[r].xi.x
+        yt += sc.robots[r].xi.y
+        print('Robot',r,': (',sc.robots[r].xi.x,',',sc.robots[r].xi.y,')')
+        positionList[i].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
+    xt = xt / len(sc.robots)
+    yt = yt / len(sc.robots)
+    print('Center: (',xt,',',yt,')')
+positionList = np.array(positionList)
+np.save('positionList.npy',positionList)
 if sc:
     for j in range(1, len(sc.robots)):
         dataList[0].append(dataList[j])
