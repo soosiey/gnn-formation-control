@@ -21,7 +21,8 @@ import torch
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 3
+robotNum = 8
+global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
@@ -86,10 +87,12 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     #sp.plot(5, tf)
     sp.plot(6, tf,expert=expert)
 
-def generateData(i,expert):
-    sc = Scene(fileName = __file__, recordData = True, runNum = i)
+def generateData(ep,expert):
+    sc = Scene(fileName = __file__, recordData = True, runNum = ep)
     sp = ScenePlot(sc)
     sp.saveEnabled = True # save plots?
+    global numRun
+    global positionList
     #sc.occupancyMapType = sc.OCCUPANCY_MAP_THREE_CHANNEL
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
     sc.dynamics = sc.DYNAMICS_MODEL_BASED_DISTANCE2_REFVEL # robot dynamics
@@ -165,7 +168,10 @@ def generateData(i,expert):
         #sc.robots[0].setPosition([0.0, 0.0, math.pi/2])
         #sc.robots[1].setPosition([-2.2, -1.0, 0.3])
         sp.plot(4, tf,expert=expert)
+
         while sc.simulate():
+            for r in range(len(sc.robots)):
+                positionList[ep].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
             #sc.renderScene(waitTime = int(sc.dt * 1000))
             #sc.showOccupancyMap(waitTime = int(sc.dt * 1000))
 
@@ -214,14 +220,16 @@ def generateData(i,expert):
 
 # main
 import saver
-numRun = 251 if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
-if(expert):
-    numRun = 1
+global numRun
+numRun = 251 if TRAIN else 10 # This is to set the number of iterations of the Dagger algorithm
+#if(expert):
+#    numRun = 1
 dataList = [] # This is where the training data will be stored
 sc = None
 #fcl.init_test()
 lossList = []
-positionList = [[] for i in range(numRun)]
+
+positionList = [[] for n in range(numRun)]
 for i in range(0, numRun):
     print('Episode:', i+1)
     ##########################################################################
@@ -265,18 +273,18 @@ for i in range(0, numRun):
         fcl.save('v10/suhaas_model_v10_dagger_' + str(i) + '.pth')
 
     ###################### STATS ###########################
-    xt = 0
-    yt = 0
-    for r in range(len(sc.robots)):
-        xt += sc.robots[r].xi.x
-        yt += sc.robots[r].xi.y
-        print('Robot',r,': (',sc.robots[r].xi.x,',',sc.robots[r].xi.y,')')
-        positionList[i].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
-    xt = xt / len(sc.robots)
-    yt = yt / len(sc.robots)
-    print('Center: (',xt,',',yt,')')
+    #xt = 0
+    #yt = 0
+    #for r in range(len(sc.robots)):
+    #    xt += sc.robots[r].xi.x
+    #    yt += sc.robots[r].xi.y
+    #    print('Robot',r,': (',sc.robots[r].xi.x,',',sc.robots[r].xi.y,')')
+    #    positionList[i].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
+    #xt = xt / len(sc.robots)
+    #yt = yt / len(sc.robots)
+    #print('Center: (',xt,',',yt,')')
 positionList = np.array(positionList)
-np.save('positionList.npy',positionList)
+np.save('positionList_network_8.npy',positionList)
 if sc:
     for j in range(1, len(sc.robots)):
         dataList[0].append(dataList[j])
