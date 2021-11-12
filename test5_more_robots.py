@@ -21,7 +21,7 @@ import torch
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 8
+robotNum = 5
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):

@@ -96,10 +96,11 @@ def main():
         x[i - 3] = get_running_average(np.load('positionList_expert_'+str(i)+'.npy'),i)
 
     plt.figure()
+    xaxis = np.linspace(0,15,300)
     for i in range(3,9):
-        plt.plot(xn[i - 3],label=str(i),color=colors[i-3],ls='dotted')
-        plt.plot(x[i - 3],label=str(i),color=colors[i-3])
-    plt.xlabel('Timestep (tick = .05 s)')
+        plt.plot(xaxis,xn[i - 3],label=str(i),color=colors[i-3],ls='dotted')
+        plt.plot(xaxis,x[i - 3],label=str(i),color=colors[i-3])
+    plt.xlabel('Time (s)')
     plt.ylabel('Average distance from center of mass of formation')
     plt.title('Average distance from center of formation during episode')
     plt.legend()
@@ -131,23 +132,36 @@ def main():
     plt.savefig('distance_graph.png')
     plt.show()
 
+    cns = []
+    ces = []
+    plt.figure()
     for i in range(3,9):
-        plt.figure()
+        #plt.figure()
         expert = np.load('positionList_network_'+str(i)+'.npy')
         network = np.load('positionList_expert_'+str(i)+'.npy')
         cn = get_convergence(network,i)
         ce = get_convergence(expert,i)
-        plt.plot(xn[i - 3],color=colors[i-3],ls='dotted',label='network')
-        plt.plot(x[i - 3],color=colors[i-3],label='expert')
-        if(cn != -1):
-            plt.vlines(cn,0,3,ls='dotted',color=colors[i-3])
-        if(ce != -1):
-            plt.vlines(ce,0,3,color=colors[i-3])
-        plt.xlabel('Time (tick = .05 s)')
-        plt.ylabel('Distance from center of formation')
-        plt.title('Distance from center of formation and convergence time for ' + str(i) + ' robots')
-        plt.legend()
-        plt.savefig('convergence_'+str(i)+'.png')
-        plt.show()
+        #plt.plot(xn[i - 3],color=colors[i-3],ls='dotted',label='network')
+        #plt.plot(x[i - 3],color=colors[i-3],label='expert')
+        if(cn == -1):
+            cns.append(0)
+        else:
+            cns.append(cn / 20)
+        if(ce == -1):
+            ces.append(0)
+        else:
+            ces.append(ce / 20)
+            #plt.vlines(cn,0,3,ls='dotted',color=colors[i-3])
+    plt.bar(ticks,ces,.4,label='expert')
+    plt.bar(ticks+.5,cns,.4,label='network')
+            #plt.vlines(ce,0,3,color=colors[i-3])
+
+    plt.xticks(ticks+.5/2,ticks)
+    plt.xlabel('Number of robots')
+    plt.ylabel('Convergence time (s)')
+    plt.title('Convergence time')
+    plt.legend()
+    plt.savefig('convergence_time_all.png')
+    plt.show()
 main()
 
