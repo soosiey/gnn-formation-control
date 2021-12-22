@@ -18,8 +18,8 @@ import numpy as np
 import sim as vrep
 from data import Data
 from pointcloud import PointCloud
-import time
-import random
+#import time
+#import random
 
 
 LIMIT_MAX_ACC = False
@@ -35,7 +35,7 @@ def saturate(dxp, dyp, dxypMax):
 class Robot():
     def __init__(self, scene,numRobots):
         self.scene = scene
-        self.dynamics = 1
+        self.dynamics = 18
         self.numNN = 0
         self.numMod = 0
         # dynamics parameters
@@ -207,6 +207,9 @@ class Robot():
 
 
         # sort neighbors by distance
+
+
+        # need all neighbors, but only diagonal of adjmatrix is 0 so it is okay
         if True: #not hasattr(self, 'dictDistance'):
             self.dictDistance = dict()
             for j in range(len(self.scene.robots)):
@@ -224,11 +227,27 @@ class Robot():
         tauix = 0
         tauiy = 0
         # neighbors sorted by distances in descending order
+
+        #gabriel graph connections
         lsd = self.listSortedDistance
         jList = []
         for i in range(len(lsd)):
-            if lsd[i][1] < 8: #3: # r=1.5*d
+            connected = True
+            for k in range(len(lsd)):
+                if i == k:
+                    continue
+                ri = lsd[i][0]
+                rk = lsd[k][0]
+                di = np.array([self.xi.xp - self.scene.robots[rk].xi.xp,self.xi.yp - self.scene.robots[rk].xi.yp])
+                dj = np.array([self.scene.robots[ri].xi.xp - self.scene.robots[rk].xi.xp,self.scene.robots[ri].xi.yp - self.scene.robots[rk].xi.yp])
+                c = np.dot(di,dj)/(np.linalg.norm(di)*np.linalg.norm(dj))
+                angle = np.degrees(np.arccos(c))
+                if(angle > 89 and i != k):
+                    connected = False
+            if(connected):
                 jList.append(lsd[i][0])
+            #if lsd[i][1] < 8: #3: # r=1.5*d
+            #    jList.append(lsd[i][0])
         #print(self.listSortedDistance)
         for j in jList:
             robot = self.scene.robots[j]
@@ -242,6 +261,7 @@ class Robot():
             tauij0 = (pij0 - pijd0) / pij0
             tauix += tauij0 * pijx
             tauiy += tauij0 * pijy
+            #print(np.array([tauix,tauiy]))
             #tauij0 = 2 * (pij0**4 - pijd0**4) / pij0**3
             #tauix += tauij0 * pijx / pij0
             #tauiy += tauij0 * pijy / pij0
@@ -287,7 +307,7 @@ class Robot():
         vxp += K2 * self.xid.vxp
         vyp += K2 * self.xid.vyp
 
-        kk = 1
+        kk = .331/2*.331/.2
         theta = self.xi.theta
         M11 = kk * math.sin(theta) + math.cos(theta)
         M12 =-kk * math.cos(theta) + math.sin(theta)
@@ -457,7 +477,7 @@ class Robot():
         beta = p**(exp)  # Dagger algorithm paper, page 4
         model_controller = np.random.binomial(1, beta)
         TRAIN = False
-        DAGGER = True
+        DAGGER = False
         if (model_controller and TRAIN) or (not DAGGER):
             #print('\n Model-based control seleceted')
             self.numMod += 1

@@ -65,7 +65,7 @@ class Scene():
         self.OCCUPANCY_MAP_THREE_CHANNEL = 1
 
         # CONSTANTS
-        self.dynamics = 11
+        self.dynamics = 18
         self.DYNAMICS_INTEGRATOR_MODEL = 5
         self.DYNAMICS_MODEL_BASED_CICULAR = 11
         self.DYNAMICS_MODEL_BASED_STABILIZER = 12
@@ -172,7 +172,7 @@ class Scene():
             self.vrepConnected = False
             print ("Failed connecting to remote API server")
             raise Exception("Failed connecting to remote API server")
-        self.dt = 0.05
+        self.dt = 0.01
 
     def setVrepHandles(self, robotIndex, handleNameSuffix = ""):
         if self.vrepConnected == False:
@@ -239,7 +239,7 @@ class Scene():
                 self.robots[i].setPosition(None)
             return
 
-        MIN_DISTANCE = 4
+        MIN_DISTANCE = 1
         MAX_DISTANCE = 8
         if self.dynamics == 5:
             xbar = 0

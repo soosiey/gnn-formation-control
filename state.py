@@ -16,8 +16,8 @@ class State():
         self.vyp = 0 # vy prime, updated in controller
         self.theta = theta
         self.robot = robot
-        
-        
+
+
     def propagate(self, control):
         if self.robot == None:
             sys.exit("State: attribute robot is None")
@@ -33,28 +33,32 @@ class State():
             self.x += math.cos(self.theta) * dt / 2 * (v1 + v2)
             self.y += math.sin(self.theta) * dt / 2 * (v1 + v2)
             self.theta += 1 / l * dt * (v2 - v1)
-            
-            
+
+
     def transform(self):
         # For feedback linearization
         if self.robot.dynamics == 5:
             self.xp = self.x
             self.yp = self.y
             self.theta = 0 # useless
-        elif self.robot.dynamics >= 10:
+        elif self.robot.dynamics >= 10 and self.robot.dynamics < 18:
             c = self.robot.l / 2
             self.xp = self.x + c * math.cos(self.theta)
             self.yp = self.y + c * math.sin(self.theta)
             self.thetap = self.theta
-        
+        elif self.robot.dynamics == 18:
+            self.xp = self.x
+            self.yp = self.y
+            self.thetap = self.theta
+
     def distancepTo(self, other):
         dxp = self.xp - other.xp
         dyp = self.yp - other.yp
         return (dxp**2 + dyp**2)**0.5
-        
-        
-        
-        
-        
-        
-            
+
+
+
+
+
+
+

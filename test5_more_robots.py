@@ -17,16 +17,17 @@ import random
 #from DeepFCL import DeepFCL
 from suhaas_agent import Agent
 import torch
+import matplotlib.pyplot as plt
 
 TRAIN = False
 CONTINUE = False
-expert = False
+expert = True
 robotNum = 5
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v10/suhaas_model_v10_dagger_150.pth'))
+    fcl.model.load_state_dict(torch.load('models/v11/suhaas_model_v11_dagger_200.pth'))
     fcl.model.to('cuda')
 if(CONTINUE):
     fcl.model.to('cpu')
@@ -152,8 +153,8 @@ def generateData(ep,expert):
         #sc.renderScene(waitTime = 3000)
         tf = 15 # must be greater than 1
         errorCheckerEnabled = False
-        initRef(sc, i)
-        sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
+        initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
+        sc.resetPosition(6)
         #sc.resetPosition(None)
 
         #sc.robots[0].setPosition([.0, .0, .0])
@@ -221,7 +222,7 @@ def generateData(ep,expert):
 # main
 import saver
 global numRun
-numRun = 251 if TRAIN else 10 # This is to set the number of iterations of the Dagger algorithm
+numRun = 251 if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
 #if(expert):
 #    numRun = 1
 dataList = [] # This is where the training data will be stored
@@ -270,7 +271,7 @@ for i in range(0, numRun):
     print('Number of times neural network was selected:', nnn)
     print('Number of times expert model was selected:', nm)
     if(i % 50 == 0 and TRAIN):
-        fcl.save('v10/suhaas_model_v10_dagger_' + str(i) + '.pth')
+        fcl.save('v11/suhaas_model_v11_dagger_' + str(i) + '.pth')
 
     ###################### STATS ###########################
     #xt = 0
@@ -284,15 +285,14 @@ for i in range(0, numRun):
     #yt = yt / len(sc.robots)
     #print('Center: (',xt,',',yt,')')
 positionList = np.array(positionList)
-np.save('positionList_network_8.npy',positionList)
+np.save('positionList_expert_5.npy',positionList)
 if sc:
     for j in range(1, len(sc.robots)):
         dataList[0].append(dataList[j])
     dataList[0].store()
 
 if(TRAIN):
-    import matplotlib.pyplot as plt
-    fcl.save('v10/suhaas_model_v10_dagger_final.pth')
+    fcl.save('v11/suhaas_model_v11_dagger_final.pth')
     print(lossList)
     lossList = np.array(lossList)
     np.save('losslist.npy',lossList)
