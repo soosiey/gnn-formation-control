@@ -21,18 +21,19 @@ import matplotlib.pyplot as plt
 
 TRAIN = False
 CONTINUE = False
-expert = True
+expert = False
 robotNum = 5
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v11/suhaas_model_v11_dagger_200.pth'))
+    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final.pth'))
     fcl.model.to('cuda')
 if(CONTINUE):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v9/suhaas_model_v9_dagger_100.pth'))
+    fcl.model.load_state_dict(torch.load('models/v12/suhaas_model_v12_dagger_75.pth'))
     fcl.model.to('cuda')
+    print('Loaded model')
 
 def initRef(sc, i):
     if sc.dynamics == sc.DYNAMICS_MODEL_BASED_LINEAR:
@@ -151,10 +152,10 @@ def generateData(ep,expert):
             #sc.setVrepHandles(8, '#7')
             #sc.setVrepHandles(9, '#8')
         #sc.renderScene(waitTime = 3000)
-        tf = 15 # must be greater than 1
+        tf = 30 # must be greater than 1
         errorCheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
-        sc.resetPosition(6)
+        sc.resetPosition(robotNum)
         #sc.resetPosition(None)
 
         #sc.robots[0].setPosition([.0, .0, .0])
@@ -222,7 +223,7 @@ def generateData(ep,expert):
 # main
 import saver
 global numRun
-numRun = 251 if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
+numRun = 101 if TRAIN else 5 # This is to set the number of iterations of the Dagger algorithm
 #if(expert):
 #    numRun = 1
 dataList = [] # This is where the training data will be stored
@@ -231,7 +232,8 @@ sc = None
 lossList = []
 
 positionList = [[] for n in range(numRun)]
-for i in range(0, numRun):
+for i in range(numRun):
+    print(lossList)
     print('Episode:', i+1)
     ##########################################################################
     ######## Step 1: Start simulation rollouts to get training data ##########
@@ -270,8 +272,8 @@ for i in range(0, numRun):
         nm += robot.numMod
     print('Number of times neural network was selected:', nnn)
     print('Number of times expert model was selected:', nm)
-    if(i % 50 == 0 and TRAIN):
-        fcl.save('v11/suhaas_model_v11_dagger_' + str(i) + '.pth')
+    if(i % 25 == 0 and TRAIN):
+        fcl.save('v13/suhaas_model_v13_dagger_' + str(i) + '.pth')
 
     ###################### STATS ###########################
     #xt = 0
@@ -285,14 +287,18 @@ for i in range(0, numRun):
     #yt = yt / len(sc.robots)
     #print('Center: (',xt,',',yt,')')
 positionList = np.array(positionList)
-np.save('positionList_expert_5.npy',positionList)
+np.save('positionList_expert_'+str(robotNum)+'.npy',positionList)
 if sc:
+    print('data stored')
+    print(sc.dt)
     for j in range(1, len(sc.robots)):
         dataList[0].append(dataList[j])
     dataList[0].store()
+else:
+    print('data not stored')
 
 if(TRAIN):
-    fcl.save('v11/suhaas_model_v11_dagger_final.pth')
+    fcl.save('v13/suhaas_model_v13_dagger_final.pth')
     print(lossList)
     lossList = np.array(lossList)
     np.save('losslist.npy',lossList)

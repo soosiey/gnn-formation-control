@@ -20,7 +20,7 @@ def gabriel(i,j,ri,rj,l):
 
     return connected
 
-n = 5
+n = 6
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
 alldata = np.load('positionList_expert_'+str(n)+'.npy')
 exp = alldata[0]
@@ -99,7 +99,7 @@ plt.savefig('endpoints_'+str(n)+'.png')
 plt.show()
 
 # distances with end neighbors
-time = np.linspace(0,15,pos.shape[1])
+time = np.linspace(0,30,pos.shape[1])
 plt.figure()
 for i in range(len(endgabs)):
     ri = endgabs[i][0]
@@ -144,7 +144,7 @@ plt.show()
 # final distance statistics
 dataset = []
 for experiment in [4,5,6]:
-    alldata = np.load('positionList_model_'+str(experiment)+'.npy')
+    alldata = np.load('positionList_expert_'+str(experiment)+'.npy')
     allpos = np.zeros((alldata.shape[0],experiment,alldata.shape[1]//experiment,2))
     for i in range(alldata.shape[0]):
         curr = alldata[i]

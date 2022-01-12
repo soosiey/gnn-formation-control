@@ -172,7 +172,7 @@ class Scene():
             self.vrepConnected = False
             print ("Failed connecting to remote API server")
             raise Exception("Failed connecting to remote API server")
-        self.dt = 0.01
+        self.dt = 0.05
 
     def setVrepHandles(self, robotIndex, handleNameSuffix = ""):
         if self.vrepConnected == False:

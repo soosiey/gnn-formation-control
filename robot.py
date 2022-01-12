@@ -307,7 +307,7 @@ class Robot():
         vxp += K2 * self.xid.vxp
         vyp += K2 * self.xid.vyp
 
-        kk = .331/2*.331/.2
+        kk = 1
         theta = self.xi.theta
         M11 = kk * math.sin(theta) + math.cos(theta)
         M12 =-kk * math.cos(theta) + math.sin(theta)
@@ -352,7 +352,7 @@ class Robot():
             lcheck = 10
             if(hist_len > 100):
                 currhist = self.position_hist[-1*lcheck:]
-                if(not self.checkMove(currhist,num=lcheck,thresh=.001)):
+                if(not self.checkMove(currhist,num=lcheck,thresh=.00001)):
                     v1nn = 0
                     v2nn = 0
                 #for pos in range(1,len(currhist)):
@@ -367,7 +367,7 @@ class Robot():
                 #    v1nn = 0
                 #    v2nn = 0
             ### post-processing ###
-            vm = 0.7 # wheel's max linear speed in m/s
+            vm = 1.2 # wheel's max linear speed in m/s
             # Find the factor for converting linear speed to angular speed
             if math.fabs(v2nn) >= math.fabs(v1nn) and math.fabs(v2nn) > vm:
                 alpha = vm / math.fabs(v2nn)
@@ -415,7 +415,7 @@ class Robot():
 
         #print("v1 = %.3f" % v1, "m/s, v2 = %.3f" % v2)
 
-        vm = 0.7 # wheel's max linear speed in m/s
+        vm = 1.2 # wheel's max linear speed in m/s
         # Find the factor for converting linear speed to angular speed
         if math.fabs(v2) >= math.fabs(v1) and math.fabs(v2) > vm:
             alpha = vm / math.fabs(v2)
@@ -472,12 +472,12 @@ class Robot():
         ####### TO ADD THE CONTROLLER SELECTION MECHANISM HERE #############
         # use binomial distribution with probability \beta
         p = 0.8 # can be tweaked
-        exp = (self.scene.runNum - 70) // 15
+        exp = (self.scene.runNum) // 20
         exp = max(0,exp)
         beta = p**(exp)  # Dagger algorithm paper, page 4
         model_controller = np.random.binomial(1, beta)
         TRAIN = False
-        DAGGER = False
+        DAGGER = True
         if (model_controller and TRAIN) or (not DAGGER):
             #print('\n Model-based control seleceted')
             self.numMod += 1
@@ -494,7 +494,7 @@ class Robot():
             # return angular speeds of the two wheels
             self.nnv1 = omega1
             self.nnv2 = omega2
-            return omega1, omega2
+            return omega1/5, omega2/5
         else:
             # return linear speeds of the two wheels
             return v1, v2
