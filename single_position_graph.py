@@ -20,7 +20,8 @@ def gabriel(i,j,ri,rj,l):
 
     return connected
 
-n = 6
+n = 12
+ns = [12]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
 alldata = np.load('positionList_expert_'+str(n)+'.npy')
 exp = alldata[0]
@@ -99,7 +100,7 @@ plt.savefig('endpoints_'+str(n)+'.png')
 plt.show()
 
 # distances with end neighbors
-time = np.linspace(0,30,pos.shape[1])
+time = np.linspace(0,45,pos.shape[1])
 plt.figure()
 for i in range(len(endgabs)):
     ri = endgabs[i][0]
@@ -143,7 +144,7 @@ plt.show()
 
 # final distance statistics
 dataset = []
-for experiment in [4,5,6]:
+for experiment in ns:
     alldata = np.load('positionList_expert_'+str(experiment)+'.npy')
     allpos = np.zeros((alldata.shape[0],experiment,alldata.shape[1]//experiment,2))
     for i in range(alldata.shape[0]):
@@ -158,7 +159,7 @@ allm = []
 alls = []
 index = 0
 plt.figure()
-for experiment in [4,5,6]:
+for experiment in ns:
     end_positions = dataset[index][:,:,-1,:]
     m = []
     std = []
@@ -185,6 +186,6 @@ print(allm,alls)
 plt.xlabel('Number of robots')
 plt.ylabel('Distance (m)')
 plt.title('Average ending distance of neighbors in each experiment')
-plt.bar(np.arange(4,7),allm,.4,yerr=alls)
+plt.bar(12,allm,.4,yerr=alls)
 plt.savefig('average_final_distances.png')
 plt.show()
