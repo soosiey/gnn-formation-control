@@ -20,8 +20,8 @@ def gabriel(i,j,ri,rj,l):
 
     return connected
 
-n = 12
-ns = [12]
+n = 7
+ns = [4,5,6,7,8,9,12]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
 alldata = np.load('positionList_expert_'+str(n)+'.npy')
 exp = alldata[0]
@@ -177,6 +177,7 @@ for experiment in ns:
                     s.append(dist)
         m.append(np.average(s))
         std.append(np.std(s))
+    print(m)
     m = np.average(m)
     std = np.sqrt(np.dot(std,std)/len(std))
     allm.append(m)
@@ -186,6 +187,6 @@ print(allm,alls)
 plt.xlabel('Number of robots')
 plt.ylabel('Distance (m)')
 plt.title('Average ending distance of neighbors in each experiment')
-plt.bar(12,allm,.4,yerr=alls)
+plt.bar(ns,allm,.4,yerr=alls)
 plt.savefig('average_final_distances.png')
 plt.show()
