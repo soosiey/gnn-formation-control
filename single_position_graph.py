@@ -20,10 +20,12 @@ def gabriel(i,j,ri,rj,l):
 
     return connected
 
-n = 7
-ns = [4,5,6,7,8,9,12]
+#n = 7
+#ns = [4,5,6,7,8,9,12]
+n = 3
+ns = [3,4,12]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
-alldata = np.load('positionList_expert_'+str(n)+'.npy')
+alldata = np.load('positionList_expert_'+str(n)+'_longer.npy')
 exp = alldata[0]
 pos = np.zeros((n,exp.shape[0]//n,2))
 for i in range(n):
@@ -38,6 +40,11 @@ for i in range(alldata.shape[0]):
         allpos[i][j] = check
 alldata = allpos
 # paths
+endpos = pos[:,0,:]
+xlim_min = min(endpos[:,0])
+xlim_max = max(endpos[:,0])
+ylim_min = min(endpos[:,1])
+ylim_max = max(endpos[:,1])
 plt.figure()
 for i in range(pos.shape[0]):
     plt.plot(pos[i,:,0],pos[i,:,1],label=str(i))
@@ -45,8 +52,8 @@ plt.xlabel('x (m)')
 plt.ylabel('y (m)')
 plt.title('Positions of ' + str(n) + ' robots')
 plt.legend()
-plt.xlim([-n-1,n+1])
-plt.ylim([-n-1,n+1])
+plt.xlim([xlim_min-1,xlim_max+1])
+plt.ylim([ylim_min-1,ylim_max+1])
 plt.show()
 
 # end positions
@@ -55,13 +62,13 @@ plt.scatter(pos[:,-1,0],pos[:,-1,1])
 plt.xlabel('x (m)')
 plt.ylabel('y (m)')
 plt.title('Positions of ' + str(n) + ' robots at the end of a simulation')
-plt.xlim([-n-1,n+1])
-plt.ylim([-n-1,n+1])
+plt.xlim([xlim_min-1,xlim_max+1])
+plt.ylim([ylim_min-1,ylim_max+1])
 plt.show()
 
 # start graph
 plt.figure()
-endpos = pos[:,0,:]
+
 endgabs = []
 for i in range(n):
     plt.scatter(pos[i,0,0],pos[i,0,1],label=str(i))
@@ -73,8 +80,8 @@ for i in range(len(endpos)):
 plt.xlabel('x (m)')
 plt.ylabel('y (m)')
 plt.title('Graph connections at start of simulation')
-plt.xlim([-n-1,n+1])
-plt.ylim([-n-1,n+1])
+plt.xlim([xlim_min-1,xlim_max+1])
+plt.ylim([ylim_min-1,ylim_max+1])
 plt.legend()
 plt.savefig('startpoints_'+str(n)+'.png')
 plt.show()
@@ -93,8 +100,8 @@ for i in range(len(endpos)):
 plt.xlabel('x (m)')
 plt.ylabel('y (m)')
 plt.title('Graph connections at end of simulation')
-plt.xlim([-n-1,n+1])
-plt.ylim([-n-1,n+1])
+plt.xlim([xlim_min-1,xlim_max+1])
+plt.ylim([ylim_min-1,ylim_max+1])
 plt.legend()
 plt.savefig('endpoints_'+str(n)+'.png')
 plt.show()
@@ -107,7 +114,6 @@ for i in range(len(endgabs)):
     rj = endgabs[i][1]
     dist = pos[ri] - pos[rj]
     dist = np.linalg.norm(dist,axis=1)
-    print(dist.shape)
     plt.plot(time,dist,label=str(ri) + ' ' + str(rj))
 
 plt.legend()
@@ -125,7 +131,7 @@ for t in range(pos.shape[1]):
     s = 0
     c = 0
     for i in range(n):
-        for k in range(i+1,n):
+        for j in range(i+1,n):
             ri = pos[i][t]
             rj = pos[j][t]
             if(gabriel(i,j,ri,rj,pos[:,t,:])):
@@ -145,7 +151,7 @@ plt.show()
 # final distance statistics
 dataset = []
 for experiment in ns:
-    alldata = np.load('positionList_expert_'+str(experiment)+'.npy')
+    alldata = np.load('positionList_expert_'+str(experiment)+'_longer.npy')
     allpos = np.zeros((alldata.shape[0],experiment,alldata.shape[1]//experiment,2))
     for i in range(alldata.shape[0]):
         curr = alldata[i]
