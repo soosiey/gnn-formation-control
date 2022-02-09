@@ -473,6 +473,7 @@ class Robot():
         # use binomial distribution with probability \beta
         p = 0.8 # can be tweaked
         exp = (self.scene.runNum) // 20
+        #exp = (self.scene.runNum-101)//20
         exp = max(0,exp)
         beta = p**(exp)  # Dagger algorithm paper, page 4
         model_controller = np.random.binomial(1, beta)

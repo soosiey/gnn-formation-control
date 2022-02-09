@@ -22,16 +22,16 @@ import matplotlib.pyplot as plt
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 5
+robotNum = 3
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final.pth'))
+    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final_more.pth'))
     fcl.model.to('cuda')
 if(CONTINUE):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v12/suhaas_model_v12_dagger_75.pth'))
+    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final.pth'))
     fcl.model.to('cuda')
     print('Loaded model')
 
@@ -90,6 +90,8 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     sp.plot(6, tf,expert=expert)
 
 def generateData(ep,expert):
+    if(CONTINUE):
+        ep -=101
     sc = Scene(fileName = __file__, recordData = True, runNum = ep)
     sp = ScenePlot(sc)
     sp.saveEnabled = True # save plots?
@@ -223,7 +225,7 @@ def generateData(ep,expert):
 # main
 import saver
 global numRun
-numRun = 101 if TRAIN else 5 # This is to set the number of iterations of the Dagger algorithm
+numRun = 101 if TRAIN else 50 # This is to set the number of iterations of the Dagger algorithm
 #if(expert):
 #    numRun = 1
 dataList = [] # This is where the training data will be stored
@@ -287,7 +289,7 @@ for i in range(numRun):
     #yt = yt / len(sc.robots)
     #print('Center: (',xt,',',yt,')')
 positionList = np.array(positionList)
-np.save('positionList_expert_'+str(robotNum)+'_longer.npy',positionList)
+np.save('positionList_expert_'+str(robotNum)+'_longer50.npy',positionList)
 if sc:
     print('data stored')
     print(sc.dt)
@@ -298,7 +300,7 @@ else:
     print('data not stored')
 
 if(TRAIN):
-    fcl.save('v13/suhaas_model_v13_dagger_final.pth')
+    fcl.save('v13/suhaas_model_v13_dagger_final_more.pth')
     print(lossList)
     lossList = np.array(lossList)
     np.save('losslist.npy',lossList)

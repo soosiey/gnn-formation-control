@@ -22,11 +22,11 @@ def gabriel(i,j,ri,rj,l):
 
 #n = 7
 #ns = [4,5,6,7,8,9,12]
-n = 3
-ns = [3,4,12]
+n = 12
+ns = [3,4,5,8,10,12]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
 alldata = np.load('positionList_expert_'+str(n)+'_longer.npy')
-exp = alldata[0]
+exp = alldata[1]
 pos = np.zeros((n,exp.shape[0]//n,2))
 for i in range(n):
     check = exp[i::n]
@@ -152,6 +152,10 @@ plt.show()
 dataset = []
 for experiment in ns:
     alldata = np.load('positionList_expert_'+str(experiment)+'_longer.npy')
+    #if(experiment == 12 or experiment == 8):
+    #    alldata = alldata[1:]
+    #if(experiment == 8):
+    #    alldata = alldata[:1]
     allpos = np.zeros((alldata.shape[0],experiment,alldata.shape[1]//experiment,2))
     for i in range(alldata.shape[0]):
         curr = alldata[i]
