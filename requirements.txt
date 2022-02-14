@@ -13,3 +13,4 @@ torchaudio
 torchsummaryX
 torchvision
 tqdm
+pyyaml
