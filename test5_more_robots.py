@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 3
+robotNum = 5
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
@@ -154,7 +154,7 @@ def generateData(ep,expert):
             #sc.setVrepHandles(8, '#7')
             #sc.setVrepHandles(9, '#8')
         #sc.renderScene(waitTime = 3000)
-        tf = 350 # must be greater than 1
+        tf = 150 # must be greater than 1
         errorCheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
         sc.resetPosition(5)
