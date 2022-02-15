@@ -22,7 +22,7 @@ def gabriel(i,j,ri,rj,l):
 
 #n = 7
 #ns = [4,5,6,7,8,9,12]
-n = 3
+n = 6
 #ns = [3]
 ns = [3,4,5,6,7,8,9,10,12]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
@@ -118,7 +118,7 @@ for i in range(len(endgabs)):
     plt.plot(time,dist,label=str(ri) + ' ' + str(rj))
 
 plt.legend()
-plt.ylim([-2,10])
+plt.ylim([1,4])
 plt.xlabel('Time (s)')
 plt.ylabel('Distance (m)')
 plt.title('Distance between ending neighbors over course of simulation')
@@ -152,7 +152,7 @@ plt.show()
 # final distance statistics
 dataset = []
 for experiment in ns:
-    if(experiment == 3 or experiment == 5):
+    if(experiment == 3 or experiment == 4 or experiment == 5 or experiment == 6):
         alldata = np.load('positionList_expert_'+str(experiment)+'_longer50.npy')
     elif(experiment == 6):
         alldata = np.load('positionList_expert_'+str(experiment)+'.npy')
