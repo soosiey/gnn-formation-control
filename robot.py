@@ -18,6 +18,7 @@ import numpy as np
 import sim as vrep
 from data import Data
 from pointcloud import PointCloud
+import time
 #import time
 #import random
 
@@ -328,6 +329,7 @@ class Robot():
             #if observation is None:
             #    action = np.array([[0, 0]])
             #else:
+            #start = time.time()
             action = self.learnedController(omlist,index)
             #action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
             #action = np.array([[0, 0]])
@@ -407,7 +409,8 @@ class Robot():
                 self.v1Desirednn = v1nn
                 self.v2Desirednn = v2nn
 
-
+        #end = time.time()
+        print(end - start)
         #############################################################################
         #############################################################################
 
