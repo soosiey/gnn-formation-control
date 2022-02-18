@@ -1,6 +1,7 @@
 # DiffDriveRobot
 
 
+Core GNN Library used from: [https://github.com/proroklab/gnn_pathplanning](https://github.com/proroklab/gnn_pathplanning)
 ## NEW INSTRUCTIONS
 ### Install Dependencies:
 
