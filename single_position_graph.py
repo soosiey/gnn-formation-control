@@ -31,7 +31,7 @@ n = 4
 ns = [3,4,5,6,7,8,9,10]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
 alldata = np.load('positionList_expert_'+str(n)+'_longer.npy')
-alldata = alldata[:,:20000,:]
+alldata = alldata[:,:20*250*n,:]
 #search data here
 exp = alldata[0]
 
@@ -117,7 +117,7 @@ plt.show()
 
 # distances with end neighbors
 t = alldata.shape[2]//20
-time = np.linspace(0,350,pos.shape[1])
+time = np.linspace(0,250,pos.shape[1])
 plt.figure(figsize=figure_size)
 for i in range(len(endgabs)):
     ri = endgabs[i][0]
