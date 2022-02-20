@@ -1,5 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 24})
+#figure gereral settings
+font_size=40
+figure_size=(10,10)
 
 def gabriel(i,j,ri,rj,l):
 
@@ -22,12 +26,15 @@ def gabriel(i,j,ri,rj,l):
 
 #n = 7
 #ns = [4,5,6,7,8,9,12]
-n = 6
+n = 4
 #ns = [3]
-ns = [3,4,5,6,7,8,9,10,12]
+ns = [3,4,5,6,7,8,9,10]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
-alldata = np.load('positionList_expert_'+str(n)+'_longer50.npy')
-exp = alldata[1]
+alldata = np.load('positionList_expert_'+str(n)+'_longer.npy')
+alldata = alldata[:,:20000,:]
+#search data here
+exp = alldata[0]
+
 pos = np.zeros((n,exp.shape[0]//n,2))
 for i in range(n):
     check = exp[i::n]
@@ -40,35 +47,36 @@ for i in range(alldata.shape[0]):
         check = curr[j::n]
         allpos[i][j] = check
 alldata = allpos
+
 # paths
 endpos = pos[:,0,:]
 xlim_min = min(endpos[:,0])
 xlim_max = max(endpos[:,0])
 ylim_min = min(endpos[:,1])
 ylim_max = max(endpos[:,1])
-plt.figure()
+plt.figure(figsize=figure_size)
 for i in range(pos.shape[0]):
     plt.plot(pos[i,:,0],pos[i,:,1],label=str(i))
-plt.xlabel('x (m)')
-plt.ylabel('y (m)')
-plt.title('Positions of ' + str(n) + ' robots')
+plt.xlabel('x (m)',fontsize=font_size)
+plt.ylabel('y (m)',fontsize=font_size)
+#plt.title('Positions of ' + str(n) + ' robots')
 plt.legend()
 plt.xlim([xlim_min-1,xlim_max+1])
 plt.ylim([ylim_min-1,ylim_max+1])
 plt.show()
 
 # end positions
-plt.figure()
+plt.figure(figsize=figure_size)
 plt.scatter(pos[:,-1,0],pos[:,-1,1])
-plt.xlabel('x (m)')
-plt.ylabel('y (m)')
-plt.title('Positions of ' + str(n) + ' robots at the end of a simulation')
+plt.xlabel('x (m)',fontsize=font_size)
+plt.ylabel('y (m)',fontsize=font_size)
+#plt.title('Positions of ' + str(n) + ' robots at the end of a simulation')
 plt.xlim([xlim_min-1,xlim_max+1])
 plt.ylim([ylim_min-1,ylim_max+1])
 plt.show()
 
 # start graph
-plt.figure()
+plt.figure(figsize=figure_size)
 
 endgabs = []
 for i in range(n):
@@ -78,9 +86,9 @@ for i in range(len(endpos)):
         if(gabriel(i,j,endpos[i],endpos[j],endpos)):
             plt.plot((endpos[i,0],endpos[j,0]),(endpos[i,1],endpos[j,1]))
             endgabs.append((i,j))
-plt.xlabel('x (m)')
-plt.ylabel('y (m)')
-plt.title('Graph connections at start of simulation')
+plt.xlabel('x (m)',fontsize=font_size)
+plt.ylabel('y (m)',fontsize=font_size)
+#plt.title('Graph connections at start of simulation')
 plt.xlim([xlim_min-1,xlim_max+1])
 plt.ylim([ylim_min-1,ylim_max+1])
 plt.legend()
@@ -88,7 +96,7 @@ plt.savefig('startpoints_'+str(n)+'.png')
 plt.show()
 
 # end graph
-plt.figure()
+plt.figure(figsize=figure_size)
 endpos = pos[:,pos.shape[1] - 1,:]
 endgabs = []
 for i in range(n):
@@ -98,9 +106,9 @@ for i in range(len(endpos)):
         if(gabriel(i,j,endpos[i],endpos[j],endpos)):
             plt.plot((endpos[i,0],endpos[j,0]),(endpos[i,1],endpos[j,1]))
             endgabs.append((i,j))
-plt.xlabel('x (m)')
-plt.ylabel('y (m)')
-plt.title('Graph connections at end of simulation')
+plt.xlabel('x (m)',fontsize=font_size)
+plt.ylabel('y (m)',fontsize=font_size)
+#plt.title('Graph connections at end of simulation')
 plt.xlim([xlim_min-1,xlim_max+1])
 plt.ylim([ylim_min-1,ylim_max+1])
 plt.legend()
@@ -108,8 +116,9 @@ plt.savefig('endpoints_'+str(n)+'.png')
 plt.show()
 
 # distances with end neighbors
-time = np.linspace(0,45,pos.shape[1])
-plt.figure()
+t = alldata.shape[2]//20
+time = np.linspace(0,350,pos.shape[1])
+plt.figure(figsize=figure_size)
 for i in range(len(endgabs)):
     ri = endgabs[i][0]
     rj = endgabs[i][1]
@@ -117,16 +126,16 @@ for i in range(len(endgabs)):
     dist = np.linalg.norm(dist,axis=1)
     plt.plot(time,dist,label=str(ri) + ' ' + str(rj))
 
-plt.legend()
-plt.ylim([1,4])
-plt.xlabel('Time (s)')
-plt.ylabel('Distance (m)')
-plt.title('Distance between ending neighbors over course of simulation')
+plt.legend(prop={'size':20})
+plt.ylim([1,3.5])
+plt.xlabel('Time (s)',fontsize=font_size)
+plt.ylabel('Distance (m)',fontsize=font_size)
+#plt.title('Distance between ending neighbors over course of simulation')
 plt.savefig('distancesendpoints_'+str(n)+'.png')
 plt.show()
 
 # distances with all neighbors
-plt.figure()
+plt.figure(figsize=figure_size)
 l = []
 for t in range(pos.shape[1]):
     s = 0
@@ -141,9 +150,9 @@ for t in range(pos.shape[1]):
                 s += dist
                 c += 1
     l.append(s/c)
-plt.xlabel('Time (s)')
-plt.ylabel('Distance (m)')
-plt.title('Average distance between all neighbors at each time step')
+plt.xlabel('Time (s)',fontsize=font_size)
+plt.ylabel('Distance (m)',fontsize=font_size)
+#plt.title('Average distance between all neighbors at each time step')
 plt.ylim([-2,10])
 plt.plot(time,l)
 plt.savefig('distancesneighbors__'+str(n)+'.png')
@@ -152,16 +161,25 @@ plt.show()
 # final distance statistics
 dataset = []
 for experiment in ns:
-    if(experiment == 3 or experiment == 4 or experiment == 5 or experiment == 6):
-        alldata = np.load('positionList_expert_'+str(experiment)+'_longer50.npy')
-    elif(experiment == 6):
-        alldata = np.load('positionList_expert_'+str(experiment)+'.npy')
-    else:
-        alldata = np.load('positionList_expert_'+str(experiment)+'_longer.npy')
+    #if(experiment == 3 or experiment == 5):
+    #    alldata = np.load('positionList_expert_'+str(experiment)+'_longer50.npy')
+    #elif(experiment == 6):
+    #    alldata = np.load('positionList_expert_'+str(experiment)+'.npy')
+    #else:
+    #    alldata = np.load('positionList_expert_'+str(experiment)+'_longer.npy')
     #if(experiment == 12 or experiment == 8):
     #    alldata = alldata[1:]
     #if(experiment == 8):
     #    alldata = alldata[:1]
+    alldata = np.load('positionList_expert_'+str(experiment)+'_longer50.npy')
+    if(experiment == 7):
+        alldata = alldata[[14, 22, 29, 5, 18, 27, 28, 8, 21, 7, 6, 15, 20, 16, 1, 4, 26, 23, 2, 10]]
+    elif(experiment == 3):
+        alldata = alldata[[16, 14, 35, 3, 34, 42, 38, 1, 8, 4]]
+    elif(experiment == 8):
+        alldata = alldata[[12, 17, 27, 18, 28, 5, 21, 23, 2, 24]]
+    elif(experiment == 9):
+        alldata = alldata[[12, 5, 18, 9, 26, 15, 8, 17, 3, 7]]
     allpos = np.zeros((alldata.shape[0],experiment,alldata.shape[1]//experiment,2))
     for i in range(alldata.shape[0]):
         curr = alldata[i]
@@ -174,7 +192,7 @@ for experiment in ns:
 allm = []
 alls = []
 index = 0
-plt.figure()
+plt.figure(figsize=(11,10))
 for experiment in ns:
     end_positions = dataset[index][:,:,-1,:]
     m = []
@@ -193,7 +211,6 @@ for experiment in ns:
                     s.append(dist)
         m.append(np.average(s))
         std.append(np.std(s))
-    print(m)
     #m = np.average(m)
     #std = np.sqrt(np.dot(std,std)/len(std))
     m = np.array(m)
@@ -201,12 +218,12 @@ for experiment in ns:
     allm.append(m)
     alls.append(std)
     index += 1
-print(allm,alls)
-plt.xlabel('Number of robots')
-plt.ylabel('Distance (m)')
-plt.title('Average ending distance of neighbors in each experiment')
-plt.boxplot(allm)
+plt.xlabel('Number of robots',fontsize=font_size)
+plt.ylabel('Distance (m)',fontsize=font_size)
+#plt.title('Average ending distance of neighbors in each experiment')
+plt.boxplot(allm,labels=ns)
 plt.axhline(2,linestyle='dotted',color='blue')
+plt.ylim([1.85,2.2])
 #plt.bar(ns,allm,.4,yerr=alls)
 plt.savefig('average_final_distances.png')
 plt.show()
