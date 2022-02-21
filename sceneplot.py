@@ -451,6 +451,8 @@ class ScenePlot():
 
         elif type == 6:
             # Show action
+            matplotlib.rcParams.update(matplotlib.rcParamsDefault)
+            plt.rcParams.update({'font.size': 24})
             if self.sc.dynamics == 13:
                 j1 = 1
             elif self.sc.dynamics == 14 or (self.sc.dynamics >= 16 and self.sc.dynamics <= 18):
@@ -465,13 +467,15 @@ class ScenePlot():
                     else:
                         vDesired1 = self.sc.robots[i].v1Desirednn
                         vDesired2 = self.sc.robots[i].v2Desirednn
+                    #vDesired1 /= 5
+                    #vDesired2 /= 5
                     if i not in self.sc.ydict[type].keys():
                         self.sc.ydict[type][i] = []
                         self.sc.ydict2[type][i] = []
                     self.sc.ydict[type][i].append(vDesired1)
                     self.sc.ydict2[type][i].append(vDesired2)
             if self.sc.t > tf:
-                plt.figure(type)
+                plt.figure(type,figsize=(16,10))
                 for i in range(j1, len(self.sc.robots)): # Show only the follower
                 #for i in range(len(self.sc.robots)): # Show both the follower and the leader
                     c = self.getRobotColor(i)
@@ -479,16 +483,17 @@ class ScenePlot():
                         curve1Label = 'Action in x-axis'
                         curve2Label = 'Action in y-axis'
                     else:
-                        curve1Label = 'Left Wheel Velocity'
-                        curve2Label = 'Right Wheel Velocity'
+                        curve1Label = 'Robot ' + str(i+1) + ' Left Wheel Velocity'
+                        curve2Label = 'Robot ' + str(i+1) + ' Right Wheel Velocity'
                     curve1, = plt.plot(self.sc.ts, self.sc.ydict[type][i], ':',
                                       color = c, label = curve1Label)
                     curve2, = plt.plot(self.sc.ts, self.sc.ydict2[type][i], '--',
                                       color = c, label = curve2Label)
-                if int(matplotlib.__version__[0]) == 2:
-                    plt.legend(handles = [curve1, curve2])
-                plt.xlabel('t (s)')
-                plt.ylabel('Robot Actions (m/s)')
+                #if int(matplotlib.__version__[0]) == 2:
+                plt.legend(prop={'size':16},bbox_to_anchor=(1.05, 1.0), loc='upper left')
+                plt.xlabel('Time (s)',fontsize=40)
+                plt.ylabel('Robot Actions (m/s)',fontsize=40)
+                plt.tight_layout()
 
         elif type == 7:
             # Show angular velocity
@@ -570,8 +575,8 @@ class ScenePlot():
             plt.grid(True)
             if self.saveEnabled == True:
                 # Save plot as eps file
-                path = os.path.join(self.directory, 'fig' + str(type).zfill(2) + '.eps')
-                plt.savefig(path, format='eps')#, dpi=1000)
+                path = os.path.join(self.directory, 'fig' + str(type).zfill(2) + '.png')
+                plt.savefig(path)#, dpi=1000)
                 message = "Plot saved to " + str(path)
                 self.sc.log(message)
                 print(message)

@@ -352,7 +352,7 @@ class Robot():
             lcheck = 10
             if(hist_len > 100):
                 currhist = self.position_hist[-1*lcheck:]
-                if(not self.checkMove(currhist,num=lcheck,thresh=.00001)):
+                if(not self.checkMove(currhist,num=lcheck,thresh=.00005)):
                     v1nn = 0
                     v2nn = 0
                 #for pos in range(1,len(currhist)):

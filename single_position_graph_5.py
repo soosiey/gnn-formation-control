@@ -117,7 +117,7 @@ plt.show()
 
 # distances with end neighbors
 t = alldata.shape[2]//20
-time = np.linspace(0,t,pos.shape[1])
+time = np.linspace(0,250,pos.shape[1])
 plt.figure(figsize=figure_size)
 for i in range(len(endgabs)):
     ri = endgabs[i][0]

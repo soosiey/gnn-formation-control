@@ -26,14 +26,14 @@ def gabriel(i,j,ri,rj,l):
 
 #n = 7
 #ns = [4,5,6,7,8,9,12]
-n = 4
+n = 6
 #ns = [3]
 ns = [3,4,5,6,7,8,9,10]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
-alldata = np.load('positionList_expert_'+str(n)+'_longer.npy')
+alldata = np.load('positionList_expert_'+str(n)+'_longer50.npy')
 alldata = alldata[:,:20*250*n,:]
 #search data here
-exp = alldata[0]
+exp = alldata[1]
 
 pos = np.zeros((n,exp.shape[0]//n,2))
 for i in range(n):
@@ -54,6 +54,8 @@ xlim_min = min(endpos[:,0])
 xlim_max = max(endpos[:,0])
 ylim_min = min(endpos[:,1])
 ylim_max = max(endpos[:,1])
+lowmin = min(xlim_min,ylim_min)
+highmax = max(xlim_max,ylim_max)
 plt.figure(figsize=figure_size)
 for i in range(pos.shape[0]):
     plt.plot(pos[i,:,0],pos[i,:,1],label=str(i))
@@ -61,8 +63,8 @@ plt.xlabel('x (m)',fontsize=font_size)
 plt.ylabel('y (m)',fontsize=font_size)
 #plt.title('Positions of ' + str(n) + ' robots')
 plt.legend()
-plt.xlim([xlim_min-1,xlim_max+1])
-plt.ylim([ylim_min-1,ylim_max+1])
+plt.xlim([lowmin-1,highmax+1])
+plt.ylim([lowmin-1,highmax+1])
 plt.show()
 
 # end positions
@@ -71,8 +73,8 @@ plt.scatter(pos[:,-1,0],pos[:,-1,1])
 plt.xlabel('x (m)',fontsize=font_size)
 plt.ylabel('y (m)',fontsize=font_size)
 #plt.title('Positions of ' + str(n) + ' robots at the end of a simulation')
-plt.xlim([xlim_min-1,xlim_max+1])
-plt.ylim([ylim_min-1,ylim_max+1])
+plt.xlim([lowmin-1,highmax+1])
+plt.ylim([lowmin-1,highmax+1])
 plt.show()
 
 # start graph
@@ -80,7 +82,7 @@ plt.figure(figsize=figure_size)
 
 endgabs = []
 for i in range(n):
-    plt.scatter(pos[i,0,0],pos[i,0,1],label=str(i))
+    plt.scatter(pos[i,0,0],pos[i,0,1],label=str(i+1))
 for i in range(len(endpos)):
     for j in range(i+1,len(endpos)):
         if(gabriel(i,j,endpos[i],endpos[j],endpos)):
@@ -89,8 +91,8 @@ for i in range(len(endpos)):
 plt.xlabel('x (m)',fontsize=font_size)
 plt.ylabel('y (m)',fontsize=font_size)
 #plt.title('Graph connections at start of simulation')
-plt.xlim([xlim_min-1,xlim_max+1])
-plt.ylim([ylim_min-1,ylim_max+1])
+plt.xlim([lowmin-1,highmax+1])
+plt.ylim([lowmin-1,highmax+1])
 plt.legend()
 plt.savefig('startpoints_'+str(n)+'.png')
 plt.show()
@@ -100,7 +102,7 @@ plt.figure(figsize=figure_size)
 endpos = pos[:,pos.shape[1] - 1,:]
 endgabs = []
 for i in range(n):
-    plt.scatter(pos[i,-1,0],pos[i,-1,1],label=str(i))
+    plt.scatter(pos[i,-1,0],pos[i,-1,1],label=str(i+1))
 for i in range(len(endpos)):
     for j in range(i+1,len(endpos)):
         if(gabriel(i,j,endpos[i],endpos[j],endpos)):
@@ -109,8 +111,8 @@ for i in range(len(endpos)):
 plt.xlabel('x (m)',fontsize=font_size)
 plt.ylabel('y (m)',fontsize=font_size)
 #plt.title('Graph connections at end of simulation')
-plt.xlim([xlim_min-1,xlim_max+1])
-plt.ylim([ylim_min-1,ylim_max+1])
+plt.xlim([lowmin-1,highmax+1])
+plt.ylim([lowmin-1,highmax+1])
 plt.legend()
 plt.savefig('endpoints_'+str(n)+'.png')
 plt.show()
@@ -124,10 +126,10 @@ for i in range(len(endgabs)):
     rj = endgabs[i][1]
     dist = pos[ri] - pos[rj]
     dist = np.linalg.norm(dist,axis=1)
-    plt.plot(time,dist,label=str(ri) + ' ' + str(rj))
+    plt.plot(time,dist,label=str(ri+1) + ' ' + str(rj+1))
 
 plt.legend(prop={'size':20})
-plt.ylim([1,3.5])
+plt.ylim([1,4])
 plt.xlabel('Time (s)',fontsize=font_size)
 plt.ylabel('Distance (m)',fontsize=font_size)
 #plt.title('Distance between ending neighbors over course of simulation')
