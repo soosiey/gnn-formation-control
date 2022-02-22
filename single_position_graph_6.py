@@ -31,7 +31,7 @@ n = 6
 ns = [3,4,5,6,7,8,9]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
 alldata = np.load('positionList_expert_'+str(n)+'.npy')
-alldata = alldata[:,:20000,:]
+#alldata = alldata[:,:20000,:]
 #search data here
 exp = alldata[10]
 
@@ -117,20 +117,22 @@ plt.show()
 
 # distances with end neighbors
 t = alldata.shape[2]//20
-time = np.linspace(0,250,pos.shape[1])
-plt.figure(figsize=figure_size)
+time = np.linspace(0,350,pos.shape[1])
+plt.figure(figsize=(11,6))
 for i in range(len(endgabs)):
     ri = endgabs[i][0]
     rj = endgabs[i][1]
     dist = pos[ri] - pos[rj]
     dist = np.linalg.norm(dist,axis=1)
-    plt.plot(time,dist,label=str(ri) + ' ' + str(rj))
+    plt.plot(time,dist,label=str(ri+1) + ' ' + str(rj+1))
 
-plt.legend(prop={'size':20})
+plt.legend(prop={'size':14},loc='upper right')
 plt.ylim([1,5])
+plt.xlim([0,350])
 plt.xlabel('Time (s)',fontsize=font_size)
 plt.ylabel('Distance (m)',fontsize=font_size)
 #plt.title('Distance between ending neighbors over course of simulation')
+plt.tight_layout()
 plt.savefig('distancesendpoints_'+str(n)+'.png')
 plt.show()
 
