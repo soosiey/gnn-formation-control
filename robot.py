@@ -177,9 +177,11 @@ class Robot():
 
     def checkMove(self,hist,num = 1,thresh = .01):
         moving = False
-        for i in range(1,len(hist)):
-            if(abs(hist[i] - hist[i - 1]) > thresh):
-                moving = True
+        if(abs(hist[0] - hist[-1]) > thresh):
+           moving = True
+        #for i in range(1,len(hist)):
+        #    if(abs(hist[i] - hist[i - 1]) > thresh):
+        #        moving = True
         return moving
 
     def control(self,omlist,index):
@@ -213,7 +215,8 @@ class Robot():
         if True: #not hasattr(self, 'dictDistance'):
             self.dictDistance = dict()
             for j in range(len(self.scene.robots)):
-                if self.scene.adjMatrix[self.index, j] == 0:
+                #if self.scene.adjMatrix[self.index, j] == 0:
+                if self.index == j:
                     continue
                 robot = self.scene.robots[j] # neighbor
                 self.dictDistance[j] = self.xi.distancepTo(robot.xi)
@@ -349,10 +352,10 @@ class Robot():
             current_position = (self.xi.xp**2 + self.xi.yp**2)**0.5
             self.position_hist.append(current_position)
             hist_len = len(self.position_hist)
-            lcheck = 10
-            if(hist_len > 100):
+            lcheck = 200
+            if(hist_len > 200):
                 currhist = self.position_hist[-1*lcheck:]
-                if(not self.checkMove(currhist,num=lcheck,thresh=.00005)):
+                if(not self.checkMove(currhist,num=lcheck,thresh=.0002)):
                     v1nn = 0
                     v2nn = 0
                 #for pos in range(1,len(currhist)):
