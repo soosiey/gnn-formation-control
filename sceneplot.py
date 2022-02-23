@@ -453,6 +453,7 @@ class ScenePlot():
             # Show action
             matplotlib.rcParams.update(matplotlib.rcParamsDefault)
             plt.rcParams.update({'font.size': 24})
+            plist = [[] for i in range(len(self.sc.robots))]
             if self.sc.dynamics == 13:
                 j1 = 1
             elif self.sc.dynamics == 14 or (self.sc.dynamics >= 16 and self.sc.dynamics <= 18):
@@ -467,6 +468,7 @@ class ScenePlot():
                     else:
                         vDesired1 = self.sc.robots[i].v1Desirednn
                         vDesired2 = self.sc.robots[i].v2Desirednn
+                    plist[i].append([vDesired1,vDesired2])
                     #vDesired1 /= 5
                     #vDesired2 /= 5
                     if i not in self.sc.ydict[type].keys():
@@ -475,7 +477,7 @@ class ScenePlot():
                     self.sc.ydict[type][i].append(vDesired1)
                     self.sc.ydict2[type][i].append(vDesired2)
             if self.sc.t > tf:
-                plt.figure(type,figsize=(16,10))
+                plt.figure(type,figsize=(11,6))
                 for i in range(j1, len(self.sc.robots)): # Show only the follower
                 #for i in range(len(self.sc.robots)): # Show both the follower and the leader
                     c = self.getRobotColor(i)
@@ -494,6 +496,8 @@ class ScenePlot():
                 plt.xlabel('Time (s)',fontsize=40)
                 plt.ylabel('Robot Actions (m/s)',fontsize=40)
                 plt.tight_layout()
+                plist = np.array(plist)
+                np.save('controllist_'+str(len(self.sc.robots))+'.npy',plist)
 
         elif type == 7:
             # Show angular velocity

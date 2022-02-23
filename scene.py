@@ -273,6 +273,11 @@ class Scene():
         elif self.dynamics >= 16 and self.dynamics <= 18:
             xbar = 0
             ybar = 0
+            self.robots[0].setPosition([-1.18170965, 0.54446036, 0])
+            self.robots[1].setPosition([-0.65916228, 2.96265173, 0])
+            self.robots[2].setPosition([-0.00378643, -0.01864634, 0])
+            self.robots[3].setPosition([-3.23359704, 1.75259435, 0])
+            return
             for i in range(0, len(self.robots)):
                 while True:
                     minDij = float("inf")
