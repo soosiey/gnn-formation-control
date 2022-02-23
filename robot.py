@@ -177,11 +177,11 @@ class Robot():
 
     def checkMove(self,hist,num = 1,thresh = .01):
         moving = False
-        if(abs(hist[0] - hist[-1]) > thresh):
-           moving = True
-        #for i in range(1,len(hist)):
-        #    if(abs(hist[i] - hist[i - 1]) > thresh):
-        #        moving = True
+        #if(abs(hist[0] - hist[-1]) > thresh):
+        #   moving = True
+        for i in range(1,len(hist)):
+            if(abs(hist[i] - hist[i - 1]) > thresh):
+                moving = True
         return moving
 
     def control(self,omlist,index):
@@ -352,10 +352,10 @@ class Robot():
             current_position = (self.xi.xp**2 + self.xi.yp**2)**0.5
             self.position_hist.append(current_position)
             hist_len = len(self.position_hist)
-            lcheck = 200
-            if(hist_len > 200):
+            lcheck = 10
+            if(hist_len > 100):
                 currhist = self.position_hist[-1*lcheck:]
-                if(not self.checkMove(currhist,num=lcheck,thresh=.0002)):
+                if(not self.checkMove(currhist,num=lcheck,thresh=.00001)):
                     v1nn = 0
                     v2nn = 0
                 #for pos in range(1,len(currhist)):
