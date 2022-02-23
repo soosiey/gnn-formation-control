@@ -276,8 +276,8 @@ class Scene():
             self.robots[0].setPosition([-1.83938265,  0.24249859,0])
             self.robots[1].setPosition([ 1.59194398, -0.86264265,0])
             self.robots[2].setPosition([ 2.48446083,  1.84220445,0])
-            self.robots[2].setPosition([-3.02479005,  3.31855512,0])
-            self.robots[3].setPosition([ 2.1342206 , -3.21711802,0])
+            self.robots[3].setPosition([-3.02479005,  3.31855512,0])
+            self.robots[4].setPosition([ 2.1342206 , -3.21711802,0])
             return
             for i in range(0, len(self.robots)):
                 while True:

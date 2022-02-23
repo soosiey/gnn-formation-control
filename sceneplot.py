@@ -492,7 +492,7 @@ class ScenePlot():
                     curve2, = plt.plot(self.sc.ts, self.sc.ydict2[type][i], '--',
                                       color = c, label = curve2Label)
                 #if int(matplotlib.__version__[0]) == 2:
-                plt.legend(prop={'size':10},loc='upper right')
+                plt.legend(prop={'size':8},loc='upper right')
                 plt.xlabel('Time (s)',fontsize=40)
                 plt.ylabel('Robot Actions (m/s)',fontsize=30)
                 plt.tight_layout()
