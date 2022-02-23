@@ -30,10 +30,10 @@ n = 6
 #ns = [3]
 ns = [3,4,5,6,7,8,9,10]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
-alldata = np.load('positionList_expert_'+str(n)+'_longer50.npy')
+alldata = np.load('positionList_expert_'+str(n)+'_singles.npy')
 alldata = alldata[:,:20*250*n,:]
 #search data here
-exp = alldata[1]
+exp = alldata[0]
 
 pos = np.zeros((n,exp.shape[0]//n,2))
 for i in range(n):
@@ -129,7 +129,7 @@ for i in range(len(endgabs)):
     plt.plot(time,dist,label=str(ri+1) + ' ' + str(rj+1))
 
 plt.legend(prop={'size':20})
-plt.ylim([1,4])
+plt.ylim([1,8])
 plt.xlabel('Time (s)',fontsize=font_size)
 plt.ylabel('Distance (m)',fontsize=font_size)
 #plt.title('Distance between ending neighbors over course of simulation')

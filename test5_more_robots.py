@@ -22,12 +22,12 @@ import matplotlib.pyplot as plt
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 6
+robotNum = 5
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final_more.pth'))
+    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final.pth'))
     fcl.model.to('cuda')
 if(CONTINUE):
     fcl.model.to('cpu')
@@ -154,7 +154,7 @@ def generateData(ep,expert):
             #sc.setVrepHandles(8, '#7')
             #sc.setVrepHandles(9, '#8')
         #sc.renderScene(waitTime = 3000)
-        tf = 250 # must be greater than 1
+        tf = 350 # must be greater than 1
         errorCheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
         sc.resetPosition(5)

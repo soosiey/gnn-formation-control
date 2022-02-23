@@ -492,9 +492,9 @@ class ScenePlot():
                     curve2, = plt.plot(self.sc.ts, self.sc.ydict2[type][i], '--',
                                       color = c, label = curve2Label)
                 #if int(matplotlib.__version__[0]) == 2:
-                plt.legend(prop={'size':16},bbox_to_anchor=(1.05, 1.0), loc='upper left')
+                plt.legend(prop={'size':10},loc='upper right')
                 plt.xlabel('Time (s)',fontsize=40)
-                plt.ylabel('Robot Actions (m/s)',fontsize=40)
+                plt.ylabel('Robot Actions (m/s)',fontsize=30)
                 plt.tight_layout()
                 plist = np.array(plist)
                 np.save('controllist_'+str(len(self.sc.robots))+'.npy',plist)
