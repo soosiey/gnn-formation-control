@@ -22,16 +22,16 @@ import matplotlib.pyplot as plt
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 5
+robotNum = 3
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final.pth'))
+    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final_more.pth'))
     fcl.model.to('cuda')
 if(CONTINUE):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final.pth'))
+    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final_more.pth'))
     fcl.model.to('cuda')
     print('Loaded model')
 
