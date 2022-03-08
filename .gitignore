@@ -13,7 +13,6 @@ vrepConst.py
 *.npz
 *.bak
 *.avi
-*.npy
 *.eps
 *.pdf
 bin/
