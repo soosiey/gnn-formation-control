@@ -90,8 +90,8 @@ def main():
 
 
     for i in range(3,9):
-        expert = np.load('positionList_network_'+str(i)+'.npy')
-        network = np.load('positionList_expert_'+str(i)+'.npy')
+        expert = np.load('positionList/'+'positionList_network_'+str(i)+'.npy')
+        network = np.load('positionList/'+'positionList_expert_'+str(i)+'.npy')
         xn[i - 3] = get_running_average(np.load('positionList_network_'+str(i)+'.npy'),i)
         x[i - 3] = get_running_average(np.load('positionList_expert_'+str(i)+'.npy'),i)
 
@@ -114,8 +114,8 @@ def main():
     ticks = np.arange(3,9)
     plt.figure()
     for i in range(3,9):
-        expert = np.load('positionList_network_'+str(i)+'.npy')
-        network = np.load('positionList_expert_'+str(i)+'.npy')
+        expert = np.load('positionList/'+'positionList_network_'+str(i)+'.npy')
+        network = np.load('positionList/'+'positionList_expert_'+str(i)+'.npy')
         em,es = get_average(expert,i)
         nm,ns = get_average(network,i)
         network_means.append(xn[i-3][-1])
@@ -137,8 +137,8 @@ def main():
     plt.figure()
     for i in range(3,9):
         #plt.figure()
-        expert = np.load('positionList_network_'+str(i)+'.npy')
-        network = np.load('positionList_expert_'+str(i)+'.npy')
+        expert = np.load('positionList/'+'positionList_network_'+str(i)+'.npy')
+        network = np.load('positionList/'+'positionList_expert_'+str(i)+'.npy')
         cn = get_convergence(network,i)
         ce = get_convergence(expert,i)
         #plt.plot(xn[i - 3],color=colors[i-3],ls='dotted',label='network')

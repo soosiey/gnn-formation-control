@@ -30,7 +30,7 @@ n = 6
 #ns = [3]
 ns = [3,4,5,6,7,8,9]
 #exp = np.load('positionList_single_'+str(n)+'.npy')[0]
-alldata = np.load('positionList_expert_'+str(n)+'.npy')
+alldata = np.load('positionList/'+'positionList_expert_'+str(n)+'.npy')
 #alldata = alldata[:,:20000,:]
 #search data here
 exp = alldata[10]
@@ -173,7 +173,7 @@ for experiment in ns:
     #    alldata = alldata[1:]
     #if(experiment == 8):
     #    alldata = alldata[:1]
-    alldata = np.load('positionList_expert_'+str(experiment)+'_longer50.npy')
+    alldata = np.load('positionList/'+'positionList_expert_'+str(experiment)+'_longer50.npy')
     if(experiment == 7):
         alldata = alldata[[14, 22, 29, 5, 18, 27, 28, 8, 21, 7, 6, 15, 20, 16, 1, 4, 26, 23, 2, 10]]
     elif(experiment == 3):

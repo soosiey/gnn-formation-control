@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 
 
 
-network1 = np.load('positionList_network_5.npy')[4]
-network2 = np.load('positionList_network_7.npy')[3]
-network3 = np.load('positionList_network_4.npy')[4]
+network1 = np.load('positionList/'+'positionList_network_5.npy')[4]
+network2 = np.load('positionList/'+'positionList_network_7.npy')[3]
+network3 = np.load('positionList/'+'positionList_network_4.npy')[4]
 
 
 
