@@ -155,6 +155,7 @@ def generateData(ep,expert):
             #sc.setVrepHandles(9, '#8')
         #sc.renderScene(waitTime = 3000)
         tf = 10
+
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
         sc.resetPosition(5)
