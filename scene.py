@@ -318,8 +318,6 @@ class Scene():
 
 
 
-
-
     def scaleDesiredFormation(self, alpha):
         self.alpha = alpha
         for robot in self.robots:
