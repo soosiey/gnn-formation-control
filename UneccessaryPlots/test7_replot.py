@@ -5,7 +5,7 @@ Created on Tue Feb 20 17:49:53 2018
 @author: cz
 """
 
-from sceneplot import ScenePlot
+from useful.sceneplot import ScenePlot
 import saver
 
 sc = saver.load(4)

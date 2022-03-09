@@ -6,8 +6,7 @@ Created on Sun Nov 19 23:09:34 2017
 """
 
 from scene import Scene
-from sceneplot import ScenePlot
-from robot import Robot
+from useful.sceneplot import ScenePlot
 import numpy as np
 
 try:

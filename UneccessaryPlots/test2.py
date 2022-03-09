@@ -7,8 +7,7 @@ This test file is dependent on vrep.
 """
 
 from scene import Scene
-from sceneplot import ScenePlot
-from robot import Robot
+from useful.sceneplot import ScenePlot
 import numpy as np
 
 

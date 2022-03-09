@@ -90,10 +90,10 @@ def main():
 
 
     for i in range(3,9):
-        expert = np.load('positionList/'+'positionList_network_'+str(i)+'.npy')
-        network = np.load('positionList/'+'positionList_expert_'+str(i)+'.npy')
-        xn[i - 3] = get_running_average(np.load('positionList_network_'+str(i)+'.npy'),i)
-        x[i - 3] = get_running_average(np.load('positionList_expert_'+str(i)+'.npy'),i)
+        expert = np.load('positionLists/'+'positionList_network_'+str(i)+'.npy')
+        network = np.load('positionLists/'+'positionList_expert_'+str(i)+'.npy')
+        xn[i - 3] = get_running_average(np.load('positionLists/'+'positionList_network_'+str(i)+'.npy'),i)
+        x[i - 3] = get_running_average(np.load('positionLists/'+'positionList_expert_'+str(i)+'.npy'),i)
 
     plt.figure()
     xaxis = np.linspace(0,15,300)

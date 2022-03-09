@@ -19,7 +19,7 @@ from suhaas_agent import Agent
 import torch
 import matplotlib.pyplot as plt
 
-TRAIN = False
+TRAIN = True
 CONTINUE = False
 expert = False
 robotNum = 3
@@ -154,7 +154,7 @@ def generateData(ep,expert):
             #sc.setVrepHandles(8, '#7')
             #sc.setVrepHandles(9, '#8')
         #sc.renderScene(waitTime = 3000)
-        tf = 3
+        tf = 4 ## must lager than 3
 
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position

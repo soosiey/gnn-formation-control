@@ -8,7 +8,7 @@ To run this file, please open vrep file scene/scene_double.ttt first
 
 from scene import Scene
 from robot import VrepError
-from sceneplot import ScenePlot
+from useful.sceneplot import ScenePlot
 # from robot import Robot
 import numpy as np
 import math
