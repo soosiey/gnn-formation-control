@@ -54,6 +54,7 @@ class Agent():
         self.model.eval()
         self.model.addGSO(S)
         outs = [self.model(xin,r,a)[index]]
+        print("outs",outs[0].shape)
         return outs
 
     def test1(self, x, S, refs, alphas):

@@ -19,19 +19,21 @@ from suhaas_agent import Agent
 import torch
 import matplotlib.pyplot as plt
 
-TRAIN = True
+TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 3
+robotNum = 7
+simTime=4
+trainEpisode=2
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final_more.pth'))
+    fcl.model.load_state_dict(torch.load('models/'+'model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'))
     fcl.model.to('cuda')
 if(CONTINUE):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/v13/suhaas_model_v13_dagger_final_more.pth'))
+    fcl.model.load_state_dict(torch.load('models/'+'model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'))
     fcl.model.to('cuda')
     print('Loaded model')
 
@@ -91,7 +93,7 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
 
 def generateData(ep,expert):
     if(CONTINUE):
-        ep -=101
+        ep -=trainEpisode
     sc = Scene(fileName = __file__, recordData = True, runNum = ep)
     sp = ScenePlot(sc)
     sp.saveEnabled = True # save plots?
@@ -154,7 +156,7 @@ def generateData(ep,expert):
             #sc.setVrepHandles(8, '#7')
             #sc.setVrepHandles(9, '#8')
         #sc.renderScene(waitTime = 3000)
-        tf = 4 ## must lager than 3
+        tf = simTime ## must lager than 3
 
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
@@ -226,7 +228,7 @@ def generateData(ep,expert):
 # main
 import saver
 global numRun
-numRun = 101 if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
+numRun = trainEpisode if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
 #if(expert):
 #    numRun = 1
 dataList = [] # This is where the training data will be stored
@@ -276,7 +278,7 @@ for i in range(numRun):
     print('Number of times neural network was selected:', nnn)
     print('Number of times expert model was selected:', nm)
     if(i % 25 == 0 and TRAIN):
-        fcl.save('v13/suhaas_model_v13_dagger_' + str(i) + '.pth')
+        fcl.save('model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(i)+'rounds'+'.pth')
 
     ###################### STATS ###########################
     #xt = 0
@@ -301,7 +303,7 @@ else:
     print('data not stored')
 
 if(TRAIN):
-    fcl.save('v13/suhaas_model_v13_dagger_final_more.pth')
+    fcl.save('model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth')
     print(lossList)
     lossList = np.array(lossList)
     np.save('losslist.npy',lossList)
