@@ -2,7 +2,33 @@
 
 
 Core GNN Library used from: [https://github.com/proroklab/gnn_pathplanning](https://github.com/proroklab/gnn_pathplanning)
-## NEW INSTRUCTIONS
+# INSTRUCTIONS FOR DEVELOPING
+## Installation
+### System requirement
+Ubuntu 18.04LTS\
+Python 3.6
+### Install coppeliaSim
+### Install Dependencies:
+
+```
+pip3 install -r requirements.txt
+```
+****
+## Demos
+### Run demo simulation with default configuration
+```
+python Demo.py
+```
+****
+## Train
+### Training with default configuration
+```
+python Demo-train.py
+```
+****
+
+
+## OLD INSTRUCTIONS
 ### Install Dependencies:
 
 ```
