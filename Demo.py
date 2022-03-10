@@ -22,18 +22,20 @@ import matplotlib.pyplot as plt
 TRAIN = False
 CONTINUE = False
 expert = False
-robotNum = 7
-simTime=4
+robotNum = 4
+simTime=100
 trainEpisode=2
+#modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
+modelname='v13/suhaas_model_v13_dagger_final_more.pth'
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/'+'model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'))
+    fcl.model.load_state_dict(torch.load('models/'+modelname))
     fcl.model.to('cuda')
 if(CONTINUE):
     fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/'+'model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'))
+    fcl.model.load_state_dict(torch.load('models/'+modelname))
     fcl.model.to('cuda')
     print('Loaded model')
 
@@ -278,7 +280,7 @@ for i in range(numRun):
     print('Number of times neural network was selected:', nnn)
     print('Number of times expert model was selected:', nm)
     if(i % 25 == 0 and TRAIN):
-        fcl.save('model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(i)+'rounds'+'.pth')
+        fcl.save(modelname)
 
     ###################### STATS ###########################
     #xt = 0
@@ -303,7 +305,7 @@ else:
     print('data not stored')
 
 if(TRAIN):
-    fcl.save('model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth')
+    fcl.save(modelname)
     print(lossList)
     lossList = np.array(lossList)
     np.save('losslist.npy',lossList)

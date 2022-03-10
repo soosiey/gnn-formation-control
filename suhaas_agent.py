@@ -53,8 +53,14 @@ class Agent():
         a = a.to('cuda')
         self.model.eval()
         self.model.addGSO(S)
-        outs = [self.model(xin,r,a)[index]]
-        print("outs",outs[0].shape)
+
+        #### Set a threshold to eliminate small movements
+        threshold=0.05
+        control=self.model(xin,r,a)[index] ## model output
+        torch.where(control<threshold, 0., control)
+        torch.where(control>-threshold, 0., control)
+        outs = [control]
+        # print("Control",outs)
         return outs
 
     def test1(self, x, S, refs, alphas):
