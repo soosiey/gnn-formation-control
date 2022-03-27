@@ -19,11 +19,11 @@ from suhaas_agent import Agent
 import torch
 import matplotlib.pyplot as plt
 
-TRAIN = False
+TRAIN = True
 CONTINUE = False
-expert = False
+expert = True
 robotNum = 4
-simTime=100
+simTime=4
 trainEpisode=2
 #modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
 modelname='v13/suhaas_model_v13_dagger_final_more.pth'

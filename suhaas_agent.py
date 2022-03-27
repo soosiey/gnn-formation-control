@@ -27,6 +27,7 @@ class Agent():
         self.lr_schedule = {0:.0001, 10:.0001, 20:.0001}
         self.currentAgent = -1
 
+    ### model controller
     def test(self,omlist,index):
         self.currentAgent += 1
         self.currentAgent = self.currentAgent % self.nA
@@ -55,10 +56,10 @@ class Agent():
         self.model.addGSO(S)
 
         #### Set a threshold to eliminate small movements
-        threshold=0.05
+        # threshold=0.05
         control=self.model(xin,r,a)[index] ## model output
-        torch.where(control<threshold, 0., control)
-        torch.where(control>-threshold, 0., control)
+        # torch.where(control<threshold, 0., control)
+        # torch.where(control>-threshold, 0., control)
         outs = [control]
         # print("Control",outs)
         return outs
