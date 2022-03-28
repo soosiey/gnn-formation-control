@@ -334,130 +334,101 @@ class Robot():
     def gnn_control(self,omlist,index):
         ####################### NN CONTROLLER ###########################################
         #################################################################################
-        if self.learnedController is not None:
-            observation, action_1 = self.data.getObservation(-12)
-            # if observation is None:
-            #    action = np.array([[0, 0]])
-            # else:
-            action = self.learnedController(omlist, index)
-            # action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
-            # action = np.array([[0, 0]])
-            action = action[0].cpu().detach().numpy()
-            v1nn = action[0][0]
-            v2nn = action[0][1]
-            # smoothing
-            self.ctrl1_sm.append(v1nn)
-            self.ctrl2_sm.append(v2nn)
-            if len(self.ctrl1_sm) < 10:
-                v1nn = sum(self.ctrl1_sm) / len(self.ctrl1_sm)
-                v2nn = sum(self.ctrl2_sm) / len(self.ctrl2_sm)
-            else:
-                v1nn = sum(self.ctrl1_sm[len(self.ctrl1_sm) - 10:len(self.ctrl1_sm)]) / 10
-                v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm) - 10:len(self.ctrl2_sm)]) / 10
 
-            # stopping condition
+        observation, action_1 = self.data.getObservation(-12)
+        # if observation is None:
+        #    action = np.array([[0, 0]])
+        # else:
+        action = self.learnedController(omlist, index)
+        # action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
+        # action = np.array([[0, 0]])
+        action = action[0].cpu().detach().numpy()
+        v1nn = action[0][0]
+        v2nn = action[0][1]
+        # smoothing
+        self.ctrl1_sm.append(v1nn)
+        self.ctrl2_sm.append(v2nn)
+        if len(self.ctrl1_sm) < 10:
+            v1nn = sum(self.ctrl1_sm) / len(self.ctrl1_sm)
+            v2nn = sum(self.ctrl2_sm) / len(self.ctrl2_sm)
+        else:
+            v1nn = sum(self.ctrl1_sm[len(self.ctrl1_sm) - 10:len(self.ctrl1_sm)]) / 10
+            v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm) - 10:len(self.ctrl2_sm)]) / 10
 
-            current_position = (self.xi.xp ** 2 + self.xi.yp ** 2) ** 0.5
-            self.position_hist.append(current_position)
-            hist_len = len(self.position_hist)
-            lcheck = 10
-            if (hist_len > 100):
-                currhist = self.position_hist[-1 * lcheck:]
-                if (not self.checkMove(currhist, num=lcheck, thresh=.00001)):
-                    v1nn = 0
-                    v2nn = 0
-                # for pos in range(1,len(currhist)):
-                #    if(abs(currhist[pos] - currhist[pos - 1]) > .005):
-                #        moving = True
-                # if(not moving):
-                #        print('stopped')
-                #        v1nn = 0
-                #        v2nn = 0
-                # if(abs(self.position_hist[hist_len - 1] - self.position_hist[hist_len-2]) / self.position_hist[hist_len-1] < .0001):
-                #    v1nn = 0
-                #    v2nn = 0
-            ### post-processing ###
+        # stopping condition
 
-
-            vmax = self.control_vmax  # wheel's max linear speed in m/s
-            vmin = self.control_vmin  # wheel's min linear speed in m/s
-
-            # Find the factor for converting linear speed to angular speed
-            if math.fabs(v2nn) >= math.fabs(v1nn) and math.fabs(v2nn) > vmax:
-                alpha = vmax / math.fabs(v2nn)
-            elif math.fabs(v2nn) < math.fabs(v1nn) and math.fabs(v1nn) > vmax:
-                alpha = vmax / math.fabs(v1nn)
-            else:
-                alpha = 1
-            v1nn = alpha * v1nn
-            v2nn = alpha * v2nn
-            if math.fabs(v1nn) < vmin:
+        current_position = (self.xi.xp ** 2 + self.xi.yp ** 2) ** 0.5
+        self.position_hist.append(current_position)
+        hist_len = len(self.position_hist)
+        lcheck = 10
+        if (hist_len > 100):
+            currhist = self.position_hist[-1 * lcheck:]
+            if (not self.checkMove(currhist, num=lcheck, thresh=.00001)):
                 v1nn = 0
-            if math.fabs(v2nn) < vmin:
                 v2nn = 0
+            # for pos in range(1,len(currhist)):
+            #    if(abs(currhist[pos] - currhist[pos - 1]) > .005):
+            #        moving = True
+            # if(not moving):
+            #        print('stopped')
+            #        v1nn = 0
+            #        v2nn = 0
+            # if(abs(self.position_hist[hist_len - 1] - self.position_hist[hist_len-2]) / self.position_hist[hist_len-1] < .0001):
+            #    v1nn = 0
+            #    v2nn = 0
+        ### post-processing ###
 
-            # Limit maximum acceleration (deprecated)
 
-            if self.LIMIT_MAX_ACC:
-                dvMax =  self.accMax * self.scene.dt
+        vmax = self.control_vmax  # wheel's max linear speed in m/s
+        vmin = self.control_vmin  # wheel's min linear speed in m/s
 
-                # limit v1nn
-                dv1nn = v1nn - self.v1Desirednn
-                if dv1nn > dvMax:
-                    self.v1Desirednn += dvMax
-                elif dv1nn < -dvMax:
-                    self.v1Desirednn -= dvMax
-                else:
-                    self.v1Desirednn = v1nn
-                v1nn = self.v1Desired
+        # Find the factor for converting linear speed to angular speed
+        if math.fabs(v2nn) >= math.fabs(v1nn) and math.fabs(v2nn) > vmax:
+            alpha = vmax / math.fabs(v2nn)
+        elif math.fabs(v2nn) < math.fabs(v1nn) and math.fabs(v1nn) > vmax:
+            alpha = vmax / math.fabs(v1nn)
+        else:
+            alpha = 1
+        v1nn = alpha * v1nn
+        v2nn = alpha * v2nn
+        if math.fabs(v1nn) < vmin:
+            v1nn = 0
+        if math.fabs(v2nn) < vmin:
+            v2nn = 0
+        v1nn=1
+        v2nn=1
+        # Limit maximum acceleration (deprecated)
 
-                # limit v2nn
-                dv2nn = v2nn - self.v2Desirednn
-                if dv2nn > dvMax:
-                    self.v2Desirednn += dvMax
-                elif dv2nn < -dvMax:
-                    self.v2Desirednn -= dvMax
-                else:
-                    self.v2Desirednn = v2nn
-                v2nn = self.v2Desirednn
-            elif not  self.LIMIT_MAX_ACC:
+        if self.LIMIT_MAX_ACC:
+            dvMax =  self.accMax * self.scene.dt
+
+            # limit v1nn
+            dv1nn = v1nn - self.v1Desirednn
+            if dv1nn > dvMax:
+                self.v1Desirednn += dvMax
+            elif dv1nn < -dvMax:
+                self.v1Desirednn -= dvMax
+            else:
                 self.v1Desirednn = v1nn
+            v1nn = self.v1Desired
+
+            # limit v2nn
+            dv2nn = v2nn - self.v2Desirednn
+            if dv2nn > dvMax:
+                self.v2Desirednn += dvMax
+            elif dv2nn < -dvMax:
+                self.v2Desirednn -= dvMax
+            else:
                 self.v2Desirednn = v2nn
+            v2nn = self.v2Desirednn
+        elif not self.LIMIT_MAX_ACC:
+            self.v1Desirednn = v1nn
+            self.v2Desirednn = v2nn
+
         return v1nn,v2nn
     def control(self,omlist,index):
         v1,v2=self.expert_control(omlist,index)
         v1nn,v2nn=self.gnn_control(omlist,index)
-
-
-        # Limit maximum acceleration (deprecated)
-
-        if  self.LIMIT_MAX_ACC:
-
-            dvMax =  self.accMax * self.scene.dt
-
-            # limit v1
-            dv1 = v1 - self.v1Desired
-            if dv1 > dvMax:
-                self.v1Desired += dvMax
-            elif dv1 < -dvMax:
-                self.v1Desired -= dvMax
-            else:
-                self.v1Desired = v1
-            v1 = self.v1Desired
-
-            # limit v2
-            dv2 = v2 - self.v2Desired
-            if dv2 > dvMax:
-                self.v2Desired += dvMax
-            elif dv2 < -dvMax:
-                self.v2Desired -= dvMax
-            else:
-                self.v2Desired = v2
-            v2 = self.v2Desired
-        elif not  self.LIMIT_MAX_ACC:
-            self.v1Desired = v1
-            self.v2Desired = v2
-
 
         # Record data
         if (self.scene.vrepConnected and
@@ -480,7 +451,9 @@ class Robot():
         exp = max(0,exp)
         beta = p**(exp)  # Dagger algorithm paper, page 4
         model_controller = np.random.binomial(1, beta)
-        TRAIN = False
+
+        ## Control Training or not
+        TRAIN = True
         DAGGER = True
         if (model_controller and TRAIN) or (not DAGGER):
             #print('\n Model-based control seleceted')
@@ -493,14 +466,17 @@ class Robot():
 
 
         if self.scene.vrepConnected:
-            omega1 = v1 * 10.25
-            omega2 = v2 * 10.25
+            # omega1 = v1 * 10.25
+            # omega2 = v2 * 10.25
+            omega1 = v1
+            omega2 = v2
             # return angular speeds of the two wheels
             self.nnv1 = omega1
             self.nnv2 = omega2
 
-            return omega1, omega2
+
             # return omega1/5, omega2/5
+            return omega1, omega2
         else:
             # return linear speeds of the two wheels
             return v1, v2

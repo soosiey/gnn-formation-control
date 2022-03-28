@@ -144,8 +144,6 @@ class DecentralPlannerNet(nn.Module):
         self.apply(weights_init)
 
 
-
-
     def addGSO(self, S):
 
         # We add the GSO on real time, this GSO also depends on time and has
