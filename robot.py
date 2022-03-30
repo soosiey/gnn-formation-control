@@ -52,6 +52,7 @@ class Robot():
         self.kV = 3.8
         self.gamma = 0.15
         self.p=0.8
+        self.model_controller=False
 
         #
         self.pointCloud = PointCloud(self)

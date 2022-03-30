@@ -88,8 +88,9 @@ class Scene():
         self.log('A new scene is created for run #' + str(runNum))
 
     def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),
-                 role = 1, learnedController = None):
+                 role = 1,model_controller=False, learnedController = None):
         robot = Robot(self,nr)
+
         robot.index = len(self.robots)
 
         robot.role = role
@@ -104,7 +105,7 @@ class Scene():
         robot.xid0.y = arg[1, 1]
         robot.xid0.theta = arg[1, 2]
         robot.dynamics = self.dynamics
-
+        robot.model_controller=model_controller
         if self.dynamics >=20 and self.dynamics <= 25:
             robot.arg2 = arg2
 
