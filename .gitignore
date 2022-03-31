@@ -15,6 +15,7 @@ vrepConst.py
 *.avi
 *.eps
 *.pdf
+*.npy
 bin/
 lib/
 *.png
