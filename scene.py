@@ -88,8 +88,9 @@ class Scene():
         self.log('A new scene is created for run #' + str(runNum))
 
     def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),
-                 role = 1, learnedController = None):
+                 role = 1,model_controller=False, learnedController = None):
         robot = Robot(self,nr)
+
         robot.index = len(self.robots)
 
         robot.role = role
@@ -104,7 +105,7 @@ class Scene():
         robot.xid0.y = arg[1, 1]
         robot.xid0.theta = arg[1, 2]
         robot.dynamics = self.dynamics
-
+        robot.model_controller=model_controller
         if self.dynamics >=20 and self.dynamics <= 25:
             robot.arg2 = arg2
 
@@ -273,12 +274,11 @@ class Scene():
         elif self.dynamics >= 16 and self.dynamics <= 18:
             xbar = 0
             ybar = 0
-            self.robots[0].setPosition([-1.83938265,  0.24249859,0])
-            self.robots[1].setPosition([ 1.59194398, -0.86264265,0])
-            self.robots[2].setPosition([ 2.48446083,  1.84220445,0])
+            # self.robots[0].setPosition([-1.83938265,  0.24249859,0])
+            # self.robots[1].setPosition([ 1.59194398, -0.86264265,0])
+            # self.robots[2].setPosition([ 2.48446083,  1.84220445,0])
             # self.robots[3].setPosition([-3.02479005,  3.31855512,0])
             # self.robots[4].setPosition([ 2.1342206 , -3.21711802,0])
-            return
             for i in range(0, len(self.robots)):
                 while True:
                     minDij = float("inf")

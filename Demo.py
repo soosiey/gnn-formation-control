@@ -19,14 +19,14 @@ from suhaas_agent import Agent
 import torch
 import matplotlib.pyplot as plt
 
-TRAIN = False
+TRAIN = True
 CONTINUE = False
-expert = False
+expert = True
 robotNum = 4
-simTime=100
-trainEpisode=2
-#modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
-modelname='v13/suhaas_model_v13_dagger_final_more.pth'
+simTime=5
+trainEpisode=4
+modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
+# modelname='v13/suhaas_model_v13_dagger_final_more.pth'
 global positionList
 fcl = Agent(inW = 100, inH = 100, nA = robotNum)
 if(not TRAIN):
@@ -132,13 +132,10 @@ def generateData(ep,expert):
         # change the # of instantiations according to "robotNum"
         if sc.SENSOR_TYPE == "None":
             sc.setVrepHandles(0, '')
-            sc.setVrepHandles(1, '#0')
-            sc.setVrepHandles(2, '#1')
-            sc.setVrepHandles(3, '#2')
-            sc.setVrepHandles(4, '#3')
-            sc.setVrepHandles(5, '#4')
-            sc.setVrepHandles(6, '#5')
-            sc.setVrepHandles(7, '#6')
+            for i in range(1,robotNum+1):
+                sc.setVrepHandles(i, '#'+str(i))
+            # sc.setVrepHandles(1, '#0')
+
         elif sc.SENSOR_TYPE == "VPL16":
             sc.objectNames.append('velodyneVPL_16') # _ptCloud
             for i in range(robotNum):
@@ -147,16 +144,7 @@ def generateData(ep,expert):
                 if(i >= 1):
                     s += '#'+str(checkn)
                 sc.setVrepHandles(i,s)
-            #sc.setVrepHandles(0, '')
-            #sc.setVrepHandles(1, '#0')
-            #sc.setVrepHandles(2, '#1')
-            #sc.setVrepHandles(3, '#2')
-            #sc.setVrepHandles(4, '#3')
-            #sc.setVrepHandles(5, '#4')
-            #sc.setVrepHandles(6, '#5')
-            #sc.setVrepHandles(7, '#6')
-            #sc.setVrepHandles(8, '#7')
-            #sc.setVrepHandles(9, '#8')
+
         #sc.renderScene(waitTime = 3000)
         tf = simTime ## must lager than 3
 
@@ -165,10 +153,10 @@ def generateData(ep,expert):
         sc.resetPosition(5)
         #sc.resetPosition(None)
 
-        #sc.robots[0].setPosition([.0, .0, .0])
-        #sc.robots[1].setPosition([-2.0, 0.001, 0.0])
-        #sc.robots[2].setPosition([2.0, 0.0, 0.0])
-
+        # sc.robots[0].setPosition([.0, .0, math.pi/2])
+        # sc.robots[1].setPosition([1.0, 0.0, math.pi/2])
+        # sc.robots[2].setPosition([2.0, 0.0, math.pi/2])
+        # sc.robots[3].setPosition([3.0, 0.0, math.pi/2])
         #sc.robots[0].setPosition([.0, .0, .0])
         #sc.robots[1].setPosition([-3.0, 4.0, 0.0])
         #sc.robots[2].setPosition([2.0, 1.0, 0.0])

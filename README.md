@@ -8,13 +8,22 @@ Core GNN Library used from: [https://github.com/proroklab/gnn_pathplanning](http
 Ubuntu 18.04LTS\
 Python 3.6
 ### Install coppeliaSim
+https://coppeliarobotics.com/downloads
 ### Install Dependencies:
 
 ```
 pip3 install -r requirements.txt
 ```
 ****
+
+
 ## Demos
+### Start coppeliasim 
+```
+./"path to coppeliasim"/coppeliaSim.sh
+```
+### Open scene_demo.ttt(in scene folder) in coppeliaSim
+Always make sure the number of robots in the simulator equals to the number of robot in Demo.py
 ### Run demo simulation with default configuration
 ```
 python Demo.py
@@ -23,7 +32,7 @@ python Demo.py
 ## Train
 ### Training with default configuration
 ```
-python Demo-train.py
+python Train.py
 ```
 ****
 
