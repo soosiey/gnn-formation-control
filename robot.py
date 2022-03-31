@@ -144,7 +144,7 @@ class Robot():
         self.xi.transform()
         self.xid.transform()
         self.updateNeighbors()
-
+#### Set the linear velocity of 2 wheels
     def propagate(self,omega1,omega2):
         if self.scene.vrepConnected == False:
             self.xi.propagate(self.control)
@@ -508,7 +508,7 @@ class Robot():
             else:
                 cv2.line(image, tuple(p1Pix[0]), tuple(p2Pix[0]), color)
                 cv2.line(image, tuple(p0Pix[0]), tuple(p3Pix[0]), color)
-
+#### Set one robot's Position and Orientation
     def setPosition(self, stateVector = None):
         # stateVector = [x, y, theta]
 
@@ -535,7 +535,7 @@ class Robot():
         message = "Robot #" + str(self.index) + "'s pose is set to "
         message += "[{0:.3f}, {1:.3f}, {2:.3f}]".format(x0, y0, theta0)
         self.scene.log(message)
-
+#### Get one robot's Position, Orientation and Lidar reading
     def readSensorData(self):
         if self.scene.vrepConnected == False:
             return

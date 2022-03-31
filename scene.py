@@ -94,7 +94,7 @@ class Scene():
         robot.index = len(self.robots)
 
         robot.role = role
-        robot.learnedController = learnedController
+
         robot.xi.x = arg[0, 0]
         robot.xi.y = arg[0, 1]
         robot.xi.theta = arg[0, 2]
@@ -106,6 +106,7 @@ class Scene():
         robot.xid0.theta = arg[1, 2]
         robot.dynamics = self.dynamics
         robot.model_controller=model_controller
+        robot.learnedController = learnedController
         if self.dynamics >=20 and self.dynamics <= 25:
             robot.arg2 = arg2
 
@@ -154,7 +155,7 @@ class Scene():
                 ADjMatrix = np.append(ADjMatrix, dij)
         return ADjMatrix.reshape(1,len(self.robots)*len(self.robots))
 
-
+#### Connections with Vrep via localhost port
     def initVrep(self):
         print ('Program started')
         vrep.simxFinish(-1) # just in case, close all opened connections
@@ -174,7 +175,7 @@ class Scene():
             print ("Failed connecting to remote API server")
             raise Exception("Failed connecting to remote API server")
         self.dt = 0.05
-
+#### Get Vrep handles from simulator and pass them to robot.py. Handle group of parameters in simulator to define robot and sensor.
     def setVrepHandles(self, robotIndex, handleNameSuffix = ""):
         if self.vrepConnected == False:
             return False
@@ -316,8 +317,6 @@ class Scene():
         #input('One moment.')
         # End of resetPosition()
 
-
-
     def scaleDesiredFormation(self, alpha):
         self.alpha = alpha
         for robot in self.robots:
@@ -367,7 +366,7 @@ class Scene():
             self.xid.dpbarx = -self.xid.vRefMag * math.cos(self.xid.vRefAng + self.t * omega)
             self.xid.dpbary = -self.xid.vRefMag * math.sin(self.xid.vRefAng + self.t * omega)
             #print('dpbarx: ', self.xid.dpbarx, ', dpbary: ', self.xid.dpbary)
-
+#### Simulate for one simulation time step. Get sensor data, calculate control, simulate robot's movements
     def simulate(self):
         # vrep related
         '''
