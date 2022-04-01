@@ -37,6 +37,6 @@ def load(count):
     with open(path, 'rb') as f:
         sc = pickle.load(f)
         return sc
-    
+
     
     
