@@ -17,27 +17,114 @@ import random
 #from DeepFCL import DeepFCL
 from suhaas_agent import Agent
 import torch
+import saver
 import matplotlib.pyplot as plt
 
-TRAIN = True
-CONTINUE = False
-expert = True
-robotNum = 4
-simTime=5
-trainEpisode=4
-modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
-# modelname='v13/suhaas_model_v13_dagger_final_more.pth'
-global positionList
-fcl = Agent(inW = 100, inH = 100, nA = robotNum)
-if(not TRAIN):
-    fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/'+modelname))
-    fcl.model.to('cuda')
-if(CONTINUE):
-    fcl.model.to('cpu')
-    fcl.model.load_state_dict(torch.load('models/'+modelname))
-    fcl.model.to('cuda')
-    print('Loaded model')
+
+import argparse
+parser = argparse.ArgumentParser(description='Args for demo')
+parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
+parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
+parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
+parser.add_argument('--robotNum', dest='robotNum', default=4,type=int,help='Number of robot for simulation')
+parser.add_argument('--simTime', dest='simTime', default=5,type=int,help='Simulation time for one simulation')
+parser.add_argument('--trainEpisode', dest='trainEpisode', default=4,type=int,help='Episode for training')
+parser.add_argument('--modelName', dest='modelName', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
+# # modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
+args = parser.parse_args()
+print(args.trainEpisode)
+
+
+
+def demo_one(args):
+    #### store robot pose
+    numRun = args.trainEpisode if args.if_train else 1
+
+    positionList = [[] for n in range(numRun)]
+    #### training data will be stored
+    dataList = []
+
+    lossList = []
+    sc = None
+
+    numRun = args.trainEpisode if args.if_train else 1
+
+    #### Initial Agent
+    fcl = Agent(inW=100, inH=100, nA=args.robotNum)
+    if (not args.if_train):
+        fcl.model.to('cpu')
+        fcl.model.load_state_dict(torch.load('models/' + args.modelName))
+        fcl.model.to('cuda')
+    if (args.if_continue):
+        fcl.model.to('cpu')
+        fcl.model.load_state_dict(torch.load('models/' + args.modelName))
+        fcl.model.to('cuda')
+        print('Loaded model')
+    for i in range(numRun):
+        print(lossList)
+        print('Episode:', i + 1)
+        ##########################################################################
+        ######## Step 1: Start simulation rollouts to get training data ##########
+        ##########################################################################
+
+        dataListEpisode = []
+        # First episode
+        sc0 = generateData(args, fcl,i,positionList)
+        if sc0 is not None:
+            # if the list is not empty
+            sc = sc0
+            saver.save(sc)  # save data
+            for robot in sc.robots:
+                dataListEpisode.append(robot.data)
+            if not dataList:
+                for robot in sc.robots:
+                    dataList.append(robot.data)
+            else:
+                for j in range(len(sc.robots)):
+                    dataList[j].append(sc.robots[j].data)
+                    dataListEpisode[j].append(sc.robots[j].data)
+        for j in range(1, len(sc.robots)):
+            dataListEpisode[0].append(dataList[j])
+
+        ##########################################################################
+        ##### Step 2: Start training the NN model (e.g., supervised learning) #####
+        ##########################################################################
+        if (args.if_train):
+            l = fcl.train(dataListEpisode)
+            lossList.append(l)
+
+        nnn = 0
+        nm = 0
+        for robot in sc.robots:
+            nnn += robot.numNN
+            nm += robot.numMod
+        print('Number of times neural network was selected:', nnn)
+        print('Number of times expert model was selected:', nm)
+        if (i % 25 == 0 and args.if_train):
+            fcl.save(args.modelname)
+
+        ###################### STATS ###########################
+        # xt = 0
+        # yt = 0
+        # for r in range(len(sc.robots)):
+        #    xt += sc.robots[r].xi.x
+        #    yt += sc.robots[r].xi.y
+        #    print('Robot',r,': (',sc.robots[r].xi.x,',',sc.robots[r].xi.y,')')
+        #    positionList[i].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
+        # xt = xt / len(sc.robots)
+        # yt = yt / len(sc.robots)
+        # print('Center: (',xt,',',yt,')')
+    positionList = np.array(positionList)
+    np.save('positionLists/' + 'positionList_expert_' + str(args.robotNum) + '_singles.npy', positionList)
+    if sc:
+        print('data stored')
+        print(sc.dt)
+        for j in range(1, len(sc.robots)):
+            dataList[0].append(dataList[j])
+        dataList[0].store()
+    else:
+        print('data not stored')
+
 
 def initRef(sc, i):
     if sc.dynamics == sc.DYNAMICS_MODEL_BASED_LINEAR:
@@ -93,21 +180,21 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     #sp.plot(5, tf)
     sp.plot(6, tf,expert=expert)
 
-def generateData(ep,expert):
-    if(CONTINUE):
-        ep -=trainEpisode
+def generateData(args,agent,ep,positionList):
+    if(args.if_continue):
+        ep -=args.if_trainEpisode
     sc = Scene(fileName = __file__, recordData = True, runNum = ep)
     sp = ScenePlot(sc)
     sp.saveEnabled = True # save plots?
-    global numRun
-    global positionList
+    # global numRun
+    # global positionList
     #sc.occupancyMapType = sc.OCCUPANCY_MAP_THREE_CHANNEL
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
     sc.dynamics = sc.DYNAMICS_MODEL_BASED_DISTANCE2_REFVEL # robot dynamics
     sc.errorType = 0
     try:
-        for i in range(robotNum):
-            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),robotNum, role = sc.ROLE_PEER, learnedController = fcl.test)
+        for i in range(args.robotNum):
+            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum, role = sc.ROLE_PEER, learnedController = agent.test)
 
 #==============================================================================
 #         sc.addRobot(np.float32([[1, 3, 0], [0, -1, 0]]),
@@ -116,8 +203,8 @@ def generateData(ep,expert):
 #==============================================================================
 
         # No leader
-        I = np.identity(robotNum, dtype=np.int8)
-        M = np.ones(robotNum, dtype=np.int8)
+        I = np.identity(args.robotNum, dtype=np.int8)
+        M = np.ones(args.robotNum, dtype=np.int8)
         sc.setADjMatrix(M-I)
 
         # Set robot 0 as the leader.
@@ -132,13 +219,13 @@ def generateData(ep,expert):
         # change the # of instantiations according to "robotNum"
         if sc.SENSOR_TYPE == "None":
             sc.setVrepHandles(0, '')
-            for i in range(1,robotNum+1):
+            for i in range(1,args.robotNum+1):
                 sc.setVrepHandles(i, '#'+str(i))
             # sc.setVrepHandles(1, '#0')
 
         elif sc.SENSOR_TYPE == "VPL16":
             sc.objectNames.append('velodyneVPL_16') # _ptCloud
-            for i in range(robotNum):
+            for i in range(args.robotNum):
                 checkn = i - 1
                 s = ''
                 if(i >= 1):
@@ -146,7 +233,7 @@ def generateData(ep,expert):
                 sc.setVrepHandles(i,s)
 
         #sc.renderScene(waitTime = 3000)
-        tf = simTime ## must lager than 3
+        tf = args.simTime ## must lager than 3
 
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
@@ -164,7 +251,7 @@ def generateData(ep,expert):
         # Fixed initial position
         #sc.robots[0].setPosition([0.0, 0.0, math.pi/2])
         #sc.robots[1].setPosition([-2.2, -1.0, 0.3])
-        sp.plot(4, tf,expert=expert)
+        sp.plot(4, tf,expert=args.expert_only)
 
         while sc.simulate():
             for r in range(len(sc.robots)):
@@ -185,7 +272,7 @@ def generateData(ep,expert):
                     errorCheckerEnabled = False
                     print('Ending in ', str(tExtra), ' seconds...')
 
-            plot(sp, tf,expert=expert)
+            plot(sp, tf,expert=args.expert_only)
             if sc.t > tf:
                 message = "maxAbsError = {0:.3f} m".format(maxAbsError)
                 sc.log(message)
@@ -213,98 +300,6 @@ def generateData(ep,expert):
     else:
         return None
 
-
-
-# main
-import saver
-global numRun
-numRun = trainEpisode if TRAIN else 1 # This is to set the number of iterations of the Dagger algorithm
-#if(expert):
-#    numRun = 1
-dataList = [] # This is where the training data will be stored
-sc = None
-#fcl.init_test()
-lossList = []
-
-positionList = [[] for n in range(numRun)]
-for i in range(numRun):
-    print(lossList)
-    print('Episode:', i+1)
-    ##########################################################################
-    ######## Step 1: Start simulation rollouts to get training data ##########
-    ##########################################################################
-
-    dataListEpisode = []
-    # First episode
-    sc0 = generateData(i,expert)
-    if sc0 is not None:
-        # if the list is not empty
-        sc = sc0
-        saver.save(sc) # save data
-        for robot in sc.robots:
-            dataListEpisode.append(robot.data)
-        if not dataList:
-            for robot in sc.robots:
-                dataList.append(robot.data)
-        else:
-            for j in range(len(sc.robots)):
-                dataList[j].append(sc.robots[j].data)
-                dataListEpisode[j].append(sc.robots[j].data)
-    for j in range(1, len(sc.robots)):
-        dataListEpisode[0].append(dataList[j])
-
-    ##########################################################################
-    ##### Step 2: Start training the NN model (e.g., supervised learning) #####
-    ##########################################################################
-    if(TRAIN):
-        l = fcl.train(dataListEpisode)
-        lossList.append(l)
-
-    nnn = 0
-    nm = 0
-    for robot in sc.robots:
-        nnn += robot.numNN
-        nm += robot.numMod
-    print('Number of times neural network was selected:', nnn)
-    print('Number of times expert model was selected:', nm)
-    if(i % 25 == 0 and TRAIN):
-        fcl.save(modelname)
-
-    ###################### STATS ###########################
-    #xt = 0
-    #yt = 0
-    #for r in range(len(sc.robots)):
-    #    xt += sc.robots[r].xi.x
-    #    yt += sc.robots[r].xi.y
-    #    print('Robot',r,': (',sc.robots[r].xi.x,',',sc.robots[r].xi.y,')')
-    #    positionList[i].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
-    #xt = xt / len(sc.robots)
-    #yt = yt / len(sc.robots)
-    #print('Center: (',xt,',',yt,')')
-positionList = np.array(positionList)
-np.save('positionLists/'+'positionList_expert_'+str(robotNum)+'_singles.npy',positionList)
-if sc:
-    print('data stored')
-    print(sc.dt)
-    for j in range(1, len(sc.robots)):
-        dataList[0].append(dataList[j])
-    dataList[0].store()
-else:
-    print('data not stored')
-
-if(TRAIN):
-    fcl.save(modelname)
-    print(lossList)
-    lossList = np.array(lossList)
-    np.save('losslist.npy',lossList)
-    plt.figure()
-    plt.plot(lossList)
-    plt.xlabel('Episode')
-    plt.ylabel('Loss')
-    plt.title('Loss over training episodes')
-    plt.savefig('losslist.pdf')
-    plt.show()
-#for j in range(len(sc.robots)):
-#    dataList[j].store()
+demo_one(args)
 
 

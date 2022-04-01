@@ -104,6 +104,7 @@ class Robot():
             self.xid.vyp = self.xid.vy + c * math.cos(self.xid.theta) * omega
         elif self.dynamics == 16:
             # Linear desired trajectory
+
             t = self.scene.t
             #dt = self.scene.dt
             x = self.scene.xid.x
@@ -454,16 +455,21 @@ class Robot():
         model_controller = np.random.binomial(1, beta)
 
         ## Control Training or not
-        TRAIN = True
-        DAGGER = True
+        TRAIN = False
+        DAGGER = False
         if (model_controller and TRAIN) or (not DAGGER):
-            #print('\n Model-based control seleceted')
-            self.numMod += 1
+            model_controller=False
         else:
+            model_controller=True
+        #### decide to use which controller
+        model_controller=False
+        if model_controller:
             v1 = v1nn
             v2 = v2nn
-            #print('\n NN control selected')
+            # print('\n NN control selected')
             self.numNN += 1
+        else:
+            self.numMod += 1
 
 
         if self.scene.vrepConnected:
