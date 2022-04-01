@@ -176,9 +176,13 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     elif sp.sc.dynamics == 14:
         sp.plot(22, tf) # distances from goals
     sp.plot(2,tf,expert=expert)
+    sp.plot(3, tf, expert=expert)
     sp.plot(4, tf,expert=expert)
-    #sp.plot(5, tf)
+    sp.plot(5, tf,expert=expert)
     sp.plot(6, tf,expert=expert)
+    sp.plot(7, tf, expert=expert)
+    sp.plot(8, tf, expert=expert)
+    sp.plot(9, tf, expert=expert)
 
 def generateData(args,agent,ep,positionList):
     if(args.if_continue):
