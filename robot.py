@@ -77,7 +77,7 @@ class Robot():
         self.ctrl2_sm = []
 
         self.position_hist = []
-
+##### pending decide
     def propagateDesired(self):
         if self.dynamics == 5:
             pass
@@ -146,6 +146,7 @@ class Robot():
         self.xid.transform()
         self.updateNeighbors()
 #### Set the linear velocity of 2 wheels
+##### move to scene and merger with simulate
     def propagate(self,omega1,omega2):
         if self.scene.vrepConnected == False:
             self.xi.propagate(self.control)
@@ -156,13 +157,14 @@ class Robot():
             vrep.simxSetJointTargetVelocity(self.scene.clientID,
                                             self.motorRightHandle,
                                             omega2, vrep.simx_opmode_oneshot)
-
+##### move to scene and merger with simulate
     def setControl(self,omlist,i):
         if self.scene.vrepConnected == False:
             self.xi.propagate(self.control)
         else:
             omega1, omega2 = self.control(omlist,i)
             return omega1,omega2
+##### merge with update_state
     def updateNeighbors(self):
         self.neighbors = []
         self.leader = None
@@ -489,6 +491,7 @@ class Robot():
             return v1, v2
 
     def draw(self, image, drawType):
+        #### maybe useless
         if drawType == 1:
             xi = self.xi
             #color = (0, 0, 255)
@@ -515,6 +518,7 @@ class Robot():
                 cv2.line(image, tuple(p1Pix[0]), tuple(p2Pix[0]), color)
                 cv2.line(image, tuple(p0Pix[0]), tuple(p3Pix[0]), color)
 #### Set one robot's Position and Orientation
+##### (rewirte to update_state) merge with updateNeighbors
     def setPosition(self, stateVector = None):
         # stateVector = [x, y, theta]
 
@@ -542,6 +546,7 @@ class Robot():
         message += "[{0:.3f}, {1:.3f}, {2:.3f}]".format(x0, y0, theta0)
         self.scene.log(message)
 #### Get one robot's Position, Orientation and Lidar reading
+##### rewrite to communicate with scene
     def readSensorData(self):
         if self.scene.vrepConnected == False:
             return

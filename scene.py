@@ -86,7 +86,7 @@ class Scene():
         self.logFileName = os.path.splitext(fileName)[0] + ".log"
         self.runNum = runNum
         self.log('A new scene is created for run #' + str(runNum))
-
+##### merge with resetPosition,scaleDesiredFormation
     def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),
                  role = 1,model_controller=False, learnedController = None):
         robot = Robot(self,nr)
@@ -133,11 +133,12 @@ class Scene():
             message += "a leanrned controller"
         message += " is added to the scene"
         self.log(message)
-
+#####(rewrite)
     def setADjMatrix(self, adjMatrix):
         self.adjMatrix = adjMatrix
         self.Laplacian = np.diag(np.sum(self.adjMatrix, axis = 1))
 
+    #####(rewrite)
     #get latest communication graph according to robot positions (add for gnn)
     def readADjMatrix(self, MaxRange):
         ADjMatrix = np.zeros((0,len(self.robots)),dtype=np.float32)
@@ -234,7 +235,7 @@ class Scene():
 
         #self.robots[robotIndex].setPosition()
         self.robots[robotIndex].readSensorData()
-
+#####(merge with addRobot)
     def resetPosition(self, radius = 2):
         if radius is None:
             for i in range(0, len(self.robots)):
@@ -317,6 +318,7 @@ class Scene():
         #input('One moment.')
         # End of resetPosition()
 
+#####(merge with addRobot)
     def scaleDesiredFormation(self, alpha):
         self.alpha = alpha
         for robot in self.robots:
@@ -326,6 +328,7 @@ class Scene():
             robot.xid.y *= alpha
 
     def propagateXid(self):
+        #### For simulate()
         t = self.t
         dt = self.dt
         sDot = 0
@@ -401,6 +404,7 @@ class Scene():
             return True
 
     def calcCOG(self):
+        #### For simulate()
         # Calculate Center Of Gravity
         for i in range(len(self.robots)):
             x = self.robots[i].xi.x
@@ -420,6 +424,7 @@ class Scene():
         self.centerTraj[-1, :] /= len(self.robots)
 
     def renderScene(self, timestep = -1, waitTime = 25, mode = 0):
+        #### mayby useless
         if USE_CV2 == False:
             return
         self.image = np.zeros((self.hPix, self.wPix, 3), np.uint8)
@@ -436,7 +441,7 @@ class Scene():
 
 
     def getRobotColor(self, i, brightness = 0.7, reverse = False):
-
+        #### maybe useless
         if i == 0:
             c = (brightness, 0, 0)
         elif i == 1:
@@ -453,6 +458,7 @@ class Scene():
             return c
 
     def showOccupancyMap(self, waitTime = 25):
+        #### maybe useless
         if USE_CV2 == False:
             return
         pc = self.robots[0].pointCloud
@@ -521,7 +527,7 @@ class Scene():
         else:
             return None
 
-
+#####
     def deallocate(self):
         self.log("Scene is destructed")
         if USE_CV2 == True:
