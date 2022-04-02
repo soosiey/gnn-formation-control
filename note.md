@@ -1,8 +1,17 @@
 # Note
 
+## Robot related 
+
 + **Robot Position**:  sc.robots[0].setPosition [x(m),y(m),theta(rad)]
 + **Robot velocity**: v1,v2,v1nn,v2nn(linear velocity)
-
+## File functions
++ **scene.py**  
+(not yet finished) Middleware between robot controller and simulation(Vrep).  
+Define the overall scene for simulation.  
++ **robot.py**  
+(not yet finished) Define the robot related parameters and functions.
++ **saver.py**  
+Save the scene class. Save the robots' states of one simulation(pose,speed,wheel speed)
 ## API interface
 
 1. **sim.py**  
@@ -51,6 +60,9 @@
         Set one robot's Position and Orientation.
     3. readSensorData  
         Get one robot's Position, Orientation and Lidar reading.
+
+
+
 #### Author Xinchi Huang
 
 

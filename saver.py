@@ -8,10 +8,12 @@ Created on Tue Feb 20 18:33:11 2018
 # save scene
 import pickle
 import os
+import numpy as np
 
 directory = 'data_scene'
 
-def save(sc):
+#### Save the scene class to a pkl file
+def save_scene(sc):
     if not os.path.exists(directory):
         os.makedirs(directory)
     count = 0
@@ -31,7 +33,11 @@ def save(sc):
     with open(path, 'wb') as f:
         pickle.dump(sc, f)
     sc.log("Scene is written to " + path + '\n')
-    
+#### Save the robots states of one simulation to a npy file
+def save_states(sc):
+    print(sc)
+def save(sc):
+    save_scene(sc)
 def load(count):
     path = os.path.join(directory, 'sc'+str(count).zfill(3)+'.pkl')
     with open(path, 'rb') as f:

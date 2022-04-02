@@ -28,7 +28,7 @@ parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool
 parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
 parser.add_argument('--robotNum', dest='robotNum', default=4,type=int,help='Number of robot for simulation')
 parser.add_argument('--simTime', dest='simTime', default=5,type=int,help='Simulation time for one simulation')
-parser.add_argument('--trainEpisode', dest='trainEpisode', default=4,type=int,help='Episode for training')
+parser.add_argument('--trainEpisode', dest='trainEpisode', default=1,type=int,help='Episode for training')
 parser.add_argument('--modelName', dest='modelName', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
 # # modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
 args = parser.parse_args()
@@ -46,7 +46,7 @@ def demo_one(args):
 
     lossList = []
     sc = None
-
+    args.modelName = 'v13/test_train.pth' if args.if_train else 'v13/suhaas_model_v13_dagger_final_more.pth'
     numRun = args.trainEpisode if args.if_train else 1
 
     #### Initial Agent
