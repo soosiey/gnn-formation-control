@@ -197,7 +197,7 @@ class Robot():
         ####################### NN CONTROLLER ###########################################
         #################################################################################
 
-        observation, action_1 = self.data.getObservation(-12)
+        # observation, action_1 = self.data.getObservation()
         # if observation is None:
         #    action = np.array([[0, 0]])
         # else:
@@ -474,7 +474,7 @@ class Robot():
             return omega1,omega2
     ##### For simulate in scene
     def getDataObs(self):
-        observation, action_1 = self.data.getObservation(-12)
+        observation, action_1 = self.data.getObservation()
         return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
 
 

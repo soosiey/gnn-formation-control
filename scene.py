@@ -5,7 +5,6 @@ try:
     USE_CV2 = True
 except ImportError:
     USE_CV2 = False
-
 import numpy as np
 from robot import Robot
 #import matplotlib.pyplot as plt
@@ -22,7 +21,7 @@ class Scene():
 
         self.t = 0
         self.dt = 0.01
-
+        self.runNum = runNum
         # formation reference link
         self.xid = State(0.0, 0.0, math.pi / 2)
         self.xi = State(0.0, 0.0, math.pi / 2)
@@ -30,7 +29,7 @@ class Scene():
 
         self.robots = []
         self.adjMatrix = None
-        self.Laplacian = None
+        # self.Laplacian = None
 
         # vrep related
         self.vrepConnected = False
@@ -42,6 +41,12 @@ class Scene():
         self.OCCUPANCY_MAP_BINARY = 0
         # 1 for 3-channel: mean height, height variance, visibility
         self.OCCUPANCY_MAP_THREE_CHANNEL = 1
+        #log related
+        self.errorType = 0
+        self.logPriorityMax = 1  # Messages with lower priorities are not logged
+        self.logFileName = os.path.splitext(fileName)[0] + ".log"
+        self.log('A new scene is created for run #' + str(runNum))
+
 
         ##### useless artribute
         # for plots
@@ -62,32 +67,13 @@ class Scene():
             self.out = cv2.VideoWriter('output.avi', self.fourcc, 20.0, (self.wPix, self.hPix))
             self.frameCounter = 0
 
-        self.robots = []
-        self.adjMatrix = None
-        self.Laplacian = None
-
-        # vrep related
-        self.vrepConnected = False
-        #self.vrepSimStarted = False
-        self.SENSOR_TYPE = "None"
-        self.objectNames = []
-        self.recordData = recordData
-        self.occupancyMapType = None
-        self.OCCUPANCY_MAP_BINARY = 0
-        # 1 for 3-channel: mean height, height variance, visibility
-        self.OCCUPANCY_MAP_THREE_CHANNEL = 1
 
 
         # follower does not have knowledge of absolute position
 
 
-        self.errorType = 0
-        self.logPriorityMax = 1 # Messages with lower priorities are not logged
-        self.logFileName = os.path.splitext(fileName)[0] + ".log"
-        self.runNum = runNum
-        self.log('A new scene is created for run #' + str(runNum))
 ##### merge with resetPosition,scaleDesiredFormation
-    def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),model_controller=False, learnedController = None):
+    def addRobot(self, arg, nr,model_controller=False, learnedController = None):
         robot = Robot(self,nr)
         robot.index = len(self.robots)
         robot.xi.x = arg[0, 0]
@@ -98,11 +84,8 @@ class Scene():
         robot.xid.theta = arg[1, 2]
         robot.model_controller=model_controller
         robot.learnedController = learnedController
-
         robot.recordData = self.recordData
-
         self.robots.append(robot)
-
         message = ""
         message += " robot #" + str(robot.index) + " using "
         if learnedController is None:
@@ -476,7 +459,6 @@ class Scene():
             if absError > maxAbsError:
                 maxAbsError = absError
         return maxAbsError
-
     def deallocate(self):
         self.log("Scene is destructed")
         if USE_CV2 == True:
@@ -501,7 +483,6 @@ class Scene():
                 f.write(prefix + message + '\n')
 class VrepError(Exception):
     # Exception raised for errors related vrep.
-
     def __init__(self, message):
         self.message = message
 

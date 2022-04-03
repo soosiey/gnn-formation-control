@@ -223,57 +223,6 @@ class ScenePlot():
                 plt.xlabel('t (s)')
                 plt.ylabel('Center distance from goal (m)')
 
-        # elif type == 24: # Formation Error type 24: epsilon
-        #     if len(self.sc.robots) != 3:
-        #         raise Exception("Plot type 24 is valid only when the number of robots is 3.")
-        #     if self.sc.dynamics != 5:
-        #         raise Exception("Plot type 24 is valid only for dynamics 13.")
-        #     xi = 3 * [None]
-        #     xid = 3 * [None]
-        #     if not self.sc.ploted[type]:
-        #         for i in range(0, 3):
-        #             xi[i] = self.sc.robots[i].xi
-        #             xid[i] = self.sc.robots[i].xid
-        #
-        #         for i in range(0, 3):
-        #             error = 0
-        #             j1 = None
-        #             for j in range(0, 3):
-        #                 if i == j:
-        #                     continue
-        #                 if j1 is None:
-        #                     j1 = j
-        #                 else:
-        #                     j2 = j
-        #                 xj = self.sc.robots[j].xi.x
-        #                 yj = self.sc.robots[j].xi.y
-        #                 xjd = self.sc.robots[j].xid.x
-        #                 yjd = self.sc.robots[j].xid.y
-        #
-        #             errorij1 = xi[i].distancepTo(xi[j1]) - xid[i].distancepTo(xid[j1])
-        #             errorij2 = xi[i].distancepTo(xi[j2]) - xid[i].distancepTo(xid[j2])
-        #             errorj1j2 = xi[j1].distancepTo(xi[j2]) - xid[j1].distancepTo(xid[j2])
-        #             ejid = xid[i].distancepTo(xid[j])
-        #             epsilon = errorij1 + errorij2 - errorj1j2
-        #
-        #             # If this is the first time this type of plot is drawn
-        #             if i not in self.sc.ydict[type].keys():
-        #                 self.sc.ydict[type][i] = []
-        #                 self.sc.ydict2[type][i] = i # for legend
-        #             self.sc.ydict[type][i].append(epsilon)
-        #     if self.sc.t > tf:
-        #         errors = self.sc.ydict[type]
-        #         legends = self.sc.ydict2[type]
-        #         curves = []
-        #         plt.figure(type)
-        #         for k in range(0, len(self.sc.ydict[type])):
-        #             curve, = plt.plot(self.sc.ts, errors[k], '-',
-        #                               label = str(legends[k]))
-        #             curves.append(curve)
-        #         if int(matplotlib.__version__[0]) == 2:
-        #             plt.legend(handles = curves)
-        #         plt.xlabel('t (s)')
-        #         plt.ylabel('Formation Separation Error (m)')
 
         elif type == 3: # Formation Error type 3
             if not self.sc.ploted[type]:
