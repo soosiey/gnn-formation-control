@@ -103,17 +103,7 @@ def demo_one(args):
         if (i % 25 == 0 and args.if_train):
             fcl.save(args.modelname)
 
-        ###################### STATS ###########################
-        # xt = 0
-        # yt = 0
-        # for r in range(len(sc.robots)):
-        #    xt += sc.robots[r].xi.x
-        #    yt += sc.robots[r].xi.y
-        #    print('Robot',r,': (',sc.robots[r].xi.x,',',sc.robots[r].xi.y,')')
-        #    positionList[i].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
-        # xt = xt / len(sc.robots)
-        # yt = yt / len(sc.robots)
-        # print('Center: (',xt,',',yt,')')
+
     positionList = np.array(positionList)
     np.save('positionLists/' + 'positionList_expert_' + str(args.robotNum) + '_singles.npy', positionList)
     if sc:
@@ -127,54 +117,25 @@ def demo_one(args):
 
 
 def initRef(sc, i):
-    if sc.dynamics == sc.DYNAMICS_MODEL_BASED_LINEAR:
-        #radiusLeaderList = [2.0, 3.0, 4.0]
-        #speedLeaderList = [0.2, 0.3, 0.4]
-        radiusLeaderList = [2.0]
-        speedLeaderList = [0.4]
-        radiusLeader = random.choice(radiusLeaderList)
-        sc.referenceSpeed = random.choice(speedLeaderList)
-        sc.referenceOmega = sc.referenceSpeed / radiusLeader
-        message = "Ref speed: {0:.3f} m/s; Ref omega: {1:.3f} rad/s; Ref radius: {2:.3f} m"
-        message = message.format(sc.referenceSpeed, sc.referenceOmega, radiusLeader)
-    elif (sc.dynamics == sc.DYNAMICS_MODEL_BASED_LINEAR_GOAL or
-          sc.dynamics == sc.DYNAMICS_MODEL_BASED_DISTANCE_GOAL):
-        g = 4.0
-        goalList = [[g, g], [-g, g], [g, -g], [-g, -g]]
-        #sc.xid.x, sc.xid.y = random.choice(goalList)
-        sc.xid.x, sc.xid.y = goalList[i]
-        sc.xid.vRef = 0.7
-        message = "Goal: ({0:.3f}, {1:.3f})"
-        message = message.format(sc.xid.x, sc.xid.y, sc.xid.vRef)
-        sc.xid.theta = 0
-        sc.xid.sDot = 0
-        sc.xid.thetaDot = 0
-    elif (sc.dynamics == sc.DYNAMICS_MODEL_BASED_DISTANCE_REFVEL or
-          sc.dynamics == sc.DYNAMICS_MODEL_BASED_DISTANCE2_REFVEL):
-        # set desired velocity vector
-        sc.xid.vRefMag = 0.7
-        sc.xid.vRefAng = 2 * math.pi * random.random()#0.982793723# 2 * math.pi * random.random()
-        sc.xid.theta = 0
-        sc.xid.sDot = 0
-        sc.xid.thetaDot = 0
-        # scale desired formation separation
-        #alphaList = [1.0, 1.5, 2.0]
-        #alphaList = [1.0,2.0,3.0,4.0,4.5]
-        alphaList = [2.0]
-        alpha = random.choice(alphaList)
-        sc.scaleDesiredFormation(alpha)
-        message = "vRefMag: {0:.3f}, vRefAng: {1:.3f}, alpha: {2:.3f}"
-        message = message.format(sc.xid.vRefMag, sc.xid.vRefAng, alpha)
+
+    # set desired velocity vector
+    sc.xid.vRefMag = 0.7
+    sc.xid.vRefAng = 2 * math.pi * random.random()#0.982793723# 2 * math.pi * random.random()
+    sc.xid.theta = 0
+    sc.xid.sDot = 0
+    sc.xid.thetaDot = 0
+    # scale desired formation separation
+    #alphaList = [1.0, 1.5, 2.0]
+    #alphaList = [1.0,2.0,3.0,4.0,4.5]
+    alphaList = [2.0]
+    alpha = random.choice(alphaList)
+    sc.scaleDesiredFormation(alpha)
+    message = "vRefMag: {0:.3f}, vRefAng: {1:.3f}, alpha: {2:.3f}"
+    message = message.format(sc.xid.vRefMag, sc.xid.vRefAng, alpha)
     sc.log(message)
     print(message)
 
 def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
-    if sp.sc.dynamics == 14:
-        sp.plot(21, tf) # Formation Orientation
-    if sp.sc.dynamics == 16:
-        sp.plot(23, tf) # distance from goal
-    elif sp.sc.dynamics == 14:
-        sp.plot(22, tf) # distances from goals
     sp.plot(2,tf,expert=expert)
     sp.plot(3, tf, expert=expert)
     sp.plot(4, tf,expert=expert)
@@ -194,19 +155,12 @@ def generateData(args,agent,ep,positionList):
     # global positionList
     #sc.occupancyMapType = sc.OCCUPANCY_MAP_THREE_CHANNEL
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
-    sc.dynamics = sc.DYNAMICS_MODEL_BASED_DISTANCE2_REFVEL # robot dynamics
+    # sc.dynamics = 18 # robot dynamics
     sc.errorType = 0
 
     try:
         for i in range(args.robotNum):
-            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum, role ="PEER", learnedController = agent.test)
-
-#==============================================================================
-#         sc.addRobot(np.float32([[1, 3, 0], [0, -1, 0]]),
-#                     dynamics = sc.DYNAMICS_LEARNED,
-#                     learnedController = fcl.test)
-#==============================================================================
-
+            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum, learnedController = agent.test)
         # No leader
         I = np.identity(args.robotNum, dtype=np.int8)
         M = np.ones(args.robotNum, dtype=np.int8)
@@ -245,30 +199,11 @@ def generateData(args,agent,ep,positionList):
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
         sc.resetPosition(5)
-        #sc.resetPosition(None)
-
-        # sc.robots[0].setPosition([.0, .0, math.pi/2])
-        # sc.robots[1].setPosition([1.0, 0.0, math.pi/2])
-        # sc.robots[2].setPosition([2.0, 0.0, math.pi/2])
-        # sc.robots[3].setPosition([3.0, 0.0, math.pi/2])
-        #sc.robots[0].setPosition([.0, .0, .0])
-        #sc.robots[1].setPosition([-3.0, 4.0, 0.0])
-        #sc.robots[2].setPosition([2.0, 1.0, 0.0])
-
-        # Fixed initial position
-        #sc.robots[0].setPosition([0.0, 0.0, math.pi/2])
-        #sc.robots[1].setPosition([-2.2, -1.0, 0.3])
         sp.plot(4, tf,expert=args.expert_only)
 
         while sc.simulate():
             for r in range(len(sc.robots)):
                 positionList[ep].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
-            #sc.renderScene(waitTime = int(sc.dt * 1000))
-            #sc.showOccupancyMap(waitTime = int(sc.dt * 1000))
-
-            #print("---------------------")
-            #print("t = %.3f" % sc.t, "s")
-            #print(sc.robots[2].xid0.y)
             if sc.t > 1:
                 maxAbsError = sc.getMaxFormationError()
                 if maxAbsError < 0.01 and errorCheckerEnabled:
@@ -285,15 +220,12 @@ def generateData(args,agent,ep,positionList):
                 sc.log(message)
                 print(message)
                 break
-
-
     except KeyboardInterrupt:
         x = input('Quit?(y/n)')
         if x == 'y' or x == 'Y':
             tf = sc.t - 0.01
             plot(sp, tf)
             raise Exception('Aborted.')
-
     except VrepError as err:
         sc.log(err.message)
         print(err.message)

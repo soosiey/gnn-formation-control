@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 19 23:08:18 2017
-
-@author: cz
-"""
 
 try:
     import cv2
@@ -33,7 +28,7 @@ class Robot():
     def __init__(self, scene,numRobots):
         self.index=None
         self.scene = scene
-        self.dynamics = 18
+        # self.dynamics = 18
         self.numNN = 0
         self.numMod = 0
         # dynamics parameters
@@ -44,14 +39,8 @@ class Robot():
         self.xi = State(0, 0, 0, self)
         #self.xi = State(random.random()*100, random.random()*100,2*math.pi*random.random(),self)
         self.xid = State(3, 0, 0, self)
-        self.xid0 = State(3, 0, math.pi/4, self)
         self.reachedGoal = False
         # Control parameters
-        self.kRho = 1
-        self.kAlpha = 6
-        self.kPhi = -1
-        self.kV = 3.8
-        self.gamma = 0.15
         self.p=0.8
         self.model_controller=False
 
@@ -70,7 +59,6 @@ class Robot():
         self.v1Desirednn = 0
         self.v2Desirednn = 0
         #### Robot's neighbor
-        self.role = None
         self.neighbors = []
         self.leader = None # Only for data recording purposes
 
@@ -99,17 +87,10 @@ class Robot():
 
         K3 = 0.0  # interaction between i and j
         dxypMax = float('inf')
-        if self.role == "LEADER":  # I am a leader
-            K1 = 1
-            K2 = 1
-        elif self.role == "FOLLOWER":
-            K1 = 0  # Reference position information is forbidden
-            K2 = 1
-        elif self.role == "PEER":
-            K1 = 0
-            K2 = 0
-            K3 = 1  # interaction between i and j
-            dxypMax = 0.7
+        K1 = 0
+        K2 = 0
+        K3 = 1  # interaction between i and j
+        dxypMax = 0.7
 
         # sort neighbors by distance
 
@@ -158,10 +139,7 @@ class Robot():
             pijx = self.xi.xp - robot.xi.xp
             pijy = self.xi.yp - robot.xi.yp
             pij0 = self.xi.distancepTo(robot.xi)
-            if self.dynamics == 18:
-                pijd0 = self.scene.alpha
-            else:
-                pijd0 = self.xid.distancepTo(robot.xid)
+            pijd0 = self.scene.alpha
             tauij0 = (pij0 - pijd0) / pij0
             tauix += tauij0 * pijx
             tauiy += tauij0 * pijy
@@ -418,10 +396,6 @@ class Robot():
                 continue
             robot = robot_list[j]  # neighbor
             self.neighbors.append(robot)
-            if robot.role == "LEADER":
-                if self.leader is not None:
-                    raise Exception('There cannot be more than two leaders in a scene!')
-                self.leader = robot
     #### (not yet finish)
     def update_state(self,stateVector):
         self.update_pose(stateVector)
@@ -483,8 +457,7 @@ class Robot():
         Returns:None
 
         """
-        if self.dynamics == 17 or self.dynamics == 18:
-            self.xid.theta = self.scene.xid.vRefAng
+        self.xid.theta = self.scene.xid.vRefAng
 
 ##### For simulate
     def precompute(self,adjmatrix,robot_list):
@@ -492,18 +465,6 @@ class Robot():
         self.xid.transform()
         self.update_neighbors(adjmatrix,robot_list)
 #### Set the linear velocity of 2 wheels
-##### move to scene and merger with simulate
-    # def propagate(self,omega1,omega2):
-    #
-    #     if self.scene.vrepConnected == False:
-    #         self.xi.propagate(self.control)
-    #     else:
-    #         vrep.simxSetJointTargetVelocity(self.scene.clientID,
-    #                                         self.motorLeftHandle,
-    #                                         omega1, vrep.simx_opmode_oneshot)
-    #         vrep.simxSetJointTargetVelocity(self.scene.clientID,
-    #                                         self.motorRightHandle,
-    #                                         omega2, vrep.simx_opmode_oneshot)
 
     def get_control(self,omlist,i):
         if self.scene.vrepConnected == False:

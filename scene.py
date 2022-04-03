@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 19 22:06:30 2017
 
-@author: cz
-"""
 try:
     import cv2
     USE_CV2 = True
@@ -22,6 +18,8 @@ from state import State
 
 class Scene():
     def __init__(self, fileName = "Untitled", recordData = False, runNum = 0):
+        ##### useful artributes
+
         self.t = 0
         self.dt = 0.01
 
@@ -30,6 +28,22 @@ class Scene():
         self.xi = State(0.0, 0.0, math.pi / 2)
         self.alpha = 1 # desired formation scale
 
+        self.robots = []
+        self.adjMatrix = None
+        self.Laplacian = None
+
+        # vrep related
+        self.vrepConnected = False
+        # self.vrepSimStarted = False
+        self.SENSOR_TYPE = "None"
+        self.objectNames = []
+        self.recordData = recordData
+        self.occupancyMapType = None
+        self.OCCUPANCY_MAP_BINARY = 0
+        # 1 for 3-channel: mean height, height variance, visibility
+        self.OCCUPANCY_MAP_THREE_CHANNEL = 1
+
+        ##### useless artribute
         # for plots
         self.ts = [] # timestamps
         self.tss = [] # timestamps (sparse)
@@ -58,28 +72,14 @@ class Scene():
         self.SENSOR_TYPE = "None"
         self.objectNames = []
         self.recordData = recordData
-
         self.occupancyMapType = None
         self.OCCUPANCY_MAP_BINARY = 0
         # 1 for 3-channel: mean height, height variance, visibility
         self.OCCUPANCY_MAP_THREE_CHANNEL = 1
 
-        # CONSTANTS
-        self.dynamics = 18
-        self.DYNAMICS_INTEGRATOR_MODEL = 5
-        self.DYNAMICS_MODEL_BASED_CICULAR = 11
-        self.DYNAMICS_MODEL_BASED_STABILIZER = 12
-        self.DYNAMICS_MODEL_BASED_LINEAR = 13
-        self.DYNAMICS_MODEL_BASED_LINEAR_GOAL = 14
-        self.DYNAMICS_MODEL_BASED_DISTANCE_GOAL = 16
-        self.DYNAMICS_MODEL_BASED_DISTANCE_REFVEL = 17
-        self.DYNAMICS_MODEL_BASED_DISTANCE2_REFVEL = 18
-        self.DYNAMICS_LEARNED = 30
 
         # follower does not have knowledge of absolute position
-        # self.ROLE_LEADER = "LEADER"
-        # self.ROLE_FOLLOWER = "FOLLOWER"
-        # self.ROLE_PEER = "PEER"
+
 
         self.errorType = 0
         self.logPriorityMax = 1 # Messages with lower priorities are not logged
@@ -87,39 +87,23 @@ class Scene():
         self.runNum = runNum
         self.log('A new scene is created for run #' + str(runNum))
 ##### merge with resetPosition,scaleDesiredFormation
-    def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),
-                 role = "FOLLOWER",model_controller=False, learnedController = None):
+    def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),model_controller=False, learnedController = None):
         robot = Robot(self,nr)
         robot.index = len(self.robots)
-        robot.role = role
         robot.xi.x = arg[0, 0]
         robot.xi.y = arg[0, 1]
         robot.xi.theta = arg[0, 2]
         robot.xid.x = arg[1, 0]
         robot.xid.y = arg[1, 1]
         robot.xid.theta = arg[1, 2]
-        robot.xid0.x = arg[1, 0]
-        robot.xid0.y = arg[1, 1]
-        robot.xid0.theta = arg[1, 2]
-        robot.dynamics = self.dynamics
         robot.model_controller=model_controller
         robot.learnedController = learnedController
-        if robot.role == "LEADER":
-            robot.recordData = False # Leader data is not recorded
-        else:
-            robot.recordData = self.recordData
+
+        robot.recordData = self.recordData
 
         self.robots.append(robot)
 
         message = ""
-        if robot.role == "LEADER":
-            message += "Leader"
-        elif robot.role == "FOLLOWER":
-            message += "Follower"
-        elif robot.role == "PEER":
-            message += "Peer"
-        else:
-            message += "Type-unkonwn"
         message += " robot #" + str(robot.index) + " using "
         if learnedController is None:
             message += "a model-based controller"
@@ -137,43 +121,41 @@ class Scene():
 
         MIN_DISTANCE = 1
         MAX_DISTANCE = 8
-        if self.dynamics >= 16 and self.dynamics <= 18:
-            x_average = 0
-            y_average = 0
-            for i in range(0, len(self.robots)):
-                while True:
-                    minDij = float("inf")
-                    alpha1 = math.pi * (2 * random.random())  # arbitrary
-                    rho1 = radius * random.random()
-                    x1 = rho1 * math.cos(alpha1)
-                    y1 = rho1 * math.sin(alpha1)
-                    theta1 = 2 * math.pi * random.random()
-                    for j in range(0, i):
-                        dij = ((x1 - self.robots[j].xi.x) ** 2 +
-                               (y1 - self.robots[j].xi.y) ** 2) ** 0.5
-                        if dij < minDij:
-                            minDij = dij  # find the smallest dij for all j
-                    print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
-                    # if the smallest dij is greater than allowed,
-                    if i == 0:
-                        self.robots[i].update_pose([x1, y1, theta1])
-                        break  # i++
-                    elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
-                        self.robots[i].update_pose([x1, y1, theta1])
-                        break  # i++
-                x_average += x1
-                y_average += y1
-            self.xi.x = x_average / len(self.robots)
-            self.xi.y = y_average / len(self.robots)
-            self.xid.dpbarx = self.xi.x - self.xid.x
-            self.xid.dpbary = self.xi.y - self.xid.y
+
+        x_average = 0
+        y_average = 0
+        for i in range(0, len(self.robots)):
+            while True:
+                minDij = float("inf")
+                alpha1 = math.pi * (2 * random.random())  # arbitrary
+                rho1 = radius * random.random()
+                x1 = rho1 * math.cos(alpha1)
+                y1 = rho1 * math.sin(alpha1)
+                theta1 = 2 * math.pi * random.random()
+                for j in range(0, i):
+                    dij = ((x1 - self.robots[j].xi.x) ** 2 +
+                           (y1 - self.robots[j].xi.y) ** 2) ** 0.5
+                    if dij < minDij:
+                        minDij = dij  # find the smallest dij for all j
+                print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
+                # if the smallest dij is greater than allowed,
+                if i == 0:
+                    self.robots[i].update_pose([x1, y1, theta1])
+                    break  # i++
+                elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
+                    self.robots[i].update_pose([x1, y1, theta1])
+                    break  # i++
+            x_average += x1
+            y_average += y1
+        self.xi.x = x_average / len(self.robots)
+        self.xi.y = y_average / len(self.robots)
+        self.xid.dpbarx = self.xi.x - self.xid.x
+        self.xid.dpbary = self.xi.y - self.xid.y
 
     #####(merge with addRobot)
     def scaleDesiredFormation(self, alpha):
         self.alpha = alpha
         for robot in self.robots:
-            robot.xid0.x *= alpha
-            robot.xid0.y *= alpha
             robot.xid.x *= alpha
             robot.xid.y *= alpha
 
@@ -182,7 +164,7 @@ class Scene():
 
     def setADjMatrix(self, adjMatrix):
         self.adjMatrix = adjMatrix
-        self.Laplacian = np.diag(np.sum(self.adjMatrix, axis = 1))
+        # self.Laplacian = np.diag(np.sum(self.adjMatrix, axis = 1))
 
     #####(rewrite)
     #get latest communication graph according to robot positions (add for gnn)
@@ -341,6 +323,7 @@ class Scene():
             return
         return pos,ori,vel,omega,velodyne_points
     def propagate(self,robot,omega1,omega2):
+        #### Set the linear velocity of 2 wheels
         if self.vrepConnected == False:
             robot.xi.propagate(robot.control)
         else:
@@ -376,9 +359,8 @@ class Scene():
             if self.robots[i].reachedGoal:
                 countReachedGoal += 1
         self.calcCOG()
-
         if self.vrepConnected:
-            vrep.simxSynchronousTrigger(self.clientID);
+            vrep.simxSynchronousTrigger(self.clientID)
         if countReachedGoal == len(self.robots):
             return False
         else:
@@ -400,13 +382,10 @@ class Scene():
         sDot = 0
         thetaDot = 0
 
-        if self.dynamics == 17 or self.dynamics == 18:
-            # self.xid.vRefMag
-            # self.xid.vRefAng
-            omega = 0
-            self.xid.dpbarx = -self.xid.vRefMag * math.cos(self.xid.vRefAng + self.t * omega)
-            self.xid.dpbary = -self.xid.vRefMag * math.sin(self.xid.vRefAng + self.t * omega)
-            #print('dpbarx: ', self.xid.dpbarx, ', dpbary: ', self.xid.dpbary)
+        omega = 0
+        self.xid.dpbarx = -self.xid.vRefMag * math.cos(self.xid.vRefAng + self.t * omega)
+        self.xid.dpbary = -self.xid.vRefMag * math.sin(self.xid.vRefAng + self.t * omega)
+        #print('dpbarx: ', self.xid.dpbarx, ', dpbary: ', self.xid.dpbary)
     def calcCOG(self):
         #### For simulate()
         # Calculate Center Of Gravity
@@ -427,23 +406,7 @@ class Scene():
             #print(self.centerTraj)
         self.centerTraj[-1, :] /= len(self.robots)
 
-    # def renderScene(self, timestep = -1, waitTime = 25, mode = 0):
-    #     #### mayby useless
-    #     if USE_CV2 == False:
-    #         return
-    #     self.image = np.zeros((self.hPix, self.wPix, 3), np.uint8)
-    #     for robot in self.robots:
-    #         robot.draw(self.image, 1)
-    #         #robot.draw(self.image, 2)
-    #     if mode == 0:
-    #         cv2.imshow('scene', self.image)
-    #         cv2.waitKey(waitTime)
-    #     elif mode == 1:
-    #         if self.frameCounter % 5 == 0:
-    #             self.out.write(self.image)
-    #         self.frameCounter += 1
-
-
+    ###### leave here for future needs
     def getRobotColor(self, i, brightness = 0.7, reverse = False):
         #### maybe useless
         if i == 0:
@@ -460,7 +423,6 @@ class Scene():
             return c[::-1]
         else:
             return c
-
     def showOccupancyMap(self, waitTime = 25):
         #### maybe useless
         if USE_CV2 == False:
@@ -500,8 +462,6 @@ class Scene():
                             interpolation = cv2.INTER_NEAREST)
             cv2.imshow('Occupancy Map', im)
         cv2.waitKey(waitTime)
-
-
     def getMaxFormationError(self):
         if 2 not in self.ydict.keys():
             raise Exception('Plot type 2 must be drawn in order to get formation error!')
@@ -517,21 +477,6 @@ class Scene():
                 maxAbsError = absError
         return maxAbsError
 
-    def m2pix(self, p = None):
-        if p is None: # if p is None
-            return (self.wPix / self.xMax / 2)
-        x, y = tuple(p[0])
-        #print('x = ' + str(x) + ', y = ' + str(y))
-        xPix = int((x + self.xMax) * (self.wPix / self.xMax / 2))
-        yPix = int((self.yMax - y) * (self.hPix / self.yMax / 2))
-        #print('x, y: ' +str(np.uint16([[x, y]])))
-        if (xPix < self.wPix and xPix >= 0 and
-            yPix < self.hPix and yPix >= 0):
-            return np.uint16([[xPix, yPix]])
-        else:
-            return None
-
-#####
     def deallocate(self):
         self.log("Scene is destructed")
         if USE_CV2 == True:
@@ -546,8 +491,6 @@ class Scene():
             vrep.simxStopSimulation(self.clientID, vrep.simx_opmode_blocking)
             # Now close the connection to V-REP:
             vrep.simxFinish(self.clientID)
-
-
     def log(self, message, priority=1):
         if priority <= self.logPriorityMax:
             with open(self.logFileName, "a+" ) as f:
@@ -556,8 +499,6 @@ class Scene():
                             + " [sim time: {1:.3f} s] ")
                 prefix = prefix.format(self.runNum, self.t)
                 f.write(prefix + message + '\n')
-
-
 class VrepError(Exception):
     # Exception raised for errors related vrep.
 

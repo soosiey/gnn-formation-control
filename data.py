@@ -14,7 +14,7 @@ class Data():
         self.mode = -12
         self.q = queue.Queue()
         self.robot = robot
-        dynamics = self.robot.scene.dynamics
+        dynamics = 18
         pc = self.robot.pointCloud
         self.d = dict() # Will become None after the scene is saved
         self.d['epi_starts'] = np.array([], dtype = np.bool)
@@ -25,18 +25,8 @@ class Data():
             self.d['observations2'] = np.zeros((0, 2), dtype = np.float32)
         self.d['observations1'] = np.zeros((0, pc.lenScanVector), dtype = np.float32)
         print('Dynamics:',dynamics)
-        if dynamics == 5:
-            self.d['obs2'] = np.zeros((0, 2), dtype = np.float32)
-        elif dynamics == 16:
-            self.d['obs2'] = np.zeros((0, 2), dtype = np.float32)
-        elif dynamics == 17:
-            #self.d['obs2'] = np.zeros((0, 10), dtype = np.float32)
-            self.d['obs2'] = np.zeros((0, 8), dtype = np.float32)
-        elif dynamics == 18:
             #self.d['obs2'] = np.zeros((0, 6), dtype = np.float32)
-            self.d['obs2'] = np.zeros((0,robot.nr + 5),dtype = np.float32)
-        else:
-            raise Exception("Undefined robot dynamics for data recording", dynamics)
+        self.d['obs2'] = np.zeros((0,robot.nr + 5),dtype = np.float32)
         self.d['actions'] = np.zeros((0, 2), dtype = np.float32)
         # add communication graph for gnn
         #self.d['graph'] = np.zeros((0, 9), dtype = np.float32) # 9: n by n where n is the # of robots
@@ -100,8 +90,8 @@ class Data():
 #                                   peer.xi.x, peer.xi.y, peer.xi.theta]])
                 #state = np.array([[dpbar, psi, peer.scene.alpha] + dstars])
                 state = np.array([[psi, peer.scene.alpha]])
-            print("state")
-            print(state)
+            # print("state")
+            # print(state)
             ret = (obs0, state)
 
         return ret
@@ -126,24 +116,20 @@ class Data():
 
         self.d['observations1'] = np.append(self.d['observations1'],
                               self.robot.pointCloud.scanVector, axis = 0) # option 2
-
-        if self.robot.scene.dynamics == 5:
-            pass
-        elif self.robot.scene.dynamics == 16 or self.robot.scene.dynamics == 17 or self.robot.scene.dynamics == 18:
-            peer = self.robot
-            psi = peer.xid.theta - peer.xi.theta
-            if psi > math.pi:
-                psi -= 2 * math.pi
-            elif psi < -math.pi:
-                psi += 2 * math.pi
-            dpbar = (peer.scene.xid.dpbarx**2 + peer.scene.xid.dpbary**2)**0.5
-            dstars = []
-            for neighbor in self.robot.neighbors:
-                dstars.append(peer.xid.distancepTo(neighbor.xid))
-            #print(dstars)
-            obs2Data = [[dpbar, psi, peer.scene.alpha,
-                         peer.xi.x, peer.xi.y, peer.xi.theta]
-                        + dstars] # mode = -12
+        peer = self.robot
+        psi = peer.xid.theta - peer.xi.theta
+        if psi > math.pi:
+            psi -= 2 * math.pi
+        elif psi < -math.pi:
+            psi += 2 * math.pi
+        dpbar = (peer.scene.xid.dpbarx**2 + peer.scene.xid.dpbary**2)**0.5
+        dstars = []
+        for neighbor in self.robot.neighbors:
+            dstars.append(peer.xid.distancepTo(neighbor.xid))
+        #print(dstars)
+        obs2Data = [[dpbar, psi, peer.scene.alpha,
+                     peer.xi.x, peer.xi.y, peer.xi.theta]
+                    + dstars] # mode = -12
             #print("Robot", self.robot.index, ", psi: ", psi)
         self.d['obs2'] = np.append(self.d['obs2'], obs2Data, axis = 0)
         self.d['actions'] = np.append(self.d['actions'],

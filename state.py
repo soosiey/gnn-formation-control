@@ -37,19 +37,9 @@ class State():
 
     def transform(self):
         # For feedback linearization
-        if self.robot.dynamics == 5:
-            self.xp = self.x
-            self.yp = self.y
-            self.theta = 0 # useless
-        elif self.robot.dynamics >= 10 and self.robot.dynamics < 18:
-            c = self.robot.l / 2
-            self.xp = self.x + c * math.cos(self.theta)
-            self.yp = self.y + c * math.sin(self.theta)
-            self.thetap = self.theta
-        elif self.robot.dynamics == 18:
-            self.xp = self.x
-            self.yp = self.y
-            self.thetap = self.theta
+        self.xp = self.x
+        self.yp = self.y
+        self.thetap = self.theta
 
     def distancepTo(self, other):
         dxp = self.xp - other.xp
