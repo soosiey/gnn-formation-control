@@ -104,9 +104,6 @@ class Scene():
         robot.dynamics = self.dynamics
         robot.model_controller=model_controller
         robot.learnedController = learnedController
-        if self.dynamics >=20 and self.dynamics <= 25:
-            robot.arg2 = arg2
-
         if robot.role == "LEADER":
             robot.recordData = False # Leader data is not recorded
         else:
@@ -140,38 +137,9 @@ class Scene():
 
         MIN_DISTANCE = 1
         MAX_DISTANCE = 8
-        if self.dynamics == 5:
-            xbar = 0
-            ybar = 0
-            for i in range(0, len(self.robots)):
-                while True:
-                    minDij = float("inf")
-                    # alpha1 = math.pi * (-2/3*i - 1/3* random.random()) # limited
-                    alpha1 = math.pi * (2 * random.random())  # arbitrary
-                    rho1 = radius * random.random()
-                    x1 = rho1 * math.cos(alpha1)
-                    y1 = rho1 * math.sin(alpha1)
-                    theta1 = 0  # 2 * math.pi * random.random()
-                    for j in range(0, i):
-                        dij = ((x1 - self.robots[j].xi.x) ** 2 +
-                               (y1 - self.robots[j].xi.y) ** 2) ** 0.5
-                        # print('j = ', j, '( %.3f' % self.robots[j].xi.x, ', %.3f'%self.robots[j].xi.y, '), ', 'dij = ', dij)
-                        if dij < minDij:
-                            minDij = dij  # find the smallest dij for all j
-                    print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
-                    # if the smallest dij is greater than allowed,
-                    if minDij >= MIN_DISTANCE:
-                        self.robots[i].update_pose([x1, y1, theta1])
-                        break  # i++
-                xbar += x1
-                ybar += y1
-            self.xi.x = xbar / len(self.robots)
-            self.xi.y = ybar / len(self.robots)
-            self.xid.dpbarx = self.xi.x - self.xid.x
-            self.xid.dpbary = self.xi.y - self.xid.y
-        elif self.dynamics >= 16 and self.dynamics <= 18:
-            xbar = 0
-            ybar = 0
+        if self.dynamics >= 16 and self.dynamics <= 18:
+            x_average = 0
+            y_average = 0
             for i in range(0, len(self.robots)):
                 while True:
                     minDij = float("inf")
@@ -193,10 +161,10 @@ class Scene():
                     elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
                         self.robots[i].update_pose([x1, y1, theta1])
                         break  # i++
-                xbar += x1
-                ybar += y1
-            self.xi.x = xbar / len(self.robots)
-            self.xi.y = ybar / len(self.robots)
+                x_average += x1
+                y_average += y1
+            self.xi.x = x_average / len(self.robots)
+            self.xi.y = y_average / len(self.robots)
             self.xid.dpbarx = self.xi.x - self.xid.x
             self.xid.dpbary = self.xi.y - self.xid.y
 
@@ -371,9 +339,6 @@ class Scene():
             pass
         else:
             return
-
-
-
         return pos,ori,vel,omega,velodyne_points
     def propagate(self,robot,omega1,omega2):
         if self.vrepConnected == False:
@@ -402,12 +367,11 @@ class Scene():
         for robot in self.robots:
             pos, ori, vel, omega, velodyne_points = self.read_sensor(robot)
             robot.get_sensor_data(pos, ori, vel, omega, velodyne_points)
-            # robot.readSensorData()
             robot.propagateDesired()
             o,g,r,a = robot.getDataObs()
             omlist.append((o,g,r,a))
         for i in range(len(self.robots)):
-            o1,o2 = self.robots[i].setControl(omlist,i)
+            o1,o2 = self.robots[i].get_control(omlist,i)
             self.propagate(self.robots[i],o1,o2)
             if self.robots[i].reachedGoal:
                 countReachedGoal += 1
@@ -435,36 +399,8 @@ class Scene():
         dt = self.dt
         sDot = 0
         thetaDot = 0
-        if self.robots[0].dynamics == 13:
-            t1 = 1
-            speed = self.referenceSpeed
-            omega = self.referenceOmega
-            if t < t1:
-                sDot = t / t1 * speed
-                thetaDot = t / t1 * omega
-            else:
-                sDot = speed
-                thetaDot = omega
-            self.xid.x += sDot * dt * math.cos(self.xid.theta)
-            self.xid.y += sDot * dt * math.sin(self.xid.theta)
-            self.xid.theta += thetaDot * dt
-            self.xid.sDot = sDot
-            self.xid.thetaDot = thetaDot
-        elif self.robots[0].dynamics == 14:
-            # do nothing because xid is time-invariant
-            pass
-        elif self.robots[0].dynamics == 16:
-            xbar = 0
-            ybar = 0
-            for robot in self.robots:
-                xbar += robot.xi.x
-                ybar += robot.xi.y
-            self.xi.x = xbar / len(self.robots)
-            self.xi.y = ybar / len(self.robots)
-            self.xid.dpbarx = self.xi.x - self.xid.x
-            self.xid.dpbary = self.xi.y - self.xid.y
-            #print('dpbarx: ', self.xid.dpbarx, ', dpbary: ', self.xid.dpbary)
-        elif self.dynamics == 17 or self.dynamics == 18:
+
+        if self.dynamics == 17 or self.dynamics == 18:
             # self.xid.vRefMag
             # self.xid.vRefAng
             omega = 0

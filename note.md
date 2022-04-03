@@ -1,7 +1,9 @@
 # Note
-
+## Scene related
++ **scene.xi**: The center of all robots in the scene
++ 
 ## Robot related 
-
++ **robot.xi**: The pose of one robot
 + **Robot Position**:  sc.robots[0].setPosition [x(m),y(m),theta(rad)]
 + **Robot velocity**: v1,v2,v1nn,v2nn(linear velocity)
 ## File functions

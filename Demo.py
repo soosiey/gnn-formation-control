@@ -61,7 +61,7 @@ def demo_one(args):
         fcl.model.to('cuda')
         print('Loaded model')
     for i in range(numRun):
-        print(lossList)
+        # print(lossList)
         print('Episode:', i + 1)
         ##########################################################################
         ######## Step 1: Start simulation rollouts to get training data ##########

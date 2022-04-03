@@ -100,6 +100,8 @@ class Data():
 #                                   peer.xi.x, peer.xi.y, peer.xi.theta]])
                 #state = np.array([[dpbar, psi, peer.scene.alpha] + dstars])
                 state = np.array([[psi, peer.scene.alpha]])
+            print("state")
+            print(state)
             ret = (obs0, state)
 
         return ret
