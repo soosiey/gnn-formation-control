@@ -5,7 +5,7 @@ Created on Sun Nov 19 23:09:34 2017
 @author: cz
 """
 
-from scene import Scene
+from scene_old import Scene
 from useful.sceneplot import ScenePlot
 import numpy as np
 

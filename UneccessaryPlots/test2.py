@@ -6,7 +6,7 @@ This test file is dependent on vrep.
 @author: cz
 """
 
-from scene import Scene
+from scene_old import Scene
 from useful.sceneplot import ScenePlot
 import numpy as np
 

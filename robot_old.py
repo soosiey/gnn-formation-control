@@ -31,7 +31,6 @@ def saturate(dxp, dyp, dxypMax):
 
 class Robot():
     def __init__(self, scene,numRobots):
-        self.index=None
         self.scene = scene
         self.dynamics = 18
         self.numNN = 0
@@ -69,7 +68,7 @@ class Robot():
         self.v2Desired = 0
         self.v1Desirednn = 0
         self.v2Desirednn = 0
-        #### Robot's neighbor
+
         self.role = None
         self.neighbors = []
         self.leader = None # Only for data recording purposes
@@ -78,8 +77,109 @@ class Robot():
         self.ctrl2_sm = []
 
         self.position_hist = []
+##### pending decide
+    def propagateDesired(self):
+        if self.dynamics == 5:
+            pass
+        elif self.dynamics == 4 or self.dynamics == 11:
+            # Circular desired trajectory, depricated.
+            t = self.scene.t
+            radius = 2
+            omega = 0.2
+            theta0 = math.atan2(self.xid0.y, self.xid0.x)
+            rho0 = (self.xid0.x ** 2 + self.xid0.y ** 2) ** 0.5
+            self.xid.x = (radius * math.cos(omega * t) +
+                          rho0 * math.cos(omega * t + theta0))
+            self.xid.y = (radius * math.sin(omega * t) +
+                          rho0 * math.sin(omega * t + theta0))
+            self.xid.vx = -(radius * omega * math.sin(omega * t) +
+                            rho0 * omega * math.sin(omega * t + theta0))
+            self.xid.vy = (radius * omega * math.cos(omega * t) +
+                           rho0 * omega * math.cos(omega * t + theta0))
+            self.xid.theta = math.atan2(self.xid.vy, self.xid.vx)
+            #self.xid.omega = omega
+
+            c = self.l/2
+            self.xid.vxp = self.xid.vx - c * math.sin(self.xid.theta) * omega
+            self.xid.vyp = self.xid.vy + c * math.cos(self.xid.theta) * omega
+        elif self.dynamics == 16:
+            # Linear desired trajectory
+
+            t = self.scene.t
+            #dt = self.scene.dt
+            x = self.scene.xid.x
+            y = self.scene.xid.y
+            #print('x = ', x, 'y = ', y)
+            theta = self.scene.xid.theta
+            #print('theta = ', theta)
+            sDot = self.scene.xid.sDot
+            thetaDot = self.scene.xid.thetaDot
+
+            phii = math.atan2(self.xid0.y, self.xid0.x)
+            rhoi = (self.xid0.x ** 2 + self.xid0.y ** 2) ** 0.5
+            #print('phii = ', phii)
+            self.xid.x = x + rhoi * math.cos(phii)
+            self.xid.y = y + rhoi * math.sin(phii)
+            self.xid.vx = sDot * math.cos(theta)
+            self.xid.vy = sDot * math.sin(theta)
+            #print('vx: ', self.xid.vx, 'vy:', self.xid.vy)
+            #print('v', self.index, ' = ', (self.xid.vx**2 + self.xid.vy**2)**0.5)
+
+            dpbarx = -self.scene.xid.dpbarx
+            dpbary = -self.scene.xid.dpbary
+            if (dpbarx**2 + dpbary**2)**0.5 > 1e-1:
+                self.xid.theta = math.atan2(dpbary, dpbarx)
+            #if (self.xid.vx**2 + self.xid.vy**2)**0.5 > 1e-3:
+            #    self.xid.theta = math.atan2(self.xid.vy, self.xid.vx)
+            #self.xid.omega = omega
+
+            c = self.l/2
+            self.xid.vxp = self.xid.vx - c * math.sin(self.xid.theta) * thetaDot
+            self.xid.vyp = self.xid.vy + c * math.cos(self.xid.theta) * thetaDot
+            self.xid.vRef = self.scene.xid.vRef
+        elif self.dynamics == 17 or self.dynamics == 18:
+            self.xid.theta = self.scene.xid.vRefAng
 
 
+    def precompute(self):
+        self.xi.transform()
+        self.xid.transform()
+        self.updateNeighbors()
+#### Set the linear velocity of 2 wheels
+##### move to scene and merger with simulate
+    def propagate(self,omega1,omega2):
+        if self.scene.vrepConnected == False:
+            self.xi.propagate(self.control)
+        else:
+            vrep.simxSetJointTargetVelocity(self.scene.clientID,
+                                            self.motorLeftHandle,
+                                            omega1, vrep.simx_opmode_oneshot)
+            vrep.simxSetJointTargetVelocity(self.scene.clientID,
+                                            self.motorRightHandle,
+                                            omega2, vrep.simx_opmode_oneshot)
+##### move to scene and merger with simulate
+    def setControl(self,omlist,i):
+        if self.scene.vrepConnected == False:
+            self.xi.propagate(self.control)
+        else:
+            omega1, omega2 = self.control(omlist,i)
+            return omega1,omega2
+##### merge with update_state
+    def updateNeighbors(self):
+        self.neighbors = []
+        self.leader = None
+        for j in range(len(self.scene.robots)):
+            if self.scene.adjMatrix[self.index, j] == 0:
+                continue
+            robot = self.scene.robots[j] # neighbor
+            self.neighbors.append(robot)
+            if robot.role == self.scene.ROLE_LEADER:
+                if self.leader is not None:
+                    raise Exception('There cannot be more than two leaders in a scene!')
+                self.leader = robot
+    def getDataObs(self):
+        observation, action_1 = self.data.getObservation(-12)
+        return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
     def checkMove(self,hist,num = 1,thresh = .01):
         moving = False
         #if(abs(hist[0] - hist[-1]) > thresh):
@@ -96,16 +196,16 @@ class Robot():
         # Feedback linearization
         # v1: left wheel speed
         # v2: right wheel speed
-
         K3 = 0.0  # interaction between i and j
+
         dxypMax = float('inf')
-        if self.role == "LEADER":  # I am a leader
+        if self.role == self.scene.ROLE_LEADER:  # I am a leader
             K1 = 1
             K2 = 1
-        elif self.role == "FOLLOWER":
+        elif self.role == self.scene.ROLE_FOLLOWER:
             K1 = 0  # Reference position information is forbidden
             K2 = 1
-        elif self.role == "PEER":
+        elif self.role == self.scene.ROLE_PEER:
             K1 = 0
             K2 = 0
             K3 = 1  # interaction between i and j
@@ -135,7 +235,6 @@ class Robot():
 
         # gabriel graph connections
         lsd = self.listSortedDistance
-        print(lsd)
         jList = []
         for i in range(len(lsd)):
             connected = True
@@ -391,17 +490,38 @@ class Robot():
             # return linear speeds of the two wheels
             return v1, v2
 
-    ##### (not yet finish) For update_state
-    #### Set one robot's Position and Orientation
-    def update_pose(self,stateVector):
-        """
-        For update_state
-        Args:
-            stateVector: [x,y,theta] the desire pose of robot
+    def draw(self, image, drawType):
+        #### maybe useless
+        if drawType == 1:
+            xi = self.xi
+            #color = (0, 0, 255)
+            color = self.scene.getRobotColor(self.index, 255, True)
+        elif drawType == 2:
+            xi = self.xid
+            color = (0, 255, 0)
+        r = self.l/2
+        rPix = round(r * self.scene.m2pix())
+        dx = -r * math.sin(xi.theta)
+        dy = r * math.cos(xi.theta)
+        p1 = np.float32([[xi.x + dx, xi.y + dy]])
+        p2 = np.float32([[xi.x - dx, xi.y - dy]])
+        p0 = np.float32([[xi.x, xi.y]])
+        p3 = np.float32([[xi.x + dy/2, xi.y - dx/2]])
+        p1Pix = self.scene.m2pix(p1)
+        p2Pix = self.scene.m2pix(p2)
+        p0Pix = self.scene.m2pix(p0)
+        p3Pix = self.scene.m2pix(p3)
+        if USE_CV2 == True:
+            if self.dynamics <= 1 or self.dynamics == 4 or self.dynamics == 5:
+                cv2.circle(image, tuple(p0Pix[0]), rPix, color)
+            else:
+                cv2.line(image, tuple(p1Pix[0]), tuple(p2Pix[0]), color)
+                cv2.line(image, tuple(p0Pix[0]), tuple(p3Pix[0]), color)
+#### Set one robot's Position and Orientation
+##### (rewirte to update_state) merge with updateNeighbors
+    def setPosition(self, stateVector = None):
+        # stateVector = [x, y, theta]
 
-        Returns: None
-
-        """
         z0 = 0.1587
         if stateVector == None:
             x0 = self.xi.x
@@ -416,40 +536,46 @@ class Robot():
             self.xi.theta = theta0
         else:
             raise Exception('Argument error!')
-        position = [x0, y0, z0]
-        orientation = [0, 0, theta0]
-        handle = self.robotHandle
-        self.scene.executor_setpose(self.index, handle, position, orientation)
-    #### Set one robot's neighbors
-    ##### (not yet finish) For update_state
-    def update_neighbors(self,adjmatrix,robot_list):
-        """
-        Set the neighbors of one robot according to the adjmatrix
-        Args:
-            adjmatrix: Scene's adjacent matrix
-            robot_list: All robots in the scene
-
-        Returns: None
-
-        """
-        self.neighbors = []
-        self.leader = None
-        for j in range(len(robot_list)):
-            if adjmatrix[self.index, j] == 0:
-                continue
-            robot = robot_list[j]  # neighbor
-            self.neighbors.append(robot)
-            if robot.role == "LEADER":
-                if self.leader is not None:
-                    raise Exception('There cannot be more than two leaders in a scene!')
-                self.leader = robot
-    #### (not yet finish)
-    def update_state(self,stateVector):
-        self.update_pose(stateVector)
-        # self.update_neighbors(adjmatrix, robot_list)
+        if self.scene.vrepConnected == False:
+            return
+        vrep.simxSetObjectPosition(self.scene.clientID, self.robotHandle, -1,
+                [x0, y0, z0], vrep.simx_opmode_oneshot)
+        vrep.simxSetObjectOrientation(self.scene.clientID, self.robotHandle, -1,
+                [0, 0, theta0], vrep.simx_opmode_oneshot)
+        message = "Robot #" + str(self.index) + "'s pose is set to "
+        message += "[{0:.3f}, {1:.3f}, {2:.3f}]".format(x0, y0, theta0)
+        self.scene.log(message)
 #### Get one robot's Position, Orientation and Lidar reading
-    def get_sensor_data(self,pos,ori,vel,omega,velodyne_points):
-        ##### Get absolute pose from simulator
+##### rewrite to communicate with scene
+    def readSensorData(self):
+        if self.scene.vrepConnected == False:
+            return
+        if "readSensorData_firstCall" not in self.__dict__:
+            self.readSensorData_firstCall = True
+        else:
+            self.readSensorData_firstCall = False
+
+        # Read robot states
+        res, pos = vrep.simxGetObjectPosition(self.scene.clientID,
+                                              self.robotHandle, -1,
+                                              vrep.simx_opmode_blocking)
+        if res != 0:
+            raise VrepError("Cannot get object position with error code " + str(res))
+        res, ori = vrep.simxGetObjectOrientation(self.scene.clientID,
+                                              self.robotHandle, -1,
+                                              vrep.simx_opmode_blocking)
+        if res != 0:
+            raise VrepError("Cannot get object orientation with error code " + str(res))
+        res, vel, omega = vrep.simxGetObjectVelocity(self.scene.clientID,
+                                                     self.robotHandle,
+                                                     vrep.simx_opmode_blocking)
+        if res != 0:
+            raise VrepError("Cannot get object velocity with error code " + str(res))
+        #print("Linear speed: %.3f" % (vel[0]**2 + vel[1]**2)**0.5,
+        #      "m/s. Angular speed: %.3f" % omega[2])
+        #print("pos: %.2f" % pos[0], ", %.2f" % pos[1])
+        #print("Robot #", self.index, " ori: %.3f" % ori[0], ", %.3f" % ori[1], ", %.3f" % ori[2])
+
         self.xi.x = pos[0]
         self.xi.y = pos[1]
         self.xi.alpha = ori[0]
@@ -460,10 +586,34 @@ class Robot():
                                          math.sin(self.xi.theta)])))
         self.vActual = sgn * (vel[0]**2 + vel[1]**2)**0.5
         self.omegaActual = omega[2]
-        ##### Get laser/vision sensor data
-        # Parse data
-        if not velodyne_points==None:
+        # Read laser/vision sensor data
+        if self.scene.SENSOR_TYPE == "2d_":
+            # self.laserFrontHandle
+            # self.laserRearHandle
+
+            if self.readSensorData_firstCall:
+                opmode = vrep.simx_opmode_streaming
+            else:
+                opmode = vrep.simx_opmode_buffer
+            laserFront_points = vrep.simxGetStringSignal(
+                    self.scene.clientID, self.laserFrontName + '_signal', opmode)
+            print(self.laserFrontName + '_signal: ', len(laserFront_points[1]))
+            laserRear_points = vrep.simxGetStringSignal(
+                    self.scene.clientID, self.laserRearName + '_signal', opmode)
+            print(self.laserRearName + '_signal: ', len(laserRear_points[1]))
+        elif self.scene.SENSOR_TYPE == "2d": # deprecated
+            raise Exception('2d sensor is not supported!!!!')
+        elif self.scene.SENSOR_TYPE == "VPL16":
+            # self.pointCloudHandle
+            velodyne_points = vrep.simxCallScriptFunction(
+                    self.scene.clientID, self.pointCloudName, 1,
+                    'getVelodyneData_function', [], [], [], 'abc',
+                    vrep.simx_opmode_blocking)
+            #print(len(velodyne_points[2]))
+            #print(velodyne_points[2])
             res = velodyne_points[0]
+
+            # Parse data
             if 'VPL16_counter' not in self.__dict__:
                 self.VPL16_counter = 0
             # reset the counter every fourth time
@@ -472,113 +622,43 @@ class Robot():
             if self.VPL16_counter == 0:
                 # Reset point cloud
                 self.pointCloud.clearData()
+            #print('VPL16_counter = ', self.VPL16_counter)
             self.pointCloud.addRawData(velodyne_points[2]) # will rotate here
+
             if self.VPL16_counter == 3:
+
+                #print("Length of point cloud is " + str(len(self.pointCloud.data)))
+                if res != 0:
+                    raise VrepError("Cannot get point cloud with error code " + str(res))
+
+                #start = time.clock()
                 self.pointCloud.crop()
+                #end = time.clock()
+                #self.pointCloud.updateScanVector() # option 2
                 self.pointCloud.updateOccupancyMap() # option 1
+                #print('Time elapsed: ', end - start)
             self.VPL16_counter += 1
             # add for gnn
-            ###### (not yet finish)
+            #self.graph_matrix = np.ones((3, 3), dtype = np.float32)-np.identity(3)
+            #self.graph_matrix = self.graph_matrix.reshape(1,9) # 9: n by n where n is the # of robots
             self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)
+            #self.graph_matrix = self.scene.readADjMatrix(MaxRange=100)
+
+        elif self.scene.SENSOR_TYPE == "kinect":
+            pass
+        else:
+            return
     def getV1V2(self):
         v1 = self.vActual + self.omegaActual * self.l / 2
         v2 = self.vActual - self.omegaActual * self.l / 2
         return np.array([[v1, v2]])
-##### might move to scene
-##### pending decide
-    def propagateDesired(self):
-        if self.dynamics == 5:
-            pass
-        elif self.dynamics == 4 or self.dynamics == 11:
-            # Circular desired trajectory, depricated.
-            t = self.scene.t
-            radius = 2
-            omega = 0.2
-            theta0 = math.atan2(self.xid0.y, self.xid0.x)
-            rho0 = (self.xid0.x ** 2 + self.xid0.y ** 2) ** 0.5
-            self.xid.x = (radius * math.cos(omega * t) +
-                          rho0 * math.cos(omega * t + theta0))
-            self.xid.y = (radius * math.sin(omega * t) +
-                          rho0 * math.sin(omega * t + theta0))
-            self.xid.vx = -(radius * omega * math.sin(omega * t) +
-                            rho0 * omega * math.sin(omega * t + theta0))
-            self.xid.vy = (radius * omega * math.cos(omega * t) +
-                           rho0 * omega * math.cos(omega * t + theta0))
-            self.xid.theta = math.atan2(self.xid.vy, self.xid.vx)
-            #self.xid.omega = omega
-
-            c = self.l/2
-            self.xid.vxp = self.xid.vx - c * math.sin(self.xid.theta) * omega
-            self.xid.vyp = self.xid.vy + c * math.cos(self.xid.theta) * omega
-        elif self.dynamics == 16:
-            # Linear desired trajectory
-
-            t = self.scene.t
-            #dt = self.scene.dt
-            x = self.scene.xid.x
-            y = self.scene.xid.y
-            #print('x = ', x, 'y = ', y)
-            theta = self.scene.xid.theta
-            #print('theta = ', theta)
-            sDot = self.scene.xid.sDot
-            thetaDot = self.scene.xid.thetaDot
-
-            phii = math.atan2(self.xid0.y, self.xid0.x)
-            rhoi = (self.xid0.x ** 2 + self.xid0.y ** 2) ** 0.5
-            #print('phii = ', phii)
-            self.xid.x = x + rhoi * math.cos(phii)
-            self.xid.y = y + rhoi * math.sin(phii)
-            self.xid.vx = sDot * math.cos(theta)
-            self.xid.vy = sDot * math.sin(theta)
-            #print('vx: ', self.xid.vx, 'vy:', self.xid.vy)
-            #print('v', self.index, ' = ', (self.xid.vx**2 + self.xid.vy**2)**0.5)
-
-            dpbarx = -self.scene.xid.dpbarx
-            dpbary = -self.scene.xid.dpbary
-            if (dpbarx**2 + dpbary**2)**0.5 > 1e-1:
-                self.xid.theta = math.atan2(dpbary, dpbarx)
-            #if (self.xid.vx**2 + self.xid.vy**2)**0.5 > 1e-3:
-            #    self.xid.theta = math.atan2(self.xid.vy, self.xid.vx)
-            #self.xid.omega = omega
-
-            c = self.l/2
-            self.xid.vxp = self.xid.vx - c * math.sin(self.xid.theta) * thetaDot
-            self.xid.vyp = self.xid.vy + c * math.cos(self.xid.theta) * thetaDot
-            self.xid.vRef = self.scene.xid.vRef
-        elif self.dynamics == 17 or self.dynamics == 18:
-            self.xid.theta = self.scene.xid.vRefAng
-
-##### For simulate
-    def precompute(self,adjmatrix,robot_list):
-        self.xi.transform()
-        self.xid.transform()
-        self.update_neighbors(adjmatrix,robot_list)
-#### Set the linear velocity of 2 wheels
-##### move to scene and merger with simulate
-    def propagate(self,omega1,omega2):
-        if self.scene.vrepConnected == False:
-            self.xi.propagate(self.control)
-        else:
-            vrep.simxSetJointTargetVelocity(self.scene.clientID,
-                                            self.motorLeftHandle,
-                                            omega1, vrep.simx_opmode_oneshot)
-            vrep.simxSetJointTargetVelocity(self.scene.clientID,
-                                            self.motorRightHandle,
-                                            omega2, vrep.simx_opmode_oneshot)
-##### move to scene and merger with simulate
-    def setControl(self,omlist,i):
-        if self.scene.vrepConnected == False:
-            self.xi.propagate(self.control)
-        else:
-            omega1, omega2 = self.control(omlist,i)
-            return omega1,omega2
-    ##### For simulate in scene
-    def getDataObs(self):
-        observation, action_1 = self.data.getObservation(-12)
-        return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
 
 
 
 
+class VrepError(Exception):
+    # Exception raised for errors related vrep.
 
+    def __init__(self, message):
+        self.message = message
 

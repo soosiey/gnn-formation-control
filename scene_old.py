@@ -11,7 +11,7 @@ except ImportError:
     USE_CV2 = False
 
 import numpy as np
-from robot import Robot
+from robot_old import Robot
 #import matplotlib.pyplot as plt
 import sim as vrep
 import math
@@ -77,9 +77,9 @@ class Scene():
         self.DYNAMICS_LEARNED = 30
 
         # follower does not have knowledge of absolute position
-        # self.ROLE_LEADER = "LEADER"
-        # self.ROLE_FOLLOWER = "FOLLOWER"
-        # self.ROLE_PEER = "PEER"
+        self.ROLE_LEADER = 0
+        self.ROLE_FOLLOWER = 1
+        self.ROLE_PEER = 2
 
         self.errorType = 0
         self.logPriorityMax = 1 # Messages with lower priorities are not logged
@@ -88,10 +88,13 @@ class Scene():
         self.log('A new scene is created for run #' + str(runNum))
 ##### merge with resetPosition,scaleDesiredFormation
     def addRobot(self, arg, nr,arg2 = np.float32([.5, .5]),
-                 role = "FOLLOWER",model_controller=False, learnedController = None):
+                 role = 1,model_controller=False, learnedController = None):
         robot = Robot(self,nr)
+
         robot.index = len(self.robots)
+
         robot.role = role
+
         robot.xi.x = arg[0, 0]
         robot.xi.y = arg[0, 1]
         robot.xi.theta = arg[0, 2]
@@ -107,7 +110,7 @@ class Scene():
         if self.dynamics >=20 and self.dynamics <= 25:
             robot.arg2 = arg2
 
-        if robot.role == "LEADER":
+        if robot.role == self.ROLE_LEADER:
             robot.recordData = False # Leader data is not recorded
         else:
             robot.recordData = self.recordData
@@ -115,11 +118,11 @@ class Scene():
         self.robots.append(robot)
 
         message = ""
-        if robot.role == "LEADER":
+        if robot.role == 0:
             message += "Leader"
-        elif robot.role == "FOLLOWER":
+        elif robot.role == 1:
             message += "Follower"
-        elif robot.role == "PEER":
+        elif robot.role == 2:
             message += "Peer"
         else:
             message += "Type-unkonwn"
@@ -130,88 +133,7 @@ class Scene():
             message += "a leanrned controller"
         message += " is added to the scene"
         self.log(message)
-
-        #####(merge with addRobot)
-    def resetPosition(self, radius=2):
-        if radius is None:
-            for i in range(0, len(self.robots)):
-                self.robots[i].update_pose(None)
-            return
-
-        MIN_DISTANCE = 1
-        MAX_DISTANCE = 8
-        if self.dynamics == 5:
-            xbar = 0
-            ybar = 0
-            for i in range(0, len(self.robots)):
-                while True:
-                    minDij = float("inf")
-                    # alpha1 = math.pi * (-2/3*i - 1/3* random.random()) # limited
-                    alpha1 = math.pi * (2 * random.random())  # arbitrary
-                    rho1 = radius * random.random()
-                    x1 = rho1 * math.cos(alpha1)
-                    y1 = rho1 * math.sin(alpha1)
-                    theta1 = 0  # 2 * math.pi * random.random()
-                    for j in range(0, i):
-                        dij = ((x1 - self.robots[j].xi.x) ** 2 +
-                               (y1 - self.robots[j].xi.y) ** 2) ** 0.5
-                        # print('j = ', j, '( %.3f' % self.robots[j].xi.x, ', %.3f'%self.robots[j].xi.y, '), ', 'dij = ', dij)
-                        if dij < minDij:
-                            minDij = dij  # find the smallest dij for all j
-                    print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
-                    # if the smallest dij is greater than allowed,
-                    if minDij >= MIN_DISTANCE:
-                        self.robots[i].update_pose([x1, y1, theta1])
-                        break  # i++
-                xbar += x1
-                ybar += y1
-            self.xi.x = xbar / len(self.robots)
-            self.xi.y = ybar / len(self.robots)
-            self.xid.dpbarx = self.xi.x - self.xid.x
-            self.xid.dpbary = self.xi.y - self.xid.y
-        elif self.dynamics >= 16 and self.dynamics <= 18:
-            xbar = 0
-            ybar = 0
-            for i in range(0, len(self.robots)):
-                while True:
-                    minDij = float("inf")
-                    alpha1 = math.pi * (2 * random.random())  # arbitrary
-                    rho1 = radius * random.random()
-                    x1 = rho1 * math.cos(alpha1)
-                    y1 = rho1 * math.sin(alpha1)
-                    theta1 = 2 * math.pi * random.random()
-                    for j in range(0, i):
-                        dij = ((x1 - self.robots[j].xi.x) ** 2 +
-                               (y1 - self.robots[j].xi.y) ** 2) ** 0.5
-                        if dij < minDij:
-                            minDij = dij  # find the smallest dij for all j
-                    print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
-                    # if the smallest dij is greater than allowed,
-                    if i == 0:
-                        self.robots[i].update_pose([x1, y1, theta1])
-                        break  # i++
-                    elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
-                        self.robots[i].update_pose([x1, y1, theta1])
-                        break  # i++
-                xbar += x1
-                ybar += y1
-            self.xi.x = xbar / len(self.robots)
-            self.xi.y = ybar / len(self.robots)
-            self.xid.dpbarx = self.xi.x - self.xid.x
-            self.xid.dpbary = self.xi.y - self.xid.y
-
-    #####(merge with addRobot)
-    def scaleDesiredFormation(self, alpha):
-        self.alpha = alpha
-        for robot in self.robots:
-            robot.xid0.x *= alpha
-            robot.xid0.y *= alpha
-            robot.xid.x *= alpha
-            robot.xid.y *= alpha
-
 #####(rewrite)
-
-
     def setADjMatrix(self, adjMatrix):
         self.adjMatrix = adjMatrix
         self.Laplacian = np.diag(np.sum(self.adjMatrix, axis = 1))
@@ -310,125 +232,101 @@ class Scene():
             self.robots[robotIndex].kinectRgbHandle = kinectRgbHandle
             self.robots[robotIndex].kinectDepthName = handleNames[3] + handleNameSuffix
             self.robots[robotIndex].kinectRgbName = handleNames[4] + handleNameSuffix
+
         #self.robots[robotIndex].setPosition()
-        pos, ori, vel, omega,velodyne_points= self.read_sensor(self.robots[robotIndex])
-        # print(pos, ori, vel, omega,velodyne_points)
-        self.robots[robotIndex].get_sensor_data(pos, ori, vel, omega,velodyne_points)
-#### Simulate for one simulation time step. Get sensor data, calculate control, simulate robot's movements
-    def read_sensor(self,robot):
-
-        ##### Read absolute pose from simulator
-        if self.vrepConnected == False:
-            return
-        if "readSensorData_firstCall" not in self.__dict__:
-            self.readSensorData_firstCall = True
-        else:
-            self.readSensorData_firstCall = False
-
-        # Read robot states
-        res, pos = vrep.simxGetObjectPosition(self.clientID,
-                                              robot.robotHandle, -1,
-                                              vrep.simx_opmode_blocking)
-        if res != 0:
-            raise VrepError("Cannot get object position with error code " + str(res))
-        res, ori = vrep.simxGetObjectOrientation(self.clientID,
-                                                 robot.robotHandle, -1,
-                                                 vrep.simx_opmode_blocking)
-        if res != 0:
-            raise VrepError("Cannot get object orientation with error code " + str(res))
-        res, vel, omega = vrep.simxGetObjectVelocity(self.clientID,
-                                                     robot.robotHandle,
-                                                     vrep.simx_opmode_blocking)
-        if res != 0:
-            raise VrepError("Cannot get object velocity with error code " + str(res))
-        ##### Read sensors
-        velodyne_points=None
-        if self.SENSOR_TYPE == "2d_":
-            # self.laserFrontHandle
-            # self.laserRearHandle
-
-            if self.readSensorData_firstCall:
-                opmode = vrep.simx_opmode_streaming
-            else:
-                opmode = vrep.simx_opmode_buffer
-            laserFront_points = vrep.simxGetStringSignal(
-                    self.clientID, robot.laserFrontName + '_signal', opmode)
-            print(robot.laserFrontName + '_signal: ', len(laserFront_points[1]))
-            laserRear_points = vrep.simxGetStringSignal(
-                    self.clientID, robot.laserRearName + '_signal', opmode)
-            print(robot.laserRearName + '_signal: ', len(laserRear_points[1]))
-        elif self.SENSOR_TYPE == "2d": # deprecated
-            raise Exception('2d sensor is not supported!!!!')
-        elif self.SENSOR_TYPE == "VPL16":
-            # self.pointCloudHandle
-            velodyne_points = vrep.simxCallScriptFunction(
-                    self.clientID, robot.pointCloudName, 1,
-                    'getVelodyneData_function', [], [], [], 'abc',
-                    vrep.simx_opmode_blocking)
-            res = velodyne_points[0]
-            # Parse data
-        elif self.scene.SENSOR_TYPE == "kinect":
-            pass
-        else:
+        self.robots[robotIndex].readSensorData()
+#####(merge with addRobot)
+    def resetPosition(self, radius = 2):
+        if radius is None:
+            for i in range(0, len(self.robots)):
+                self.robots[i].setPosition(None)
             return
 
+        MIN_DISTANCE = 1
+        MAX_DISTANCE = 8
+        if self.dynamics == 5:
+            xbar = 0
+            ybar = 0
+            for i in range(0, len(self.robots)):
+                while True:
+                    minDij = float("inf")
+                    #alpha1 = math.pi * (-2/3*i - 1/3* random.random()) # limited
+                    alpha1 = math.pi * (2 * random.random()) # arbitrary
+                    rho1 = radius * random.random()
+                    x1 = rho1 * math.cos(alpha1)
+                    y1 = rho1 * math.sin(alpha1)
+                    theta1 = 0#2 * math.pi * random.random()
+                    for j in range(0, i):
+                        dij = ((x1 - self.robots[j].xi.x)**2 +
+                               (y1 - self.robots[j].xi.y)**2)**0.5
+                        # print('j = ', j, '( %.3f' % self.robots[j].xi.x, ', %.3f'%self.robots[j].xi.y, '), ', 'dij = ', dij)
+                        if dij < minDij:
+                            minDij = dij # find the smallest dij for all j
+                    print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
+                    # if the smallest dij is greater than allowed,
+                    if minDij >= MIN_DISTANCE:
+                        self.robots[i].setPosition([x1, y1, theta1])
+                        break # i++
+                xbar += x1
+                ybar += y1
+            self.xi.x = xbar / len(self.robots)
+            self.xi.y = ybar / len(self.robots)
+            self.xid.dpbarx = self.xi.x - self.xid.x
+            self.xid.dpbary = self.xi.y - self.xid.y
+        elif self.dynamics >= 16 and self.dynamics <= 18:
+            xbar = 0
+            ybar = 0
+            # self.robots[0].setPosition([-1.83938265,  0.24249859,0])
+            # self.robots[1].setPosition([ 1.59194398, -0.86264265,0])
+            # self.robots[2].setPosition([ 2.48446083,  1.84220445,0])
+            # self.robots[3].setPosition([-3.02479005,  3.31855512,0])
+            # self.robots[4].setPosition([ 2.1342206 , -3.21711802,0])
+            for i in range(0, len(self.robots)):
+                while True:
+                    minDij = float("inf")
+                    #alpha1 = math.pi * (-2/3*i - 1/3* random.random()) # limited
+                    alpha1 = math.pi * (2 * random.random()) # arbitrary
+                    rho1 = radius * random.random()
+                    x1 = rho1 * math.cos(alpha1)
+                    y1 = rho1 * math.sin(alpha1)
+                    theta1 = 2 * math.pi * random.random()
+                    for j in range(0, i):
+                        dij = ((x1 - self.robots[j].xi.x)**2 +
+                               (y1 - self.robots[j].xi.y)**2)**0.5
+                        # print('j = ', j, '( %.3f' % self.robots[j].xi.x, ', %.3f'%self.robots[j].xi.y, '), ', 'dij = ', dij)
+                        if dij < minDij:
+                            minDij = dij # find the smallest dij for all j
+                    print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
+                    # if the smallest dij is greater than allowed,
+                    if i==0:
+                        self.robots[i].setPosition([x1, y1, theta1])
+                        break # i++
+                    elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
+                        self.robots[i].setPosition([x1, y1, theta1])
+                        break # i++
+                    #if minDij >= MIN_DISTANCE:
+                    #    self.robots[i].setPosition([x1, y1, theta1])
+                    #    print((x1,y1,theta1))
+                    #    break # i++
+                xbar += x1
+                ybar += y1
+            self.xi.x = xbar / len(self.robots)
+            self.xi.y = ybar / len(self.robots)
+            self.xid.dpbarx = self.xi.x - self.xid.x
+            self.xid.dpbary = self.xi.y - self.xid.y
 
+        #input('One moment.')
+        # End of resetPosition()
 
-        return pos,ori,vel,omega,velodyne_points
-    def propagate(self,robot,omega1,omega2):
-        if self.vrepConnected == False:
-            robot.xi.propagate(robot.control)
-        else:
-            vrep.simxSetJointTargetVelocity(self.clientID,
-                                            robot.motorLeftHandle,
-                                            omega1, vrep.simx_opmode_oneshot)
-            vrep.simxSetJointTargetVelocity(self.clientID,
-                                            robot.motorRightHandle,
-                                            omega2, vrep.simx_opmode_oneshot)
-    def simulate(self):
-        # vrep related
-        '''
-        cmd = input('Press <enter> key to step the simulation!')
-        if cmd == 'q': # quit
-            return False
-        '''
-        self.t += self.dt
-        self.ts.append(self.t)
-        self.propagateXid()
-        countReachedGoal = 0
-        omlist = []
+#####(merge with addRobot)
+    def scaleDesiredFormation(self, alpha):
+        self.alpha = alpha
         for robot in self.robots:
-            robot.precompute(self.adjMatrix,self.robots)
-        for robot in self.robots:
-            pos, ori, vel, omega, velodyne_points = self.read_sensor(robot)
-            robot.get_sensor_data(pos, ori, vel, omega, velodyne_points)
-            # robot.readSensorData()
-            robot.propagateDesired()
-            o,g,r,a = robot.getDataObs()
-            omlist.append((o,g,r,a))
-        for i in range(len(self.robots)):
-            o1,o2 = self.robots[i].setControl(omlist,i)
-            self.propagate(self.robots[i],o1,o2)
-            if self.robots[i].reachedGoal:
-                countReachedGoal += 1
-        self.calcCOG()
+            robot.xid0.x *= alpha
+            robot.xid0.y *= alpha
+            robot.xid.x *= alpha
+            robot.xid.y *= alpha
 
-        if self.vrepConnected:
-            vrep.simxSynchronousTrigger(self.clientID);
-        if countReachedGoal == len(self.robots):
-            return False
-        else:
-            return True
-    def executor_setpose(self,index,handle,position,orientation):
-        if self.vrepConnected == False:
-            return
-        vrep.simxSetObjectPosition(self.clientID, handle, -1,
-                                   position, vrep.simx_opmode_oneshot)
-        vrep.simxSetObjectOrientation(self.clientID, handle, -1,
-                                      orientation, vrep.simx_opmode_oneshot)
-        message = "Robot #" + str(index) + "'s pose is set to "
-        message += "[{0:.3f}, {1:.3f}, {2:.3f}]".format(position[0], position[1], orientation[-1])
-        self.log(message)
     def propagateXid(self):
         #### For simulate()
         t = self.t
@@ -471,6 +369,40 @@ class Scene():
             self.xid.dpbarx = -self.xid.vRefMag * math.cos(self.xid.vRefAng + self.t * omega)
             self.xid.dpbary = -self.xid.vRefMag * math.sin(self.xid.vRefAng + self.t * omega)
             #print('dpbarx: ', self.xid.dpbarx, ', dpbary: ', self.xid.dpbary)
+#### Simulate for one simulation time step. Get sensor data, calculate control, simulate robot's movements
+    def simulate(self):
+        # vrep related
+        '''
+        cmd = input('Press <enter> key to step the simulation!')
+        if cmd == 'q': # quit
+            return False
+        '''
+        self.t += self.dt
+        self.ts.append(self.t)
+        self.propagateXid()
+        countReachedGoal = 0
+        omlist = []
+        for robot in self.robots:
+            robot.precompute()
+        for robot in self.robots:
+            robot.readSensorData()
+            robot.propagateDesired()
+            o,g,r,a = robot.getDataObs()
+            omlist.append((o,g,r,a))
+        for i in range(len(self.robots)):
+            o1,o2 = self.robots[i].setControl(omlist,i)
+            self.robots[i].propagate(o1, o2)
+            if robot.reachedGoal:
+                countReachedGoal += 1
+        self.calcCOG()
+
+        if self.vrepConnected:
+            vrep.simxSynchronousTrigger(self.clientID);
+        if countReachedGoal == len(self.robots):
+            return False
+        else:
+            return True
+
     def calcCOG(self):
         #### For simulate()
         # Calculate Center Of Gravity
@@ -491,21 +423,21 @@ class Scene():
             #print(self.centerTraj)
         self.centerTraj[-1, :] /= len(self.robots)
 
-    # def renderScene(self, timestep = -1, waitTime = 25, mode = 0):
-    #     #### mayby useless
-    #     if USE_CV2 == False:
-    #         return
-    #     self.image = np.zeros((self.hPix, self.wPix, 3), np.uint8)
-    #     for robot in self.robots:
-    #         robot.draw(self.image, 1)
-    #         #robot.draw(self.image, 2)
-    #     if mode == 0:
-    #         cv2.imshow('scene', self.image)
-    #         cv2.waitKey(waitTime)
-    #     elif mode == 1:
-    #         if self.frameCounter % 5 == 0:
-    #             self.out.write(self.image)
-    #         self.frameCounter += 1
+    def renderScene(self, timestep = -1, waitTime = 25, mode = 0):
+        #### mayby useless
+        if USE_CV2 == False:
+            return
+        self.image = np.zeros((self.hPix, self.wPix, 3), np.uint8)
+        for robot in self.robots:
+            robot.draw(self.image, 1)
+            #robot.draw(self.image, 2)
+        if mode == 0:
+            cv2.imshow('scene', self.image)
+            cv2.waitKey(waitTime)
+        elif mode == 1:
+            if self.frameCounter % 5 == 0:
+                self.out.write(self.image)
+            self.frameCounter += 1
 
 
     def getRobotColor(self, i, brightness = 0.7, reverse = False):
@@ -622,9 +554,5 @@ class Scene():
                 f.write(prefix + message + '\n')
 
 
-class VrepError(Exception):
-    # Exception raised for errors related vrep.
 
-    def __init__(self, message):
-        self.message = message
 

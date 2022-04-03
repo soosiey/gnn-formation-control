@@ -6,7 +6,7 @@ To run this file, please open vrep file scene/scene_double.ttt first
 @author: cz
 """
 
-from scene import Scene
+from scene_old import Scene
 from useful.sceneplot import ScenePlot
 
 # from robot import Robot

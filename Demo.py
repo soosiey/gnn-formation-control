@@ -7,7 +7,7 @@ To run this file, please open vrep file scene/scene_double.ttt first
 """
 
 from scene import Scene
-from robot import VrepError
+from scene import VrepError
 from sceneplot import ScenePlot
 # from robot import Robot
 import numpy as np
@@ -27,7 +27,7 @@ parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help=
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
 parser.add_argument('--robotNum', dest='robotNum', default=4,type=int,help='Number of robot for simulation')
-parser.add_argument('--simTime', dest='simTime', default=5,type=int,help='Simulation time for one simulation')
+parser.add_argument('--simTime', dest='simTime', default=2,type=int,help='Simulation time for one simulation')
 parser.add_argument('--trainEpisode', dest='trainEpisode', default=1,type=int,help='Episode for training')
 parser.add_argument('--modelName', dest='modelName', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
 # # modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
@@ -196,9 +196,10 @@ def generateData(args,agent,ep,positionList):
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
     sc.dynamics = sc.DYNAMICS_MODEL_BASED_DISTANCE2_REFVEL # robot dynamics
     sc.errorType = 0
+
     try:
         for i in range(args.robotNum):
-            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum, role = sc.ROLE_PEER, learnedController = agent.test)
+            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum, role ="PEER", learnedController = agent.test)
 
 #==============================================================================
 #         sc.addRobot(np.float32([[1, 3, 0], [0, -1, 0]]),
@@ -221,6 +222,7 @@ def generateData(args,agent,ep,positionList):
         sc.objectNames = ['Pioneer_p3dx', 'Pioneer_p3dx_leftMotor', 'Pioneer_p3dx_rightMotor']
 
         # change the # of instantiations according to "robotNum"
+        # print(sc.SENSOR_TYPE)
         if sc.SENSOR_TYPE == "None":
             sc.setVrepHandles(0, '')
             for i in range(1,args.robotNum+1):
@@ -229,6 +231,7 @@ def generateData(args,agent,ep,positionList):
 
         elif sc.SENSOR_TYPE == "VPL16":
             sc.objectNames.append('velodyneVPL_16') # _ptCloud
+            print(sc.objectNames)
             for i in range(args.robotNum):
                 checkn = i - 1
                 s = ''

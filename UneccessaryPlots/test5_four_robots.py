@@ -6,8 +6,8 @@ To run this file, please open vrep file scene/scene_double.ttt first
 @author: cz
 """
 
-from scene import Scene
-from robot import VrepError
+from scene_old import Scene
+from robot_old import VrepError
 from useful.sceneplot import ScenePlot
 # from robot import Robot
 import numpy as np
