@@ -18,21 +18,16 @@ class State():
         self.robot = robot
 
 
+
     def propagate(self, control):
         if self.robot == None:
             sys.exit("State: attribute robot is None")
         dt = self.robot.scene.dt
-        if self.robot.dynamics == 5:
-            v1, v2 = control()
-            self.x += v1 * dt
-            self.y += v2 * dt
-            self.theta = 0 # useless
-        elif self.robot.dynamics >= 10:
-            l = self.robot.l
-            v1, v2 = control()
-            self.x += math.cos(self.theta) * dt / 2 * (v1 + v2)
-            self.y += math.sin(self.theta) * dt / 2 * (v1 + v2)
-            self.theta += 1 / l * dt * (v2 - v1)
+        l = self.robot.l
+        v1, v2 = control()
+        self.x += math.cos(self.theta) * dt / 2 * (v1 + v2)
+        self.y += math.sin(self.theta) * dt / 2 * (v1 + v2)
+        self.theta += 1 / l * dt * (v2 - v1)
 
 
     def transform(self):

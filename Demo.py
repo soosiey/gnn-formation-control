@@ -93,13 +93,6 @@ def demo_one(args):
             l = fcl.train(dataListEpisode)
             lossList.append(l)
 
-        nnn = 0
-        nm = 0
-        for robot in sc.robots:
-            nnn += robot.numNN
-            nm += robot.numMod
-        print('Number of times neural network was selected:', nnn)
-        print('Number of times expert model was selected:', nm)
         if (i % 25 == 0 and args.if_train):
             fcl.save(args.modelname)
 
@@ -160,7 +153,7 @@ def generateData(args,agent,ep,positionList):
 
     try:
         for i in range(args.robotNum):
-            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum, learnedController = agent.test)
+            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum,expert_controller=False, learnedController = agent.test)
         # No leader
         I = np.identity(args.robotNum, dtype=np.int8)
         M = np.ones(args.robotNum, dtype=np.int8)
@@ -220,6 +213,8 @@ def generateData(args,agent,ep,positionList):
                 sc.log(message)
                 print(message)
                 break
+        for r in range(len(sc.robots)):
+            print(sc.robots[r].pose_list)
     except KeyboardInterrupt:
         x = input('Quit?(y/n)')
         if x == 'y' or x == 'Y':

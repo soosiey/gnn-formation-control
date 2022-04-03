@@ -26,52 +26,51 @@ def saturate(dxp, dyp, dxypMax):
 
 class Robot():
     def __init__(self, scene,numRobots):
+
+        ##### useful artribute
+
         self.index=None
         self.scene = scene
-        # self.dynamics = 18
-        self.numNN = 0
-        self.numMod = 0
-        # dynamics parameters
-
         self.l = 0.331
         self.nr = numRobots
         # state
         self.xi = State(0, 0, 0, self)
-        #self.xi = State(random.random()*100, random.random()*100,2*math.pi*random.random(),self)
         self.xid = State(3, 0, 0, self)
+        self.wheel_velocity_1 = 0
+        self.wheel_velocity_2 = 0
         self.reachedGoal = False
+        self.neighbors = []
         # Control parameters
-        self.p=0.8
-        self.model_controller=False
-
-        #
+        self.expert_controller=False
+        self.p = 0.8
+        self.control_vmax = 1.2
+        self.control_vmin = 0.01
+        self.LIMIT_MAX_ACC = False
+        self.accMax = 0.5
+        ##### for future need
         self.pointCloud = PointCloud(self)
         # control parameters
-        self.control_vmax=1.2
-        self.control_vmin = 0.01
-        self.LIMIT_MAX_ACC=False
-        self.accMax = 0.5
+
         # Data to be recorded
+        self.pose_list=[]
+        self.velocity_list=[]
+
+
         self.recordData = False
         self.data = Data(self)
         self.v1Desired = 0
         self.v2Desired = 0
         self.v1Desirednn = 0
         self.v2Desirednn = 0
+        self.position_hist = []
         #### Robot's neighbor
-        self.neighbors = []
-        self.leader = None # Only for data recording purposes
+
+        # self.leader = None # Only for data recording purposes
 
         self.ctrl1_sm = []
         self.ctrl2_sm = []
-
-        self.position_hist = []
-
-
     def checkMove(self,hist,num = 1,thresh = .01):
         moving = False
-        #if(abs(hist[0] - hist[-1]) > thresh):
-        #   moving = True
         for i in range(1,len(hist)):
             if(abs(hist[i] - hist[i - 1]) > thresh):
                 moving = True
@@ -218,7 +217,6 @@ class Robot():
             v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm) - 10:len(self.ctrl2_sm)]) / 10
 
         # stopping condition
-
         current_position = (self.xi.xp ** 2 + self.xi.yp ** 2) ** 0.5
         self.position_hist.append(current_position)
         hist_len = len(self.position_hist)
@@ -322,14 +320,12 @@ class Robot():
         else:
             model_controller=True
         #### decide to use which controller
-        model_controller=False
+        if self.expert_controller:
+            model_controller=False
         if model_controller:
             v1 = v1nn
             v2 = v2nn
             # print('\n NN control selected')
-            self.numNN += 1
-        else:
-            self.numMod += 1
 
 
         if self.scene.vrepConnected:
@@ -343,20 +339,27 @@ class Robot():
 
 
             # return omega1/5, omega2/5
+            self.wheel_velocity_1=omega1
+            self.wheel_velocity_2=omega2
             return omega1, omega2
         else:
             # return linear speeds of the two wheels
+            self.wheel_velocity_1=v1
+            self.wheel_velocity_2=v2
             return v1, v2
 
     ##### (not yet finish) For update_state
     #### Set one robot's Position and Orientation
     def update_pose(self,stateVector):
         """
-        For update_state
+        For update_state. Update robot state and return robots pose for scene to execute
         Args:
             stateVector: [x,y,theta] the desire pose of robot
-
-        Returns: None
+        Returns:
+            self.index
+            handle:
+            position:
+            orientation:
 
         """
         z0 = 0.1587
@@ -376,7 +379,8 @@ class Robot():
         position = [x0, y0, z0]
         orientation = [0, 0, theta0]
         handle = self.robotHandle
-        self.scene.executor_setpose(self.index, handle, position, orientation)
+
+        return self.index, handle, position, orientation
     #### Set one robot's neighbors
     ##### (not yet finish) For update_state
     def update_neighbors(self,adjmatrix,robot_list):
@@ -400,6 +404,9 @@ class Robot():
     def update_state(self,stateVector):
         self.update_pose(stateVector)
         # self.update_neighbors(adjmatrix, robot_list)
+    def record_state(self):
+        self.pose_list.append([self.xi.x,self.xi.y,self.xi.theta])
+        self.velocity_list.append([self.wheel_velocity_1,self.wheel_velocity_2])
 #### Get one robot's Position, Orientation and Lidar reading
     def get_sensor_data(self,pos,ori,vel,omega,velodyne_points):
         """
@@ -420,6 +427,7 @@ class Robot():
         self.xi.alpha = ori[0]
         self.xi.beta = ori[1]
         self.xi.theta = ori[2]
+
         sgn = np.sign(np.dot(np.asarray(vel[0:2]),
                              np.asarray([math.cos(self.xi.theta),
                                          math.sin(self.xi.theta)])))
@@ -445,19 +453,21 @@ class Robot():
             # add for gnn
             ###### (not yet finish)
             self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)
+            print("matrix")
+            print(np.shape(self.velocity_list))
     def getV1V2(self):
         v1 = self.vActual + self.omegaActual * self.l / 2
         v2 = self.vActual - self.omegaActual * self.l / 2
         return np.array([[v1, v2]])
 ##### might move to scene
 ##### pending decide
-    def propagateDesired(self):
-        """
-        Update robot pose
-        Returns:None
-
-        """
-        self.xid.theta = self.scene.xid.vRefAng
+    # def propagateDesired(self):
+    #     """
+    #     Update robot desire pose
+    #     Returns:None
+    #
+    #     """
+    #     self.xid.theta = self.scene.xid.vRefAng
 
 ##### For simulate
     def precompute(self,adjmatrix,robot_list):
@@ -476,7 +486,15 @@ class Robot():
     def getDataObs(self):
         observation, action_1 = self.data.getObservation()
         return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
-
+    def save_trace(self,path):
+        pose_array=np.array(self.pose_list)
+        velocity_array=np.array(self.velocity_list)
+        pose_path = path + "pose_array" + str(self.index) + ".npy"
+        velocity_path = path + "velocity_array" + str(self.index) + ".npy"
+        np.save(pose_path,pose_array)
+        np.save(velocity_path,velocity_array)
+        print("Pose array of robot "+str(self.index)+" saved at "+pose_path)
+        print("Velocity array of robot " + str(self.index) + " saved at " + velocity_path)
 
 
 

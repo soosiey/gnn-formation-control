@@ -62,6 +62,7 @@ class Data():
             self.d['epi_starts'] = np.append(self.d['epi_starts'], False)
 
         self.d['observations'] = np.append(self.d['observations'], observation, axis = 0) # option 1
+
         self.d['observations1'] = np.append(self.d['observations1'],
                               self.robot.pointCloud.scanVector, axis = 0) # option 2
         peer = self.robot

@@ -73,7 +73,7 @@ class Scene():
 
 
 ##### merge with resetPosition,scaleDesiredFormation
-    def addRobot(self, arg, nr,model_controller=False, learnedController = None):
+    def addRobot(self, arg, nr,expert_controller=False, learnedController = None):
         robot = Robot(self,nr)
         robot.index = len(self.robots)
         robot.xi.x = arg[0, 0]
@@ -82,7 +82,7 @@ class Scene():
         robot.xid.x = arg[1, 0]
         robot.xid.y = arg[1, 1]
         robot.xid.theta = arg[1, 2]
-        robot.model_controller=model_controller
+        robot.expert_controller=expert_controller
         robot.learnedController = learnedController
         robot.recordData = self.recordData
         self.robots.append(robot)
@@ -123,10 +123,12 @@ class Scene():
                 print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
                 # if the smallest dij is greater than allowed,
                 if i == 0:
-                    self.robots[i].update_pose([x1, y1, theta1])
+                    index, handle, position, orientation=self.robots[i].update_pose([x1, y1, theta1])
+                    self.executor_setpose(index, handle, position, orientation)
                     break  # i++
                 elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
-                    self.robots[i].update_pose([x1, y1, theta1])
+                    index, handle, position, orientation = self.robots[i].update_pose([x1, y1, theta1])
+                    self.executor_setpose(index, handle, position, orientation)
                     break  # i++
             x_average += x1
             y_average += y1
@@ -333,11 +335,12 @@ class Scene():
         for robot in self.robots:
             pos, ori, vel, omega, velodyne_points = self.read_sensor(robot)
             robot.get_sensor_data(pos, ori, vel, omega, velodyne_points)
-            robot.propagateDesired()
+            robot.xid.theta = self.xid.vRefAng
             o,g,r,a = robot.getDataObs()
             omlist.append((o,g,r,a))
         for i in range(len(self.robots)):
             o1,o2 = self.robots[i].get_control(omlist,i)
+            self.robots[i].record_state()
             self.propagate(self.robots[i],o1,o2)
             if self.robots[i].reachedGoal:
                 countReachedGoal += 1
