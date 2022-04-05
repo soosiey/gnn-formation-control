@@ -318,6 +318,51 @@ class Scene():
             vrep.simxSetJointTargetVelocity(self.clientID,
                                             robot.motorRightHandle,
                                             omega2, vrep.simx_opmode_oneshot)
+    def mock_simulator(self,robot):
+        v1=robot.wheel_velocity_1
+        v2=robot.wheel_velocity_2
+        dt = robot.scene.dt
+        l = robot.l
+        d_x = math.cos(robot.xi.theta) * dt / 2 * (v1 + v2)
+        d_y = math.sin(robot.xi.theta) * dt / 2 * (v1 + v2)
+        d_theta = 1 / l * dt * (v2 - v1)
+        new_x=robot.xi.x+d_x
+        new_y=robot.xi.y+d_y
+        new_theta=robot.xi.theta+d_theta
+        pos=[new_x,new_y]
+        ori=[0,0,new_theta]
+        vel=[v1,v2]
+        omega=[0,0,1 / l * dt * (v2 - v1)]
+        velodyne_points=None
+        return pos, ori, vel, omega, velodyne_points
+    def expert_simulate(self):
+        print(self.t)
+        self.t += self.dt
+        self.ts.append(self.t)
+        self.propagateXid()
+        countReachedGoal = 0
+        omlist = []
+        for robot in self.robots:
+            robot.precompute(self.adjMatrix, self.robots)
+        for robot in self.robots:
+            pos, ori, vel, omega, velodyne_points = self.mock_simulator(robot)
+            robot.get_sensor_data(pos, ori, vel, omega, velodyne_points)
+            robot.xid.theta = self.xid.vRefAng
+            o, g, r, a = robot.getDataObs()
+            omlist.append((o, g, r, a))
+        for i in range(len(self.robots)):
+            o1, o2 = self.robots[i].get_control(omlist, i)
+            self.robots[i].record_state()
+            # self.propagate(self.robots[i], o1, o2)
+            if self.robots[i].reachedGoal:
+                countReachedGoal += 1
+        self.calcCOG()
+        # if self.vrepConnected:
+        #     vrep.simxSynchronousTrigger(self.clientID)
+        if countReachedGoal == len(self.robots):
+            return False
+        else:
+            return True
     def simulate(self):
         # vrep related
         '''
@@ -325,6 +370,7 @@ class Scene():
         if cmd == 'q': # quit
             return False
         '''
+
         self.t += self.dt
         self.ts.append(self.t)
         self.propagateXid()
@@ -351,6 +397,7 @@ class Scene():
             return False
         else:
             return True
+
     def executor_setpose(self,index,handle,position,orientation):
         if self.vrepConnected == False:
             return
@@ -449,8 +496,8 @@ class Scene():
             cv2.imshow('Occupancy Map', im)
         cv2.waitKey(waitTime)
     def getMaxFormationError(self):
-        if 2 not in self.ydict.keys():
-            raise Exception('Plot type 2 must be drawn in order to get formation error!')
+        # if 2 not in self.ydict.keys():
+        #     raise Exception('Plot type 2 must be drawn in order to get formation error!')
         if self.errorType == 0:
             errors = self.ydict[2]
         else:
@@ -484,6 +531,22 @@ class Scene():
                             + " [sim time: {1:.3f} s] ")
                 prefix = prefix.format(self.runNum, self.t)
                 f.write(prefix + message + '\n')
+    def save_robot_states(self,path):
+        pose_list=[]
+        velocity_list=[]
+        for i in range(len(self.robots)):
+            pose_list.append(self.robots[i].pose_list)
+            velocity_list.append(self.robots[i].velocity_list)
+        pose_array=np.array(pose_list)
+        velocity_array=np.array(velocity_list)
+        pose_path = path + "pose_array_scene" + ".npy"
+        velocity_path = path + "velocity_array_scene" + ".npy"
+        np.save(pose_path, pose_array)
+        np.save(velocity_path, velocity_array)
+        print("Pose array of scene"+" saved at " + pose_path)
+        print("Velocity array of robot"+" saved at " + velocity_path)
+
+
 class VrepError(Exception):
     # Exception raised for errors related vrep.
     def __init__(self, message):

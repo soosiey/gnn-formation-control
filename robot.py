@@ -453,8 +453,6 @@ class Robot():
             # add for gnn
             ###### (not yet finish)
             self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)
-            print("matrix")
-            print(np.shape(self.velocity_list))
     def getV1V2(self):
         v1 = self.vActual + self.omegaActual * self.l / 2
         v2 = self.vActual - self.omegaActual * self.l / 2
@@ -489,8 +487,8 @@ class Robot():
     def save_trace(self,path):
         pose_array=np.array(self.pose_list)
         velocity_array=np.array(self.velocity_list)
-        pose_path = path + "pose_array" + str(self.index) + ".npy"
-        velocity_path = path + "velocity_array" + str(self.index) + ".npy"
+        pose_path = path + "pose_array_robot_" + str(self.index) + ".npy"
+        velocity_path = path + "velocity_array_robot_" + str(self.index) + ".npy"
         np.save(pose_path,pose_array)
         np.save(velocity_path,velocity_array)
         print("Pose array of robot "+str(self.index)+" saved at "+pose_path)

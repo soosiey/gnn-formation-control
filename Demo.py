@@ -16,6 +16,7 @@ import random
 # from data import Data
 #from DeepFCL import DeepFCL
 from suhaas_agent import Agent
+from plots.plot_scene import plot_scene
 import torch
 import saver
 import matplotlib.pyplot as plt
@@ -26,8 +27,8 @@ parser = argparse.ArgumentParser(description='Args for demo')
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
-parser.add_argument('--robotNum', dest='robotNum', default=4,type=int,help='Number of robot for simulation')
-parser.add_argument('--simTime', dest='simTime', default=2,type=int,help='Simulation time for one simulation')
+parser.add_argument('--robotNum', dest='robotNum', default=9,type=int,help='Number of robot for simulation')
+parser.add_argument('--simTime', dest='simTime', default=200,type=int,help='Simulation time for one simulation')
 parser.add_argument('--trainEpisode', dest='trainEpisode', default=1,type=int,help='Episode for training')
 parser.add_argument('--modelName', dest='modelName', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
 # # modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
@@ -70,6 +71,8 @@ def demo_one(args):
         dataListEpisode = []
         # First episode
         sc0 = generateData(args, fcl,i,positionList)
+        sc0.save_robot_states("")
+        plot_scene(sc0,"","figs")
         if sc0 is not None:
             # if the list is not empty
             sc = sc0
@@ -153,7 +156,7 @@ def generateData(args,agent,ep,positionList):
 
     try:
         for i in range(args.robotNum):
-            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum,expert_controller=False, learnedController = agent.test)
+            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robotNum,expert_controller=True, learnedController = agent.test)
         # No leader
         I = np.identity(args.robotNum, dtype=np.int8)
         M = np.ones(args.robotNum, dtype=np.int8)
@@ -192,34 +195,28 @@ def generateData(args,agent,ep,positionList):
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
         sc.resetPosition(5)
-        sp.plot(4, tf,expert=args.expert_only)
-
-        while sc.simulate():
+        # sp.plot(4, tf,expert=args.expert_only)
+        realstop = 10
+        while sc.expert_simulate():
             for r in range(len(sc.robots)):
                 positionList[ep].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
-            if sc.t > 1:
-                maxAbsError = sc.getMaxFormationError()
-                if maxAbsError < 0.01 and errorCheckerEnabled:
-                    #tf = sc.t - 0.01
-                    # set for how many seconds after convergence the simulator shall run
-                    tExtra = 30
-                    #tf = sc.t + tExtra
-                    errorCheckerEnabled = False
-                    print('Ending in ', str(tExtra), ' seconds...')
+            stop=True
 
-            plot(sp, tf,expert=args.expert_only)
-            if sc.t > tf:
-                message = "maxAbsError = {0:.3f} m".format(maxAbsError)
-                sc.log(message)
-                print(message)
-                break
-        for r in range(len(sc.robots)):
-            print(sc.robots[r].pose_list)
+            for i in range(len(sc.robots)):
+                if not(sc.robots[i].wheel_velocity_1==0 and sc.robots[i].wheel_velocity_2==0):
+                    stop=False
+            if sc.t > tf or stop:
+                print("stop")
+                if realstop>0:
+                    realstop-=1
+                else:
+                    print("Stop at")
+                    print(sc.t)
+                    break
     except KeyboardInterrupt:
         x = input('Quit?(y/n)')
         if x == 'y' or x == 'Y':
             tf = sc.t - 0.01
-            plot(sp, tf)
             raise Exception('Aborted.')
     except VrepError as err:
         sc.log(err.message)

@@ -117,8 +117,8 @@ def load(path):
     with open(path, 'rb') as f:
         sc = pickle.load(f)
         return sc
-path="/home/xinchi/GNN-control/gnn-formation-control/data_scene/sc001.pkl"
-sc=load(path)
-save(sc)
+# path="/home/xinchi/GNN-control/gnn-formation-control/data_scene/sc001.pkl"
+# sc=load(path)
+# save(sc)
 
     
