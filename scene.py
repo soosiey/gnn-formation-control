@@ -335,6 +335,35 @@ class Scene():
         omega=[0,0,1 / l * dt * (v2 - v1)]
         velodyne_points=None
         return pos, ori, vel, omega, velodyne_points
+    def check_stop_condition(self,desire_distance,thresh):
+        node_mum = len(self.robots)
+        gabriel_graph = [[1] * node_mum for _ in range(node_mum)]
+        position_list=[]
+        for i in range(node_mum):
+            position=[self.robots[i].xi.x,self.robots[i].xi.y]
+            position_list.append(position)
+        position_array = np.array(position_list)
+        for u in range(node_mum):
+            for v in range(node_mum):
+                m = (position_array[u] + position_array[v]) / 2
+                for w in range(node_mum):
+                    if w == v:
+                        continue
+                    if np.linalg.norm(position_array[w] - m) < np.linalg.norm(position_array[u] - m):
+                        gabriel_graph[u][v] = 0
+                        gabriel_graph[v][u] = 0
+                        break
+        stop=True
+        for i in range(node_mum):
+            for j in range(i+1,node_mum):
+                if gabriel_graph[i][j]==1:
+                    distance=math.sqrt((self.robots[i].xi.x-self.robots[j].xi.x)**2+(self.robots[i].xi.y-self.robots[j].xi.y)**2)
+                    print("distance between {r1:d} and {r2:d}".format(r1=i,r2=j))
+                    print(distance)
+                    if abs((distance-desire_distance)/desire_distance)>thresh:
+                        stop=False
+
+        return stop
     def expert_simulate(self):
         print(self.t)
         self.t += self.dt
@@ -342,6 +371,7 @@ class Scene():
         self.propagateXid()
         countReachedGoal = 0
         omlist = []
+        print(self.t)
         for robot in self.robots:
             robot.precompute(self.adjMatrix, self.robots)
         for robot in self.robots:
@@ -376,16 +406,21 @@ class Scene():
         self.propagateXid()
         countReachedGoal = 0
         omlist = []
+        print(self.t)
         for robot in self.robots:
             robot.precompute(self.adjMatrix,self.robots)
         for robot in self.robots:
             pos, ori, vel, omega, velodyne_points = self.read_sensor(robot)
             robot.get_sensor_data(pos, ori, vel, omega, velodyne_points)
+            # print("vel")
+            # print(vel)
             robot.xid.theta = self.xid.vRefAng
             o,g,r,a = robot.getDataObs()
             omlist.append((o,g,r,a))
         for i in range(len(self.robots)):
             o1,o2 = self.robots[i].get_control(omlist,i)
+            # print("control")
+            # print(o1,o2)
             self.robots[i].record_state()
             self.propagate(self.robots[i],o1,o2)
             if self.robots[i].reachedGoal:

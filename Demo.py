@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description='Args for demo')
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
-parser.add_argument('--robotNum', dest='robotNum', default=9,type=int,help='Number of robot for simulation')
+parser.add_argument('--robotNum', dest='robotNum', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--simTime', dest='simTime', default=200,type=int,help='Simulation time for one simulation')
 parser.add_argument('--trainEpisode', dest='trainEpisode', default=1,type=int,help='Episode for training')
 parser.add_argument('--modelName', dest='modelName', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
@@ -197,14 +197,15 @@ def generateData(args,agent,ep,positionList):
         sc.resetPosition(5)
         # sp.plot(4, tf,expert=args.expert_only)
         realstop = 10
-        while sc.expert_simulate():
+        while sc.simulate():
             for r in range(len(sc.robots)):
                 positionList[ep].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
-            stop=True
-
-            for i in range(len(sc.robots)):
-                if not(sc.robots[i].wheel_velocity_1==0 and sc.robots[i].wheel_velocity_2==0):
-                    stop=False
+            # stop=True
+            stop=sc.check_stop_condition(2.0,0.01)
+            # for i in range(len(sc.robots)):
+            #     # print(sc.robots[i].wheel_velocity_1,sc.robots[i].wheel_velocity_2)
+            #     if not(sc.robots[i].wheel_velocity_1==0 and sc.robots[i].wheel_velocity_2==0):
+            #         stop=False
             if sc.t > tf or stop:
                 print("stop")
                 if realstop>0:
