@@ -5,7 +5,7 @@ This test file is dependent on vrep.
 To run this file, please open vrep file scene/scene_double.ttt first
 @author: cz
 """
-
+import os
 from scene import Scene
 from scene import VrepError
 from sceneplot import ScenePlot
@@ -19,6 +19,7 @@ from suhaas_agent import Agent
 from plots.plot_scene import plot_scene
 import torch
 import saver
+
 import matplotlib.pyplot as plt
 
 
@@ -28,12 +29,13 @@ parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help=
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
 parser.add_argument('--robotNum', dest='robotNum', default=5,type=int,help='Number of robot for simulation')
-parser.add_argument('--simTime', dest='simTime', default=200,type=int,help='Simulation time for one simulation')
+parser.add_argument('--simTime', dest='simTime', default=200,type=float,help='Simulation time for one simulation')
+parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
+parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
 parser.add_argument('--trainEpisode', dest='trainEpisode', default=1,type=int,help='Episode for training')
 parser.add_argument('--modelName', dest='modelName', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
 # # modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
 args = parser.parse_args()
-print(args.trainEpisode)
 
 
 
@@ -70,9 +72,10 @@ def demo_one(args):
 
         dataListEpisode = []
         # First episode
-        sc0 = generateData(args, fcl,i,positionList)
-        sc0.save_robot_states("")
-        plot_scene(sc0,"","figs")
+        sc0 = generateData(args, fcl,i,positionList,args.stop_thresh)
+        print(os.path.join("figs",str(args.stop_thresh),str(args.iter)))
+        sc0.save_robot_states(os.path.join("figs",str(args.stop_thresh),str(args.iter)))
+        plot_scene(sc0,"",os.path.join("figs",str(args.stop_thresh),str(args.iter)))
         if sc0 is not None:
             # if the list is not empty
             sc = sc0
@@ -141,7 +144,7 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     sp.plot(8, tf, expert=expert)
     sp.plot(9, tf, expert=expert)
 
-def generateData(args,agent,ep,positionList):
+def generateData(args,agent,ep,positionList,thresh):
     if(args.if_continue):
         ep -=args.if_trainEpisode
     sc = Scene(fileName = __file__, recordData = True, runNum = ep)
@@ -201,7 +204,7 @@ def generateData(args,agent,ep,positionList):
             for r in range(len(sc.robots)):
                 positionList[ep].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
             # stop=True
-            stop=sc.check_stop_condition(2.0,0.01)
+            stop=sc.check_stop_condition(2.0,args.stop_thresh)
             # for i in range(len(sc.robots)):
             #     # print(sc.robots[i].wheel_velocity_1,sc.robots[i].wheel_velocity_2)
             #     if not(sc.robots[i].wheel_velocity_1==0 and sc.robots[i].wheel_velocity_2==0):
@@ -231,7 +234,12 @@ def generateData(args,agent,ep,positionList):
         return sc
     else:
         return None
-
-demo_one(args)
+thresh=0.01
+for i in range(5):
+    args.stop_thresh = thresh
+    for j in range(1,11):
+        args.iter = j
+        demo_one(args)
+    thresh+=0.01
 
 

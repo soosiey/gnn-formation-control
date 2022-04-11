@@ -574,8 +574,10 @@ class Scene():
             velocity_list.append(self.robots[i].velocity_list)
         pose_array=np.array(pose_list)
         velocity_array=np.array(velocity_list)
-        pose_path = path + "pose_array_scene" + ".npy"
-        velocity_path = path + "velocity_array_scene" + ".npy"
+        if not os.path.exists(path):
+            os.makedirs(path)
+        pose_path = os.path.join(path,"pose_array_scene.npy")
+        velocity_path = os.path.join(path,"velocity_array_scene.npy")
         np.save(pose_path, pose_array)
         np.save(velocity_path, velocity_array)
         print("Pose array of scene"+" saved at " + pose_path)

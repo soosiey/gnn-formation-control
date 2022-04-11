@@ -28,7 +28,7 @@ def plot_wheel_speed(dt,velocity_array,save_path):
     colors=itertools.cycle(mcolors.TABLEAU_COLORS)
     for i in range(np.shape(velocity_array)[1]):
         xlist.append(i*dt)
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(10, 10))
     for i in range(rob_num):
         color=next(colors)
         plt.plot(xlist, velocity_array[i, :, 0], color=color, label="Robot " + str(i) + " left wheel speed")
@@ -37,8 +37,9 @@ def plot_wheel_speed(dt,velocity_array,save_path):
     plt.title("Wheel speeds")
     plt.xlabel("time(s)")
     plt.ylabel("velocity(m)")
+    plt.grid()
     plt.savefig(os.path.join(save_path, "wheel_speed_" + str(rob_num) + ".png"))
-    plt.show()
+    # plt.show()
 def plot_relative_distance(dt,pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
     distance_dict={}
@@ -50,15 +51,16 @@ def plot_relative_distance(dt,pose_array,save_path):
             name=str(i+1)+" to "+str(j+1)
             distance_array=np.sqrt(np.square(pose_array[i,:,0]-pose_array[j,:,0])+np.square(pose_array[i,:,1]-pose_array[j,:,1]))
             distance_dict[name]=distance_array
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(10, 10))
     for key in distance_dict:
         plt.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
     plt.title("Relative distance")
     plt.xlabel("time(s)")
     plt.ylabel("distance(m)")
+    plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_" + str(rob_num) + ".png"))
-    plt.show()
+    # plt.show()
     # fig = plt.gcf()
     # fig.savefig(os.path.join(save_path, "relative_distance_" + str(rob_num) + ".png"))
 def plot_relative_distance_gabreil(dt,pose_array,save_path):
@@ -82,14 +84,15 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
     plt.title("Relative distance gabreil")
     plt.xlabel("time(s)")
     plt.ylabel("distance(m)")
+    plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_gabreil_" + str(rob_num) + ".png"))
-    plt.show()
+    # plt.show()
 
 def plot_formation_gabreil(pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
     gabriel_graph = gabriel(pose_array)
     position_array = pose_array[:, -1, :2]
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(10, 10))
     plt.scatter(position_array[:,0],position_array[:,1])
     for i in range(rob_num):
         for j in range(i + 1, rob_num):
@@ -99,13 +102,13 @@ def plot_formation_gabreil(pose_array,save_path):
             ylist = [position_array[i][1], position_array[j][1]]
             distance=math.sqrt((xlist[0]-xlist[1])**2+(ylist[0]-ylist[1])**2)
             plt.plot(xlist,ylist,label="Distane: {d:.2f}".format(d=distance))
-    # plt.legend()
+    plt.legend()
     plt.title("Formation")
     plt.xlabel("distance(m)")
     plt.ylabel("distance(m)")
     plt.grid()
     plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"))
-    plt.show()
+    # plt.show()
 
 def plot_scene(sc,path="",save_path=""):
     if not path=="":
@@ -124,7 +127,9 @@ def plot_scene(sc,path="",save_path=""):
     #     folders=0
     #     for name in dirs:
     #        folders+=1
-    # os.makedirs(os.path.join(save_path,str(folders)))
+    # os.makedirs(os.path.join(save_path,str(folders)))if
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
     plot_relative_distance(dt,pose_array,save_path)
     plot_relative_distance_gabreil(dt, pose_array,save_path)
     plot_wheel_speed(dt, velocity_array,save_path)

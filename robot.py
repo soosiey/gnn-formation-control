@@ -326,23 +326,24 @@ class Robot():
             v1 = v1nn
             v2 = v2nn
             # print('\n NN control selected')
-        if math.fabs(v1)<self.control_vmin:
-            v1=0
-        if math.fabs(v2)<self.control_vmin:
-            v2=0
+        # if math.fabs(v1)<self.control_vmin:
+        #     v1=0
+        # if math.fabs(v2)<self.control_vmin:
+        #     v2=0
         if self.scene.vrepConnected:
-            # omega1 = v1 * 10.25
-            # omega2 = v2 * 10.25
-            omega1 = v1
-            omega2 = v2
+            omega1 = v1 * 10.25
+            omega2 = v2 * 10.25
+            # omega1 = v1
+            # omega2 = v2
             # return angular speeds of the two wheels
             self.nnv1 = omega1
             self.nnv2 = omega2
             self.wheel_velocity_1=v1
             self.wheel_velocity_2=v2
-            return omega1*2, omega2*2
-            # return omega1/5, omega2/5
+            # return omega1, omega2
+            return omega1/5, omega2/5
         else:
+
             # return linear speeds of the two wheels
             self.wheel_velocity_1=v1
             self.wheel_velocity_2=v2
