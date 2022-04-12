@@ -16,11 +16,11 @@ import os
 from state import State
 
 class Scene():
-    def __init__(self, fileName = "Untitled", recordData = False, runNum = 0):
+    def __init__(self, fileName = "Untitled", recordData = False,dt=0.05,runNum = 0):
         ##### useful artributes
 
         self.t = 0
-        self.dt = 0.01
+        self.dt = 0.05
         self.runNum = runNum
         # formation reference link
         self.xid = State(0.0, 0.0, math.pi / 2)
@@ -29,6 +29,9 @@ class Scene():
 
         self.robots = []
         self.adjMatrix = None
+
+        self.MIN_DISTANCE = 1
+        self.MAX_DISTANCE = 5
         # self.Laplacian = None
 
         # vrep related
@@ -96,14 +99,13 @@ class Scene():
         self.log(message)
 
         #####(merge with addRobot)
-    def resetPosition(self, radius=2):
+    def resetPosition(self, radius):
         if radius is None:
             for i in range(0, len(self.robots)):
                 self.robots[i].update_pose(None)
             return
 
-        MIN_DISTANCE = 1
-        MAX_DISTANCE = 8
+
 
         x_average = 0
         y_average = 0
@@ -126,7 +128,7 @@ class Scene():
                     index, handle, position, orientation=self.robots[i].update_pose([x1, y1, theta1])
                     self.executor_setpose(index, handle, position, orientation)
                     break  # i++
-                elif MAX_DISTANCE >= minDij >= MIN_DISTANCE:
+                elif radius >= minDij >= self.MIN_DISTANCE:
                     index, handle, position, orientation = self.robots[i].update_pose([x1, y1, theta1])
                     self.executor_setpose(index, handle, position, orientation)
                     break  # i++
@@ -188,7 +190,6 @@ class Scene():
             self.vrepConnected = False
             print ("Failed connecting to remote API server")
             raise Exception("Failed connecting to remote API server")
-        self.dt = 0.05
 #### Get Vrep handles from simulator and pass them to robot_old.py. Handle group of parameters in simulator to define robot and sensor.
     def setVrepHandles(self, robotIndex, handleNameSuffix = ""):
         if self.vrepConnected == False:
