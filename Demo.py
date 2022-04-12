@@ -25,15 +25,28 @@ import matplotlib.pyplot as plt
 
 import argparse
 parser = argparse.ArgumentParser(description='Args for demo')
+
+parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
+
+
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
-parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
+parser.add_argument('--model_name', dest='model_name', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
 parser.add_argument('--robotNum', dest='robotNum', default=5,type=int,help='Number of robot for simulation')
-parser.add_argument('--simTime', dest='simTime', default=200,type=float,help='Simulation time for one simulation')
+parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
+parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
+parser.add_argument('--sim_time', dest='sim_time', default=0.5,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
+parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=2,type=float,help='Stopping after this time')
+parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
+
+
+parser.add_argument('--train_episode', dest='train_episode', default=1,type=int,help='Episode for training')
 parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
-parser.add_argument('--trainEpisode', dest='trainEpisode', default=1,type=int,help='Episode for training')
-parser.add_argument('--modelName', dest='modelName', default='v13/suhaas_model_v13_dagger_final_more.pth',type=str,help='Path to model')
+parser.add_argument('--inW', dest='inW', default=100,type=int,help='Dataset shape')
+parser.add_argument('--inH', dest='inH', default=100,type=int,help='Dataset shape')
+parser.add_argument('--save_iteration', dest='save_iteration', default=25,type=int,help='Save after certain iterations')
+
 # # modelname='model_'+str(robotNum)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
 args = parser.parse_args()
 
@@ -41,7 +54,7 @@ args = parser.parse_args()
 
 def demo_one(args):
     #### store robot pose
-    numRun = args.trainEpisode if args.if_train else 1
+    numRun = args.train_episod if args.if_train else 1
 
     positionList = [[] for n in range(numRun)]
     #### training data will be stored
@@ -49,18 +62,18 @@ def demo_one(args):
 
     lossList = []
     sc = None
-    args.modelName = 'v13/test_train.pth' if args.if_train else 'v13/suhaas_model_v13_dagger_final_more.pth'
-    numRun = args.trainEpisode if args.if_train else 1
+    args.model_name = 'v13/test_train.pth' if args.if_train else 'v13/suhaas_model_v13_dagger_final_more.pth'
+    numRun = args.train_episod if args.if_train else 1
 
     #### Initial Agent
-    fcl = Agent(inW=100, inH=100, nA=args.robotNum)
+    fcl = Agent(inW=args.inW, inH=args.inH, nA=args.robotNum)
     if (not args.if_train):
         fcl.model.to('cpu')
-        fcl.model.load_state_dict(torch.load('models/' + args.modelName))
+        fcl.model.load_state_dict(torch.load('models/' + args.model_name))
         fcl.model.to('cuda')
     if (args.if_continue):
         fcl.model.to('cpu')
-        fcl.model.load_state_dict(torch.load('models/' + args.modelName))
+        fcl.model.load_state_dict(torch.load('models/' + args.model_name))
         fcl.model.to('cuda')
         print('Loaded model')
     for i in range(numRun):
@@ -99,8 +112,8 @@ def demo_one(args):
             l = fcl.train(dataListEpisode)
             lossList.append(l)
 
-        if (i % 25 == 0 and args.if_train):
-            fcl.save(args.modelname)
+        if (i % args.save_iteration == 0 and args.if_train):
+            fcl.save(args.model_name)
 
 
     positionList = np.array(positionList)
@@ -146,7 +159,7 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
 
 def generateData(args,agent,ep,positionList,thresh):
     if(args.if_continue):
-        ep -=args.if_trainEpisode
+        ep -=args.train_episode
     sc = Scene(fileName = __file__, recordData = True, runNum = ep)
     sp = ScenePlot(sc)
     sp.saveEnabled = True # save plots?
@@ -193,18 +206,18 @@ def generateData(args,agent,ep,positionList,thresh):
                 sc.setVrepHandles(i,s)
 
         #sc.renderScene(waitTime = 3000)
-        tf = args.simTime ## must lager than 3
+        tf = args.sim_time ## must lager than 3
 
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robotNum*np.sqrt(2)) # Random initial position
-        sc.resetPosition(5)
+        sc.resetPosition(args.position_range)
         # sp.plot(4, tf,expert=args.expert_only)
-        realstop = 10
+        realstop = int(args.stop_waiting_time/args.sim_dt)
         while sc.simulate():
             for r in range(len(sc.robots)):
                 positionList[ep].append([sc.robots[r].xi.x,sc.robots[r].xi.y])
             # stop=True
-            stop=sc.check_stop_condition(2.0,args.stop_thresh)
+            stop=sc.check_stop_condition(args.desire_distance,args.stop_thresh)
             # for i in range(len(sc.robots)):
             #     # print(sc.robots[i].wheel_velocity_1,sc.robots[i].wheel_velocity_2)
             #     if not(sc.robots[i].wheel_velocity_1==0 and sc.robots[i].wheel_velocity_2==0):
@@ -234,12 +247,12 @@ def generateData(args,agent,ep,positionList,thresh):
         return sc
     else:
         return None
-thresh=0.01
-for i in range(5):
-    args.stop_thresh = thresh
-    for j in range(1,11):
-        args.iter = j
-        demo_one(args)
-    thresh+=0.01
-
+# thresh=0.01
+# for i in range(5):
+#     args.stop_thresh = thresh
+#     for j in range(1,11):
+#         args.iter = j
+#         demo_one(args)
+#     thresh+=0.01
+demo_one(args)
 

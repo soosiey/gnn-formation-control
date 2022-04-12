@@ -1,3 +1,4 @@
+
 # Note
 ## Scene related
 + **scene.xi**: The center of all robots in the scene.
