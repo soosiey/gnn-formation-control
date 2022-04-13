@@ -10,11 +10,12 @@ from tqdm import tqdm
 
 class Agent():
 
-    def __init__(self, criterion = 'mse', optimizer = 'rms', inW = 100, inH = 100,  nA = 3, lr = .01):
+    def __init__(self, criterion = 'mse', optimizer = 'rms', inW = 100, inH = 100, batch_size=16,  nA = 3, lr = .01):
         self.points_per_ep = None
         self.nA = nA
         self.inW = inW
         self.inH = inH
+        self.batch_size=batch_size
         self.model = suhaas_model.DecentralPlannerNet(nA = self.nA, inW = self.inW, inH = self.inH).double()
         self.model = self.model.to('cuda')
         self.lr = lr
@@ -116,10 +117,11 @@ class Agent():
         #np.save('inputs.npy', inputs)
         #np.save('graphs.npy', graphs)
         trainset = custom_dataset.RobotDataset(inputs,actions,graphs,refs,alphas,self.nA,inW = self.inW, inH = self.inH,transform = self.transform)
-        trainloader = DataLoader(trainset, batch_size = 16, shuffle = True, drop_last = True)
+        trainloader = DataLoader(trainset, batch_size = self.batch_size, shuffle = True, drop_last = True)
         self.model.train()
         total_loss = 0
         total = 0
+
         for i,batch in enumerate(tqdm(trainloader)):
             inputs = batch['data'].to('cuda')
             S = batch['graphs'][:,0,:,:].to('cuda')
@@ -135,9 +137,10 @@ class Agent():
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
+
             total += inputs.size(0)*self.nA
         print('Average training loss:', total_loss / total)
         return total_loss / total
 
     def save(self,pth):
-        torch.save(self.model.state_dict(), 'models/' + pth)
+        torch.save(self.model.state_dict(), pth)

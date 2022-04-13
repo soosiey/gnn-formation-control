@@ -341,7 +341,7 @@ class Robot():
             self.wheel_velocity_1=v1
             self.wheel_velocity_2=v2
             # return omega1, omega2
-            return omega1/5, omega2/5
+            return omega1, omega2
         else:
 
             # return linear speeds of the two wheels

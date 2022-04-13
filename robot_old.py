@@ -475,10 +475,10 @@ class Robot():
 
 
         if self.scene.vrepConnected:
-            # omega1 = v1 * 10.25
-            # omega2 = v2 * 10.25
-            omega1 = v1
-            omega2 = v2
+            omega1 = v1 * 10.25
+            omega2 = v2 * 10.25
+            # omega1 = v1
+            # omega2 = v2
             # return angular speeds of the two wheels
             self.nnv1 = omega1
             self.nnv2 = omega2
