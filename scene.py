@@ -20,7 +20,7 @@ class Scene():
         ##### useful artributes
 
         self.t = 0
-        self.dt = 0.05
+        self.dt = dt
         self.runNum = runNum
         # formation reference link
         self.xid = State(0.0, 0.0, math.pi / 2)
@@ -76,8 +76,8 @@ class Scene():
 
 
 ##### merge with resetPosition,scaleDesiredFormation
-    def addRobot(self, arg, nr,expert_controller=False, learnedController = None):
-        robot = Robot(self,nr)
+    def addRobot(self, arg,args, learnedController = None):
+        robot = Robot(self,args)
         robot.index = len(self.robots)
         robot.xi.x = arg[0, 0]
         robot.xi.y = arg[0, 1]
@@ -85,7 +85,6 @@ class Scene():
         robot.xid.x = arg[1, 0]
         robot.xid.y = arg[1, 1]
         robot.xid.theta = arg[1, 2]
-        robot.expert_controller=expert_controller
         robot.learnedController = learnedController
         robot.recordData = self.recordData
         self.robots.append(robot)
@@ -313,6 +312,7 @@ class Scene():
         if self.vrepConnected == False:
             robot.xi.propagate(robot.control)
         else:
+
             vrep.simxSetJointTargetVelocity(self.clientID,
                                             robot.motorLeftHandle,
                                             omega1, vrep.simx_opmode_oneshot)
@@ -420,8 +420,7 @@ class Scene():
             omlist.append((o,g,r,a))
         for i in range(len(self.robots)):
             o1,o2 = self.robots[i].get_control(omlist,i)
-            # print("control")
-            # print(o1,o2)
+
             self.robots[i].record_state()
             self.propagate(self.robots[i],o1,o2)
             if self.robots[i].reachedGoal:

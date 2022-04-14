@@ -25,14 +25,14 @@ def saturate(dxp, dyp, dxypMax):
     return dxp, dyp
 
 class Robot():
-    def __init__(self, scene,numRobots):
+    def __init__(self, scene,args):
 
         ##### useful artribute
 
         self.index=None
         self.scene = scene
         self.l = 0.331
-        self.nr = numRobots
+        self.nr = args.robot_num
         # state
         self.xi = State(0, 0, 0, self)
         self.xid = State(3, 0, 0, self)
@@ -41,7 +41,9 @@ class Robot():
         self.reachedGoal = False
         self.neighbors = []
         # Control parameters
-        self.expert_controller=False
+        self.if_train=args.if_train
+        self.expert_only=args.expert_only
+        self.use_dagger=args.use_dagger
         self.p = 0.8
         self.control_vmax = 1.2
         self.control_vmin = 0.01
@@ -187,10 +189,10 @@ class Robot():
             alpha = 1
         v1 = alpha * v1
         v2 = alpha * v2
-        if math.fabs(v1)<vmin:
-            v1=0
-        if math.fabs(v2)<vmin:
-            v2=0
+        # if math.fabs(v1)<vmin:
+        #     v1=0
+        # if math.fabs(v2)<vmin:
+        #     v2=0
         return v1,v2
     def gnn_control(self,omlist,index):
         ####################### NN CONTROLLER ###########################################
@@ -218,14 +220,14 @@ class Robot():
 
         # stopping condition
         current_position = (self.xi.xp ** 2 + self.xi.yp ** 2) ** 0.5
-        self.position_hist.append(current_position)
-        hist_len = len(self.position_hist)
-        lcheck = 10
-        if (hist_len > 100):
-            currhist = self.position_hist[-1 * lcheck:]
-            if (not self.checkMove(currhist, num=lcheck, thresh=.00001)):
-                v1nn = 0
-                v2nn = 0
+        # self.position_hist.append(current_position)
+        # hist_len = len(self.position_hist)
+        # lcheck = 10
+        # if (hist_len > 100):
+        #     currhist = self.position_hist[-1 * lcheck:]
+        #     if (not self.checkMove(currhist, num=lcheck, thresh=.00001)):
+        #         v1nn = 0
+        #         v2nn = 0
             # for pos in range(1,len(currhist)):
             #    if(abs(currhist[pos] - currhist[pos - 1]) > .005):
             #        moving = True
@@ -251,12 +253,10 @@ class Robot():
             alpha = 1
         v1nn = alpha * v1nn
         v2nn = alpha * v2nn
-        if math.fabs(v1nn) < vmin:
-            v1nn = 0
-        if math.fabs(v2nn) < vmin:
-            v2nn = 0
-        v1nn=1
-        v2nn=1
+        # if math.fabs(v1nn) < vmin:
+        #     v1nn = 0
+        # if math.fabs(v2nn) < vmin:
+        #     v2nn = 0
         # Limit maximum acceleration (deprecated)
 
         if self.LIMIT_MAX_ACC:
@@ -287,8 +287,8 @@ class Robot():
 
         return v1nn,v2nn
     def control(self,omlist,index):
-        v1,v2=self.expert_control(omlist,index)
-        v1nn,v2nn=self.gnn_control(omlist,index)
+        v1_expert,v2_expert=self.expert_control(omlist,index)
+        v1_model,v2_model=self.gnn_control(omlist,index)
 
         # Record data
         if (self.scene.vrepConnected and
@@ -304,33 +304,41 @@ class Robot():
         #print('\n Expert output: ', v1, v2)
 
         ####### TO ADD THE CONTROLLER SELECTION MECHANISM HERE #############
-        # use binomial distribution with probability \beta
-        p = self.p # can be tweaked
-        exp = (self.scene.runNum) // 20
-        #exp = (self.scene.runNum-101)//20
-        exp = max(0,exp)
-        beta = p**(exp)  # Dagger algorithm paper, page 4
-        model_controller = np.random.binomial(1, beta)
 
-        ## Control Training or not
-        TRAIN = False
-        DAGGER = False
-        if (model_controller and TRAIN) or (not DAGGER):
-            model_controller=False
+        if self.expert_only:
+            print("use expert controller")
+            v1=v1_expert
+            v2=v2_expert
+        elif not self.use_dagger:
+            print("use model controller")
+            v1 = v1_model
+            v2 = v2_model
+        elif not self.if_train:
+            print("use model controller")
+            v1=v1_model
+            v2=v2_model
         else:
-            model_controller=True
-        #### decide to use which controller
-        if self.expert_controller:
-            model_controller=False
-        if model_controller:
-            v1 = v1nn
-            v2 = v2nn
-            # print('\n NN control selected')
+            p = self.p  # can be tweaked
+            exp = (self.scene.runNum) // 20
+            # exp = (self.scene.runNum-101)//20
+            exp = max(0, exp)
+            beta = p ** (exp)  # Dagger algorithm paper, page 4
+            expert_controller = np.random.binomial(1, beta)
+            if expert_controller:
+                print("use expert controller")
+                v1 = v1_expert
+                v2 = v2_expert
+            else:
+                print("use model controller")
+                v1 = v1_model
+                v2 = v2_model
         # if math.fabs(v1)<self.control_vmin:
         #     v1=0
         # if math.fabs(v2)<self.control_vmin:
         #     v2=0
+
         if self.scene.vrepConnected:
+            # print(v1,v2)
             omega1 = v1 * 10.25
             omega2 = v2 * 10.25
             # omega1 = v1
@@ -343,7 +351,6 @@ class Robot():
             # return omega1, omega2
             return omega1, omega2
         else:
-
             # return linear speeds of the two wheels
             self.wheel_velocity_1=v1
             self.wheel_velocity_2=v2

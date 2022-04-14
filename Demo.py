@@ -26,25 +26,24 @@ import matplotlib.pyplot as plt
 import argparse
 parser = argparse.ArgumentParser(description='Args for demo')
 
-parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
-
-
+parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
+parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
-parser.add_argument('--sim_time', dest='sim_time', default=0.1,type=float,help='Simulation time for one simulation')
-parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.01,type=float,help='Stopping thresh')
-parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=0.1,type=float,help='Stopping after this time')
+parser.add_argument('--sim_time', dest='sim_time', default=200,type=float,help='Simulation time for one simulation')
+parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
+parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=2,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
-parser.add_argument('--train_episode', dest='train_episode', default=2,type=int,help='Episode for training')
-parser.add_argument('--batch_size', dest='batch_size', default=1,type=int,help='Batch size for training')
+parser.add_argument('--train_episode', dest='train_episode', default=200,type=int,help='Episode for training')
+parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
 parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
 parser.add_argument('--inW', dest='inW', default=100,type=int,help='Dataset shape')
 parser.add_argument('--inH', dest='inH', default=100,type=int,help='Dataset shape')
-parser.add_argument('--save_iteration', dest='save_iteration', default=1,type=int,help='Save after certain iterations')
+parser.add_argument('--save_iteration', dest='save_iteration', default=10,type=int,help='Save after certain iterations')
 
 # # modelname='model_'+str(robot_num)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
 args = parser.parse_args()
@@ -63,7 +62,8 @@ def demo_one(args):
     #### Initial Agent
     fcl = Agent(batch_size=args.batch_size,inW=args.inW, inH=args.inH, nA=args.robot_num)
     if (not args.if_train):
-        model_name = 'v13/suhaas_model_v13_dagger_final_more.pth'
+        model_name="suhaas_model_v13_dagger_final_more.pth"
+        # model_name = 'model_train_episode-100_robot-5.pth'
         fcl.model.to('cpu')
         fcl.model.load_state_dict(torch.load(os.path.join(args.model_path,model_name)))
         fcl.model.to('cuda')
@@ -89,7 +89,7 @@ def demo_one(args):
         ##########################################################################
         dataListEpisode = []
         # First episode
-        sc0 = generateData(args,fcl,i,positionList,args.stop_thresh)
+        sc0 = generateData(args,fcl,i,positionList)
         sc0.save_robot_states(os.path.join("results",str(args.stop_thresh),str(args.iter)))
         plot_scene(sc0,"",os.path.join("results",str(args.stop_thresh),str(args.iter)))
         if sc0 is not None:
@@ -128,7 +128,9 @@ def demo_one(args):
             last_model_name="last_"+str(i)+".pth"
             last_model=os.path.join(args.model_path, last_model_name)
             fcl.save(last_model)
-
+    saved_model_name = "model_train" + "_episode-" + str(numRun) + "_robot-" + str(args.robot_num) + ".pth"
+    saved_model = os.path.join(args.model_path, saved_model_name)
+    fcl.save(saved_model)
 
     positionList = np.array(positionList)
     np.save('positionLists/' + 'positionList_expert_' + str(args.robot_num) + '_singles.npy', positionList)
@@ -171,7 +173,7 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     sp.plot(8, tf, expert=expert)
     sp.plot(9, tf, expert=expert)
 
-def generateData(args,agent,ep,positionList,thresh):
+def generateData(args,agent,ep,positionList):
     if(args.if_continue):
         ep -=args.train_episode
     sc = Scene(fileName = __file__, recordData = True, runNum = ep)
@@ -186,7 +188,7 @@ def generateData(args,agent,ep,positionList,thresh):
 
     try:
         for i in range(args.robot_num):
-            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args.robot_num,expert_controller=True, learnedController = agent.test)
+            sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),args, learnedController = agent.test)
         # No leader
         I = np.identity(args.robot_num, dtype=np.int8)
         M = np.ones(args.robot_num, dtype=np.int8)
