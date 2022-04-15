@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description='Args for demo')
 parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
 parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
-parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
+parser.add_argument('--if_continue', dest='if_continue', default=True,type=bool,help='Continue training')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
@@ -38,7 +38,7 @@ parser.add_argument('--sim_time', dest='sim_time', default=200,type=float,help='
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
 parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=2,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
-parser.add_argument('--train_episode', dest='train_episode', default=200,type=int,help='Episode for training')
+parser.add_argument('--train_episode', dest='train_episode', default=1000,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
 parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
 parser.add_argument('--inW', dest='inW', default=100,type=int,help='Dataset shape')
@@ -58,12 +58,11 @@ def demo_one(args):
     dataList = []
     lossList = []
     sc = None
-    numRun = args.train_episode if args.if_train else 1
     #### Initial Agent
     fcl = Agent(batch_size=args.batch_size,inW=args.inW, inH=args.inH, nA=args.robot_num)
     if (not args.if_train):
-        model_name="suhaas_model_v13_dagger_final_more.pth"
-        # model_name = 'model_train_episode-100_robot-5.pth'
+        # model_name="suhaas_model_v13_dagger_final_more.pth"
+        model_name = 'last_100.pth'
         fcl.model.to('cpu')
         fcl.model.load_state_dict(torch.load(os.path.join(args.model_path,model_name)))
         fcl.model.to('cuda')
@@ -227,6 +226,13 @@ def generateData(args,agent,ep,positionList):
         CheckerEnabled = False
         initRef(sc, i) #sc.resetPosition(robot_num*np.sqrt(2)) # Random initial position
         sc.resetPosition(args.position_range)
+        # sc.robots[0].setPosition([.0, .0, 0.0])
+        # sc.robots[1].setPosition([-3.0, .0, 0.0])
+        # sc.robots[2].setPosition([3.0, .0, 0.0])
+        # sc.robots[3].setPosition([.0, 3.0, 0.0])
+        # sc.robots[4].setPosition([0.0, -3.0, 0.0])
+
+
         # sp.plot(4, tf,expert=args.expert_only)
         realstop = int(args.stop_waiting_time/args.sim_dt)
         while sc.simulate():

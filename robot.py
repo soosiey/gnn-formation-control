@@ -47,7 +47,6 @@ class Robot():
         self.p = 0.8
         self.control_vmax = 1.2
         self.control_vmin = 0.01
-        self.LIMIT_MAX_ACC = False
         self.accMax = 0.5
         ##### for future need
         self.pointCloud = PointCloud(self)
@@ -64,7 +63,7 @@ class Robot():
         self.v2Desired = 0
         self.v1Desirednn = 0
         self.v2Desirednn = 0
-        self.position_hist = []
+        # self.position_hist = []
         #### Robot's neighbor
 
         # self.leader = None # Only for data recording purposes
@@ -259,31 +258,9 @@ class Robot():
         #     v2nn = 0
         # Limit maximum acceleration (deprecated)
 
-        if self.LIMIT_MAX_ACC:
-            dvMax =  self.accMax * self.scene.dt
 
-            # limit v1nn
-            dv1nn = v1nn - self.v1Desirednn
-            if dv1nn > dvMax:
-                self.v1Desirednn += dvMax
-            elif dv1nn < -dvMax:
-                self.v1Desirednn -= dvMax
-            else:
-                self.v1Desirednn = v1nn
-            v1nn = self.v1Desired
-
-            # limit v2nn
-            dv2nn = v2nn - self.v2Desirednn
-            if dv2nn > dvMax:
-                self.v2Desirednn += dvMax
-            elif dv2nn < -dvMax:
-                self.v2Desirednn -= dvMax
-            else:
-                self.v2Desirednn = v2nn
-            v2nn = self.v2Desirednn
-        elif not self.LIMIT_MAX_ACC:
-            self.v1Desirednn = v1nn
-            self.v2Desirednn = v2nn
+        self.v1Desirednn = v1nn
+        self.v2Desirednn = v2nn
 
         return v1nn,v2nn
     def control(self,omlist,index):
@@ -307,16 +284,16 @@ class Robot():
 
         if self.expert_only:
             print("use expert controller")
-            v1=v1_expert
-            v2=v2_expert
+            v1 = v1_expert
+            v2 = v2_expert
         elif not self.use_dagger:
             print("use model controller")
             v1 = v1_model
             v2 = v2_model
         elif not self.if_train:
             print("use model controller")
-            v1=v1_model
-            v2=v2_model
+            v1 = v1_model
+            v2 = v2_model
         else:
             p = self.p  # can be tweaked
             exp = (self.scene.runNum) // 20
@@ -332,11 +309,12 @@ class Robot():
                 print("use model controller")
                 v1 = v1_model
                 v2 = v2_model
-        # if math.fabs(v1)<self.control_vmin:
-        #     v1=0
-        # if math.fabs(v2)<self.control_vmin:
-        #     v2=0
-
+        if math.fabs(v1)<self.control_vmin:
+            v1=0
+        if math.fabs(v2)<self.control_vmin:
+            v2=0
+        self.v1Desired = v1
+        self.v2Desired = v2
         if self.scene.vrepConnected:
             # print(v1,v2)
             omega1 = v1 * 10.25
@@ -501,6 +479,32 @@ class Robot():
         print("Pose array of robot "+str(self.index)+" saved at "+pose_path)
         print("Velocity array of robot " + str(self.index) + " saved at " + velocity_path)
 
+    def setPosition(self, stateVector = None):
+        # stateVector = [x, y, theta]
+
+        z0 = 0.1587
+        if stateVector == None:
+            x0 = self.xi.x
+            y0 = self.xi.y
+            theta0 = self.xi.theta
+        elif len(stateVector) == 3:
+            x0 = stateVector[0]
+            y0 = stateVector[1]
+            theta0 = stateVector[2]
+            self.xi.x = x0
+            self.xi.y = y0
+            self.xi.theta = theta0
+        else:
+            raise Exception('Argument error!')
+        if self.scene.vrepConnected == False:
+            return
+        vrep.simxSetObjectPosition(self.scene.clientID, self.robotHandle, -1,
+                [x0, y0, z0], vrep.simx_opmode_oneshot)
+        vrep.simxSetObjectOrientation(self.scene.clientID, self.robotHandle, -1,
+                [0, 0, theta0], vrep.simx_opmode_oneshot)
+        message = "Robot #" + str(self.index) + "'s pose is set to "
+        message += "[{0:.3f}, {1:.3f}, {2:.3f}]".format(x0, y0, theta0)
+        self.scene.log(message)
 
 
 

@@ -103,9 +103,6 @@ class Scene():
             for i in range(0, len(self.robots)):
                 self.robots[i].update_pose(None)
             return
-
-
-
         x_average = 0
         y_average = 0
         for i in range(0, len(self.robots)):
@@ -337,6 +334,7 @@ class Scene():
         velodyne_points=None
         return pos, ori, vel, omega, velodyne_points
     def check_stop_condition(self,desire_distance,thresh):
+        print("Distance")
         node_mum = len(self.robots)
         gabriel_graph = [[1] * node_mum for _ in range(node_mum)]
         position_list=[]
@@ -363,37 +361,7 @@ class Scene():
                     print(distance)
                     if abs((distance-desire_distance)/desire_distance)>thresh:
                         stop=False
-
         return stop
-    def expert_simulate(self):
-        print(self.t)
-        self.t += self.dt
-        self.ts.append(self.t)
-        self.propagateXid()
-        countReachedGoal = 0
-        omlist = []
-        print(self.t)
-        for robot in self.robots:
-            robot.precompute(self.adjMatrix, self.robots)
-        for robot in self.robots:
-            pos, ori, vel, omega, velodyne_points = self.mock_simulator(robot)
-            robot.get_sensor_data(pos, ori, vel, omega, velodyne_points)
-            robot.xid.theta = self.xid.vRefAng
-            o, g, r, a = robot.getDataObs()
-            omlist.append((o, g, r, a))
-        for i in range(len(self.robots)):
-            o1, o2 = self.robots[i].get_control(omlist, i)
-            self.robots[i].record_state()
-            # self.propagate(self.robots[i], o1, o2)
-            if self.robots[i].reachedGoal:
-                countReachedGoal += 1
-        self.calcCOG()
-        # if self.vrepConnected:
-        #     vrep.simxSynchronousTrigger(self.clientID)
-        if countReachedGoal == len(self.robots):
-            return False
-        else:
-            return True
     def simulate(self):
         # vrep related
         '''
@@ -418,9 +386,10 @@ class Scene():
             robot.xid.theta = self.xid.vRefAng
             o,g,r,a = robot.getDataObs()
             omlist.append((o,g,r,a))
+        print("control v1,v2")
         for i in range(len(self.robots)):
             o1,o2 = self.robots[i].get_control(omlist,i)
-
+            print(o1,o2)
             self.robots[i].record_state()
             self.propagate(self.robots[i],o1,o2)
             if self.robots[i].reachedGoal:

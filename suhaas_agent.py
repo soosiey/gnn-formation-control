@@ -65,41 +65,6 @@ class Agent():
         # print("Control",outs)
         return outs
 
-    def test1(self, x, S, refs, alphas):
-
-        self.currentAgent += 1
-        self.currentAgent = self.currentAgent % 3
-        xin = np.zeros((1, 1, self.inW, self.inH))
-
-        x = x[0]
-        #x = x.reshape((1000,1000))[::10,::10]
-        x = x.reshape((self.inW, self.inH))
-        xin[0,0] = x
-        xin = torch.from_numpy(xin).double()
-        #xin = xin.unsqueeze(0)
-        #xin = xin.unsqueeze(0)
-        xin = xin.to('cuda')
-        S = np.array(S)
-        S = S.reshape((3,3))
-        S = np.roll(S,-1*self.currentAgent,axis=0)
-        S = torch.from_numpy(S)
-        S = S.unsqueeze(0)
-        S = S.to('cuda')
-
-        r = np.zeros((1,3,1))
-        r[0,0,0] = refs
-        r = torch.from_numpy(r).double()
-        r = r.to('cuda')
-
-        a = np.zeros((1,3,1))
-        a[0,0,0] = alphas
-        a = torch.from_numpy(a).double()
-        a = a.to('cuda')
-        self.model.eval()
-        self.model.addGSO(S)
-        outs = [self.model.forward_one(xin,r,a)[0]]
-        return outs
-
     def train(self, data):
         """
         datalist[0].d['actions', 'graph', 'observations']
@@ -121,7 +86,7 @@ class Agent():
         self.model.train()
         total_loss = 0
         total = 0
-
+        print("training")
         for i,batch in enumerate(tqdm(trainloader)):
             inputs = batch['data'].to('cuda')
             S = batch['graphs'][:,0,:,:].to('cuda')
@@ -131,6 +96,7 @@ class Agent():
             self.model.addGSO(S)
             self.optimizer.zero_grad()
             outs = self.model(inputs,refs,alphas)
+            print(outs[0],actions[:,0])
             loss = self.criterion(outs[0], actions[:,0])
             for i in range(1,self.nA):
                 loss += self.criterion(outs[i], actions[:,i])
