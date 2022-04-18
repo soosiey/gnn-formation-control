@@ -25,14 +25,14 @@ def saturate(dxp, dyp, dxypMax):
     return dxp, dyp
 
 class Robot():
-    def __init__(self, scene,args):
+    def __init__(self, scene,robot_num,if_train,expert_only,use_dagger):
 
         ##### useful artribute
 
         self.index=None
         self.scene = scene
         self.l = 0.331
-        self.nr = args.robot_num
+        self.nr = robot_num
         # state
         self.xi = State(0, 0, 0, self)
         self.xid = State(3, 0, 0, self)
@@ -41,9 +41,9 @@ class Robot():
         self.reachedGoal = False
         self.neighbors = []
         # Control parameters
-        self.if_train=args.if_train
-        self.expert_only=args.expert_only
-        self.use_dagger=args.use_dagger
+        self.if_train=if_train
+        self.expert_only=expert_only
+        self.use_dagger=use_dagger
         self.p = 0.8
         self.control_vmax = 1.2
         self.control_vmin = 0.01
@@ -483,11 +483,11 @@ class Robot():
         # stateVector = [x, y, theta]
 
         z0 = 0.1587
-        if stateVector == None:
-            x0 = self.xi.x
-            y0 = self.xi.y
-            theta0 = self.xi.theta
-        elif len(stateVector) == 3:
+        # if stateVector == None:
+        #     x0 = self.xi.x
+        #     y0 = self.xi.y
+        #     theta0 = self.xi.theta
+        if len(stateVector) == 3:
             x0 = stateVector[0]
             y0 = stateVector[1]
             theta0 = stateVector[2]

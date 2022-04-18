@@ -39,6 +39,7 @@ def plot_wheel_speed(dt,velocity_array,save_path):
     plt.ylabel("velocity(m)")
     plt.grid()
     plt.savefig(os.path.join(save_path, "wheel_speed_" + str(rob_num) + ".png"))
+    plt.close()
     # plt.show()
 def plot_relative_distance(dt,pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
@@ -60,6 +61,7 @@ def plot_relative_distance(dt,pose_array,save_path):
     plt.ylabel("distance(m)")
     plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_" + str(rob_num) + ".png"))
+    plt.close()
     # plt.show()
     # fig = plt.gcf()
     # fig.savefig(os.path.join(save_path, "relative_distance_" + str(rob_num) + ".png"))
@@ -86,6 +88,7 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
     plt.ylabel("distance(m)")
     plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_gabreil_" + str(rob_num) + ".png"))
+    plt.close()
     # plt.show()
 
 def plot_formation_gabreil(pose_array,save_path):
@@ -108,6 +111,7 @@ def plot_formation_gabreil(pose_array,save_path):
     plt.ylabel("distance(m)")
     plt.grid()
     plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"))
+    plt.close()
     # plt.show()
 
 def plot_scene(sc,path="",save_path=""):

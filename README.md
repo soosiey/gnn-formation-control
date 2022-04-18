@@ -26,7 +26,7 @@ pip3 install -r requirements.txt
 Always make sure the number of robots in the simulator equals to the number of robot in Demo.py
 ### Run demo simulation with default configuration
 ```
-python Demo.py
+python Test.py
 ```
 ****
 ## Train
@@ -35,6 +35,7 @@ python Demo.py
 python Train.py
 ```
 ****
+10 episode/h
 
 
 ## OLD INSTRUCTIONS

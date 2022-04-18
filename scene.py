@@ -76,8 +76,8 @@ class Scene():
 
 
 ##### merge with resetPosition,scaleDesiredFormation
-    def addRobot(self, arg,args, learnedController = None):
-        robot = Robot(self,args)
+    def addRobot(self, arg,robot_num,if_train,expert_only,use_dagger, learnedController = None):
+        robot = Robot(self,robot_num,if_train,expert_only,use_dagger)
         robot.index = len(self.robots)
         robot.xi.x = arg[0, 0]
         robot.xi.y = arg[0, 1]
@@ -97,7 +97,7 @@ class Scene():
         message += " is added to the scene"
         self.log(message)
 
-        #####(merge with addRobot)
+    #####(merge with addRobot)
     def resetPosition(self, radius):
         if radius is None:
             for i in range(0, len(self.robots)):
@@ -386,10 +386,10 @@ class Scene():
             robot.xid.theta = self.xid.vRefAng
             o,g,r,a = robot.getDataObs()
             omlist.append((o,g,r,a))
-        print("control v1,v2")
+        # print("control v1,v2")
         for i in range(len(self.robots)):
             o1,o2 = self.robots[i].get_control(omlist,i)
-            print(o1,o2)
+            # print(o1,o2)
             self.robots[i].record_state()
             self.propagate(self.robots[i],o1,o2)
             if self.robots[i].reachedGoal:

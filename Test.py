@@ -50,6 +50,7 @@ parser.add_argument('--saved_figs', dest='saved_figs', default="results",type=st
 args = parser.parse_args()
 
 def set_robot_positions(sc,position_list):
+    print(position_list)
     for i in range(len(position_list)):
         sc.robots[i].setPosition(position_list[i])
 
@@ -58,42 +59,42 @@ def demo(args):
     #### Initial Agent
     for test_iter in range(2):
         args.expert_only=False
-        sc = generate_scene(args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range, fcl)
+        sc = generate_scene(args, fcl)
         position_list=[]
         for i in range(len(sc.robots)):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
 
-        # #### Test model result
-        # model_type="model"
-        # print(model_type)
-        # model_name = "last_160.pth"
-        # fcl.model.to('cpu')
-        # fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        # fcl.model.to('cuda')
-        # set_robot_positions(sc, position_list)
-        # sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
-        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        # #### Test suhaas model result
-        # model_type = "suhaas"
-        # sc = generate_scene(args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range, fcl)
-        # set_robot_positions(sc, position_list)
-        # print(model_type)
-        # model_name = "suhaas_model_v13_dagger_final_more.pth"
-        # fcl.model.to('cpu')
-        # fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        # fcl.model.to('cuda')
-        # sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
-        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        # plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        ### Test expert control result
-        pose=np.load("/home/xinchi/GNN-control/gnn-formation-control/results/5/suhaas/0.05/"+str(test_iter)+"/pose_array_scene.npy")
-        position_list=pose[:,0,:]
-        model_type = "expert"
-        sc = generate_scene(args.robot_num,args.if_train,True,args.use_dagger,args.sim_time,args.position_range, fcl)
+        #### Test model result
+        model_type="model"
+        print(model_type)
+        model_name = "last_160.pth"
+        fcl.model.to('cpu')
+        fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+        fcl.model.to('cuda')
         set_robot_positions(sc, position_list)
-        sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh, sc)
+        sc0 = simulate(args,sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        #### Test suhaas model result
+        model_type = "suhaas"
+        sc = generate_scene(args, fcl)
+        set_robot_positions(sc, position_list)
+        print(model_type)
+        model_name = "suhaas_model_v13_dagger_final_more.pth"
+        fcl.model.to('cpu')
+        fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+        fcl.model.to('cuda')
+        sc0 = simulate(args, sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        #### Test expert control result
+        model_type = "expert"
+        sc = generate_scene(args, fcl)
+        set_robot_positions(sc, position_list)
+        print(model_type)
+        args.expert_only=True
+        sc0 = simulate(args, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
         plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
 
@@ -117,19 +118,18 @@ def initRef(sc):
     sc.log(message)
     print(message)
 
-def generate_scene(robot_num,if_train,expert_only,use_dagger,sim_time,position_range,agent):
-
+def generate_scene(args,agent):
     sc = Scene(fileName=__file__, recordData=True)
     sp = ScenePlot(sc)
     sp.saveEnabled = True  # save plots?
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
     # sc.dynamics = 18 # robot dynamics
     sc.errorType = 0
-    for i in range(robot_num):
-        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),robot_num,if_train,expert_only,use_dagger, learnedController=agent.test)
+    for i in range(args.robot_num):
+        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]), args, learnedController=agent.test)
     # No leader
-    I = np.identity(robot_num, dtype=np.int8)
-    M = np.ones(robot_num, dtype=np.int8)
+    I = np.identity(args.robot_num, dtype=np.int8)
+    M = np.ones(args.robot_num, dtype=np.int8)
     sc.setADjMatrix(M - I)
 
     # Set robot 0 as the leader.
@@ -144,14 +144,14 @@ def generate_scene(robot_num,if_train,expert_only,use_dagger,sim_time,position_r
     # print(sc.SENSOR_TYPE)
     if sc.SENSOR_TYPE == "None":
         sc.setVrepHandles(0, '')
-        for i in range(1, robot_num + 1):
+        for i in range(1, args.robot_num + 1):
             sc.setVrepHandles(i, '#' + str(i))
         # sc.setVrepHandles(1, '#0')
 
     elif sc.SENSOR_TYPE == "VPL16":
         sc.objectNames.append('velodyneVPL_16')  # _ptCloud
         print(sc.objectNames)
-        for i in range(robot_num):
+        for i in range(args.robot_num):
             checkn = i - 1
             s = ''
             if (i >= 1):
@@ -159,20 +159,20 @@ def generate_scene(robot_num,if_train,expert_only,use_dagger,sim_time,position_r
             sc.setVrepHandles(i, s)
 
     # sc.renderScene(waitTime = 3000)
-    tf = sim_time  ## must lager than 3
+    tf = args.sim_time  ## must lager than 3
 
     CheckerEnabled = False
     initRef(sc)  # sc.resetPosition(robot_num*np.sqrt(2)) # Random initial position
-    sc.resetPosition(position_range)
+    sc.resetPosition(args.position_range)
     return sc
-def simulate(sim_time,sim_dt,stop_waiting_time,desire_distance,stop_thresh,sc):
+def simulate(args,sc):
     try:
-        tf = sim_time ## must lager than 3
+        tf = args.sim_time ## must lager than 3
         initRef(sc) #sc.resetPosition(robot_num*np.sqrt(2)) # Random initial position
         # sp.plot(4, tf,expert=args.expert_only)
-        realstop = int(stop_waiting_time/sim_dt)
+        realstop = int(args.stop_waiting_time/args.sim_dt)
         while sc.simulate():
-            stop=sc.check_stop_condition(desire_distance,stop_thresh)
+            stop=sc.check_stop_condition(args.desire_distance,args.stop_thresh)
             if sc.t > tf or stop:
                 print("stop")
                 if realstop>0:

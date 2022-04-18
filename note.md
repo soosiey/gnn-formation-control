@@ -79,6 +79,4 @@ Save the scene class. Save the robots' states of one simulation(pose,speed,wheel
 #### Author Xinchi Huang
 
 
-Need to figure out linear or omega
-
 
