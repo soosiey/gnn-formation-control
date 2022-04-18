@@ -56,7 +56,7 @@ def set_robot_positions(sc,position_list):
 def demo(args):
     fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num)
     #### Initial Agent
-    for test_iter in range(2):
+    for test_iter in range(10):
         args.expert_only=False
         sc = generate_scene(args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range, fcl)
         position_list=[]
@@ -64,32 +64,32 @@ def demo(args):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
 
-        # #### Test model result
-        # model_type="model"
-        # print(model_type)
-        # model_name = "last_160.pth"
-        # fcl.model.to('cpu')
-        # fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        # fcl.model.to('cuda')
-        # set_robot_positions(sc, position_list)
-        # sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
-        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        # #### Test suhaas model result
-        # model_type = "suhaas"
-        # sc = generate_scene(args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range, fcl)
-        # set_robot_positions(sc, position_list)
-        # print(model_type)
-        # model_name = "suhaas_model_v13_dagger_final_more.pth"
-        # fcl.model.to('cpu')
-        # fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        # fcl.model.to('cuda')
-        # sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
-        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        # plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        #### Test model result
+        model_type="model"
+        print(model_type)
+        model_name = "last_160.pth"
+        fcl.model.to('cpu')
+        fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+        fcl.model.to('cuda')
+        set_robot_positions(sc, position_list)
+        sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        #### Test suhaas model result
+        model_type = "suhaas"
+        sc = generate_scene(args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range, fcl)
+        set_robot_positions(sc, position_list)
+        print(model_type)
+        model_name = "suhaas_model_v13_dagger_final_more.pth"
+        fcl.model.to('cpu')
+        fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+        fcl.model.to('cuda')
+        sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
         ### Test expert control result
-        pose=np.load("/home/xinchi/GNN-control/gnn-formation-control/results/5/suhaas/0.05/"+str(test_iter)+"/pose_array_scene.npy")
-        position_list=pose[:,0,:]
+        # pose=np.load("/home/xinchi/GNN-control/gnn-formation-control/results/5/suhaas/0.05/"+str(test_iter)+"/pose_array_scene.npy")
+        # position_list=pose[:,0,:]
         model_type = "expert"
         sc = generate_scene(args.robot_num,args.if_train,True,args.use_dagger,args.sim_time,args.position_range, fcl)
         set_robot_positions(sc, position_list)
