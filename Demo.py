@@ -28,8 +28,9 @@ parser = argparse.ArgumentParser(description='Args for demo')
 
 parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
 parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
-parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
-parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
+parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
+parser.add_argument('--if_continue', dest='if_continue', default=True,type=bool,help='Continue training')
+parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='last_160.pth',type=str,help='Name of model')
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
@@ -41,7 +42,7 @@ parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=2.0
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
 parser.add_argument('--train_episode', dest='train_episode', default=1000,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
-# parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
+parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
 parser.add_argument('--inW', dest='inW', default=100,type=int,help='Dataset shape')
 parser.add_argument('--inH', dest='inH', default=100,type=int,help='Dataset shape')
 parser.add_argument('--save_iteration', dest='save_iteration', default=10,type=int,help='Save after certain iterations')
@@ -58,7 +59,9 @@ def demo(args):
     #### Initial Agent
     for test_iter in range(10):
         args.expert_only=False
-        sc = generate_scene(args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range, fcl)
+        sc = generate_scene(args.sim_dt, 0, args.robot_num, args.if_train, args.expert_only, args.use_dagger, args.sim_time,
+                            args.position_range,
+                            args.desire_distance,args.stop_thresh, args.expert_velocity_adjust, agent=fcl)
         position_list=[]
         for i in range(len(sc.robots)):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
@@ -77,7 +80,9 @@ def demo(args):
         plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
         #### Test suhaas model result
         model_type = "suhaas"
-        sc = generate_scene(args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range, fcl)
+        sc = generate_scene(args.sim_dt, 0, args.robot_num, args.if_train, args.expert_only, args.use_dagger, args.sim_time,
+                            args.position_range,
+                            args.desire_distance,args.stop_thresh, args.expert_velocity_adjust, agent=fcl)
         set_robot_positions(sc, position_list)
         print(model_type)
         model_name = "suhaas_model_v13_dagger_final_more.pth"
@@ -91,7 +96,9 @@ def demo(args):
         # pose=np.load("/home/xinchi/GNN-control/gnn-formation-control/results/5/suhaas/0.05/"+str(test_iter)+"/pose_array_scene.npy")
         # position_list=pose[:,0,:]
         model_type = "expert"
-        sc = generate_scene(args.robot_num,args.if_train,True,args.use_dagger,args.sim_time,args.position_range, fcl)
+        sc = generate_scene(args.sim_dt, 0, args.robot_num, args.if_train, args.expert_only, args.use_dagger, args.sim_time,
+                            args.position_range,
+                            args.desire_distance,args.stop_thresh, args.expert_velocity_adjust, agent=fcl)
         set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
@@ -117,22 +124,23 @@ def initRef(sc):
     sc.log(message)
     print(message)
 
-def generate_scene(robot_num,if_train,expert_only,use_dagger,sim_time,position_range,agent):
+def generate_scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,sim_time,position_range,
+                   desired_distance,stop_thresh,expert_velocity_adjust,agent):
 
-    sc = Scene(fileName=__file__, recordData=True)
+    sc = Scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,desired_distance,stop_thresh,expert_velocity_adjust,fileName=__file__, recordData=True)
     sp = ScenePlot(sc)
     sp.saveEnabled = True  # save plots?
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
     # sc.dynamics = 18 # robot dynamics
     sc.errorType = 0
     for i in range(robot_num):
-        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),robot_num,if_train,expert_only,use_dagger, learnedController=agent.test)
+        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),learnedController=agent.test)
     # No leader
     I = np.identity(robot_num, dtype=np.int8)
     M = np.ones(robot_num, dtype=np.int8)
     sc.setADjMatrix(M - I)
 
-    # Set robot 0 as the leader.
+    # Set robot 0 as the leader.desired_distance,expert_velocity_adjust
 
     # vrep related
     sc.initVrep()
@@ -165,6 +173,7 @@ def generate_scene(robot_num,if_train,expert_only,use_dagger,sim_time,position_r
     initRef(sc)  # sc.resetPosition(robot_num*np.sqrt(2)) # Random initial position
     sc.resetPosition(position_range)
     return sc
+
 def simulate(sim_time,sim_dt,stop_waiting_time,desire_distance,stop_thresh,sc):
     try:
         tf = sim_time ## must lager than 3

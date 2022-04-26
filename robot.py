@@ -25,7 +25,7 @@ def saturate(dxp, dyp, dxypMax):
     return dxp, dyp
 
 class Robot():
-    def __init__(self, scene,robot_num,if_train,expert_only,use_dagger):
+    def __init__(self, scene,robot_num,if_train,expert_only,use_dagger,desired_distance,expert_velocity_adjust):
 
         ##### useful artribute
 
@@ -44,6 +44,8 @@ class Robot():
         self.if_train=if_train
         self.expert_only=expert_only
         self.use_dagger=use_dagger
+        self.expert_velocity_adjust=expert_velocity_adjust
+        self.desired_distance=desired_distance
         self.p = 0.8
         self.control_vmax = 1.2
         self.control_vmin = 0.01
@@ -135,6 +137,7 @@ class Robot():
             if (connected):
                 jList.append(lsd[i][0])
         for j in jList:
+
             robot = self.scene.robots[j]
             pijx = self.xi.xp - robot.xi.xp
             pijy = self.xi.yp - robot.xi.yp
@@ -263,7 +266,7 @@ class Robot():
         self.v2Desirednn = v2nn
 
         return v1nn,v2nn
-    def control(self,omlist,index):
+    def control(self,omlist,index,average_distance_gabreil_error,thresh):
         v1_expert,v2_expert=self.expert_control(omlist,index)
         v1_model,v2_model=self.gnn_control(omlist,index)
 
@@ -281,11 +284,21 @@ class Robot():
         #print('\n Expert output: ', v1, v2)
 
         ####### TO ADD THE CONTROLLER SELECTION MECHANISM HERE #############
-
+        print("Average distance")
+        print(average_distance_gabreil_error)
+        thresh=self.nr*thresh
         if self.expert_only:
+
             print("use expert controller")
             v1 = v1_expert
             v2 = v2_expert
+
+            if self.expert_velocity_adjust:
+                if self.expert_velocity_adjust:
+                    v1 = v1_expert * min(thresh,
+                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
+                    v2 = v2_expert * min(thresh,
+                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
         elif not self.use_dagger:
             print("use model controller")
             v1 = v1_model
@@ -305,6 +318,11 @@ class Robot():
                 print("use expert controller")
                 v1 = v1_expert
                 v2 = v2_expert
+                if self.expert_velocity_adjust:
+                    v1 = v1_expert * min(thresh,
+                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
+                    v2 = v2_expert * min(thresh,
+                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
             else:
                 print("use model controller")
                 v1 = v1_model
@@ -313,6 +331,7 @@ class Robot():
             v1=0
         if math.fabs(v2)<self.control_vmin:
             v2=0
+
         self.v1Desired = v1
         self.v2Desired = v2
         if self.scene.vrepConnected:
@@ -459,11 +478,11 @@ class Robot():
         self.update_neighbors(adjmatrix,robot_list)
 #### Set the linear velocity of 2 wheels
 
-    def get_control(self,omlist,i):
+    def get_control(self,omlist,i,average_distance_gabreil_error,thresh):
         if self.scene.vrepConnected == False:
             self.xi.propagate(self.control)
         else:
-            omega1, omega2 = self.control(omlist,i)
+            omega1, omega2 = self.control(omlist,i,average_distance_gabreil_error,thresh)
             return omega1,omega2
     ##### For simulate in scene
     def getDataObs(self):

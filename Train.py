@@ -26,12 +26,13 @@ import matplotlib.pyplot as plt
 import argparse
 parser = argparse.ArgumentParser(description='Args for demo')
 
-parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
+parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
 parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
-parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
+parser.add_argument('--if_continue', dest='if_continue', default=True,type=bool,help='Continue training')
+parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
-parser.add_argument('--model_name', dest='model_name', default='last_160.pth',type=str,help='Name of model')
+parser.add_argument('--model_name', dest='model_name', default='last_200.pth',type=str,help='Name of model')
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
@@ -51,7 +52,7 @@ args = parser.parse_args()
 
 
 
-def demo_one(args):
+def Train(args):
     #### store robot pose
     numRun = args.train_episode if args.if_train else 1
     positionList = [[] for n in range(numRun)]
@@ -87,7 +88,8 @@ def demo_one(args):
         ##########################################################################
         dataListEpisode = []
         # First episode
-        sc = generate_scene(args,fcl)
+        sc = generate_scene(args.sim_dt,0,args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range,
+                        args.desire_distance,args.stop_thresh,args.expert_velocity_adjust,agent=fcl)
         sc0 = simulate(args,sc)
         sc0.save_robot_states(os.path.join(args.saved_figs,str(args.stop_thresh),str(args.iter)))
         plot_scene(sc0,"",os.path.join(args.saved_figs,str(args.stop_thresh),str(args.iter)))
@@ -179,21 +181,23 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     sp.plot(9, tf, expert=expert)
 
 
-def generate_scene(args,agent):
-    sc = Scene(fileName=__file__, recordData=True)
+def generate_scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,sim_time,position_range,
+                   desired_distance,stop_thresh,expert_velocity_adjust,agent):
+
+    sc = Scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,desired_distance,stop_thresh,expert_velocity_adjust,fileName=__file__, recordData=True)
     sp = ScenePlot(sc)
     sp.saveEnabled = True  # save plots?
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
     # sc.dynamics = 18 # robot dynamics
     sc.errorType = 0
-    for i in range(args.robot_num):
-        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]), args, learnedController=agent.test)
+    for i in range(robot_num):
+        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),learnedController=agent.test)
     # No leader
-    I = np.identity(args.robot_num, dtype=np.int8)
-    M = np.ones(args.robot_num, dtype=np.int8)
+    I = np.identity(robot_num, dtype=np.int8)
+    M = np.ones(robot_num, dtype=np.int8)
     sc.setADjMatrix(M - I)
 
-    # Set robot 0 as the leader.
+    # Set robot 0 as the leader.desired_distance,expert_velocity_adjust
 
     # vrep related
     sc.initVrep()
@@ -201,19 +205,18 @@ def generate_scene(args,agent):
     # sc.SENSOR_TYPE = "VPL16" # None, 2d, VPL16, kinect
     sc.SENSOR_TYPE = "VPL16"  # None, 2d, VPL16, kinect
     sc.objectNames = ['Pioneer_p3dx', 'Pioneer_p3dx_leftMotor', 'Pioneer_p3dx_rightMotor']
-
     # change the # of instantiations according to "robot_num"
     # print(sc.SENSOR_TYPE)
     if sc.SENSOR_TYPE == "None":
         sc.setVrepHandles(0, '')
-        for i in range(1, args.robot_num + 1):
+        for i in range(1, robot_num + 1):
             sc.setVrepHandles(i, '#' + str(i))
         # sc.setVrepHandles(1, '#0')
 
     elif sc.SENSOR_TYPE == "VPL16":
         sc.objectNames.append('velodyneVPL_16')  # _ptCloud
         print(sc.objectNames)
-        for i in range(args.robot_num):
+        for i in range(robot_num):
             checkn = i - 1
             s = ''
             if (i >= 1):
@@ -221,13 +224,13 @@ def generate_scene(args,agent):
             sc.setVrepHandles(i, s)
 
     # sc.renderScene(waitTime = 3000)
-    tf = args.sim_time  ## must lager than 3
+    tf = sim_time  ## must lager than 3
 
     CheckerEnabled = False
     initRef(sc)  # sc.resetPosition(robot_num*np.sqrt(2)) # Random initial position
-    sc.resetPosition(args.position_range)
-
+    sc.resetPosition(position_range)
     return sc
+
 
 
 def simulate(args,sc):
@@ -328,6 +331,6 @@ def simulate(args,sc):
     return sc
 
 
-demo_one(args)
+Train(args)
 
 

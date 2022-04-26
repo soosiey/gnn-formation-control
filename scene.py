@@ -16,7 +16,7 @@ import os
 from state import State
 
 class Scene():
-    def __init__(self, fileName = "Untitled", recordData = False,dt=0.05,runNum = 0):
+    def __init__(self,dt,runNum,robot_num,if_train,expert_only,use_dagger,desired_distance,stop_thresh,expert_velocity_adjust, fileName = "Untitled", recordData = False):
         ##### useful artributes
 
         self.t = 0
@@ -26,6 +26,15 @@ class Scene():
         self.xid = State(0.0, 0.0, math.pi / 2)
         self.xi = State(0.0, 0.0, math.pi / 2)
         self.alpha = 1 # desired formation scale
+        self.desired_distance=desired_distance
+        self.stop_thresh=stop_thresh
+        self.robot_num=robot_num
+        self.if_train=if_train
+        self.expert_only=expert_only
+        self.use_dagger=use_dagger
+        self.desired_distance=desired_distance
+        self.expert_velocity_adjust=expert_velocity_adjust
+
 
         self.robots = []
         self.adjMatrix = None
@@ -76,8 +85,8 @@ class Scene():
 
 
 ##### merge with resetPosition,scaleDesiredFormation
-    def addRobot(self, arg,robot_num,if_train,expert_only,use_dagger, learnedController = None):
-        robot = Robot(self,robot_num,if_train,expert_only,use_dagger)
+    def addRobot(self, arg,learnedController = None):
+        robot = Robot(self,self.robot_num,self.if_train,self.expert_only,self.use_dagger,self.desired_distance,self.expert_velocity_adjust)
         robot.index = len(self.robots)
         robot.xi.x = arg[0, 0]
         robot.xi.y = arg[0, 1]
@@ -333,8 +342,41 @@ class Scene():
         omega=[0,0,1 / l * dt * (v2 - v1)]
         velodyne_points=None
         return pos, ori, vel, omega, velodyne_points
+    def get_average_gaberil_distance_error(self):
+        # print("Distance")
+        node_mum = len(self.robots)
+        gabriel_graph = [[1] * node_mum for _ in range(node_mum)]
+        position_list = []
+        for i in range(node_mum):
+            position = [self.robots[i].xi.x, self.robots[i].xi.y]
+            position_list.append(position)
+        position_array = np.array(position_list)
+        for u in range(node_mum):
+            for v in range(node_mum):
+                m = (position_array[u] + position_array[v]) / 2
+                for w in range(node_mum):
+                    if w == v:
+                        continue
+                    if np.linalg.norm(position_array[w] - m) < np.linalg.norm(position_array[u] - m):
+                        gabriel_graph[u][v] = 0
+                        gabriel_graph[v][u] = 0
+                        break
+        total=0
+        count=0
+        for i in range(node_mum):
+            for j in range(i + 1, node_mum):
+                if gabriel_graph[i][j] == 1:
+                    distance_error = abs(math.sqrt((self.robots[i].xi.x - self.robots[j].xi.x) ** 2 + (
+                                self.robots[i].xi.y - self.robots[j].xi.y) ** 2)-self.desired_distance)
+                    # print("distance between {r1:d} and {r2:d}".format(r1=i, r2=j))
+                    # print(distance)
+                    total+=distance_error
+                    count+=1
+
+        return total/count
     def check_stop_condition(self,desire_distance,thresh):
         print("Distance")
+
         node_mum = len(self.robots)
         gabriel_graph = [[1] * node_mum for _ in range(node_mum)]
         position_list=[]
@@ -352,6 +394,7 @@ class Scene():
                         gabriel_graph[u][v] = 0
                         gabriel_graph[v][u] = 0
                         break
+
         stop=True
         for i in range(node_mum):
             for j in range(i+1,node_mum):
@@ -387,8 +430,10 @@ class Scene():
             o,g,r,a = robot.getDataObs()
             omlist.append((o,g,r,a))
         # print("control v1,v2")
+        average_distance_gabreil_error = self.get_average_gaberil_distance_error()
         for i in range(len(self.robots)):
-            o1,o2 = self.robots[i].get_control(omlist,i)
+
+            o1,o2 = self.robots[i].get_control(omlist,i,average_distance_gabreil_error,self.stop_thresh)
             # print(o1,o2)
             self.robots[i].record_state()
             self.propagate(self.robots[i],o1,o2)

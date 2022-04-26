@@ -30,9 +30,10 @@ parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool
 parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
+parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
-parser.add_argument('--model_name', dest='model_name', default='last_160.pth',type=str,help='Name of model')
-parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
+parser.add_argument('--model_name', dest='model_name', default='model_train_episode-160_robot-5.pth',type=str,help='Name of model')
+parser.add_argument('--robot_num', dest='robot_num', default=4,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=200,type=float,help='Simulation time for one simulation')
@@ -41,7 +42,7 @@ parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=2.0
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
 parser.add_argument('--train_episode', dest='train_episode', default=1000,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
-# parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
+parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
 parser.add_argument('--inW', dest='inW', default=100,type=int,help='Dataset shape')
 parser.add_argument('--inH', dest='inH', default=100,type=int,help='Dataset shape')
 parser.add_argument('--save_iteration', dest='save_iteration', default=10,type=int,help='Save after certain iterations')
@@ -50,53 +51,39 @@ parser.add_argument('--saved_figs', dest='saved_figs', default="results",type=st
 args = parser.parse_args()
 
 def set_robot_positions(sc,position_list):
-    print(position_list)
     for i in range(len(position_list)):
         sc.robots[i].setPosition(position_list[i])
+    return sc
+def Test(args):
+    for iter in range(10):
+        fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num)
+        #### Initial Agent
 
-def demo(args):
-    fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num)
-    #### Initial Agent
-    for test_iter in range(2):
-        args.expert_only=False
-        sc = generate_scene(args, fcl)
+        sc = generate_scene(args.sim_dt,0,args.robot_num,args.if_train,True,args.use_dagger,args.sim_time,args.position_range,
+                            args.desire_distance,args.stop_thresh,args.expert_velocity_adjust,agent=fcl)
         position_list=[]
         for i in range(len(sc.robots)):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
-
+        print(position_list)
         #### Test model result
-        model_type="model"
+        model_type="expert_adjusted_4"
         print(model_type)
-        model_name = "last_160.pth"
-        fcl.model.to('cpu')
-        fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        fcl.model.to('cuda')
-        set_robot_positions(sc, position_list)
-        sc0 = simulate(args,sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        #### Test suhaas model result
-        model_type = "suhaas"
-        sc = generate_scene(args, fcl)
-        set_robot_positions(sc, position_list)
+        sc=set_robot_positions(sc, position_list)
+        sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iter)))
+        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iter)))
+
+        sc = generate_scene(args.sim_dt, 0, args.robot_num, args.if_train, args.expert_only, args.use_dagger, args.sim_time,
+                            args.position_range,
+                            args.desire_distance, args.stop_thresh, args.expert_velocity_adjust, agent=fcl)
+        model_type = "model_4"
         print(model_type)
-        model_name = "suhaas_model_v13_dagger_final_more.pth"
-        fcl.model.to('cpu')
-        fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        fcl.model.to('cuda')
-        sc0 = simulate(args, sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        #### Test expert control result
-        model_type = "expert"
-        sc = generate_scene(args, fcl)
-        set_robot_positions(sc, position_list)
-        print(model_type)
-        args.expert_only=True
-        sc0 = simulate(args, sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
-        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(args.stop_thresh), str(test_iter)))
+        print(position_list)
+        sc=set_robot_positions(sc, position_list)
+        sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iter)))
+        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(iter)))
 
 
 def initRef(sc):
@@ -118,21 +105,23 @@ def initRef(sc):
     sc.log(message)
     print(message)
 
-def generate_scene(args,agent):
-    sc = Scene(fileName=__file__, recordData=True)
+def generate_scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,sim_time,position_range,
+                   desired_distance,stop_thresh,expert_velocity_adjust,agent):
+
+    sc = Scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,desired_distance,stop_thresh,expert_velocity_adjust,fileName=__file__, recordData=True)
     sp = ScenePlot(sc)
     sp.saveEnabled = True  # save plots?
     sc.occupancyMapType = sc.OCCUPANCY_MAP_BINARY
     # sc.dynamics = 18 # robot dynamics
     sc.errorType = 0
-    for i in range(args.robot_num):
-        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]), args, learnedController=agent.test)
+    for i in range(robot_num):
+        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),learnedController=agent.test)
     # No leader
-    I = np.identity(args.robot_num, dtype=np.int8)
-    M = np.ones(args.robot_num, dtype=np.int8)
+    I = np.identity(robot_num, dtype=np.int8)
+    M = np.ones(robot_num, dtype=np.int8)
     sc.setADjMatrix(M - I)
 
-    # Set robot 0 as the leader.
+    # Set robot 0 as the leader.desired_distance,expert_velocity_adjust
 
     # vrep related
     sc.initVrep()
@@ -144,14 +133,14 @@ def generate_scene(args,agent):
     # print(sc.SENSOR_TYPE)
     if sc.SENSOR_TYPE == "None":
         sc.setVrepHandles(0, '')
-        for i in range(1, args.robot_num + 1):
+        for i in range(1, robot_num + 1):
             sc.setVrepHandles(i, '#' + str(i))
         # sc.setVrepHandles(1, '#0')
 
     elif sc.SENSOR_TYPE == "VPL16":
         sc.objectNames.append('velodyneVPL_16')  # _ptCloud
         print(sc.objectNames)
-        for i in range(args.robot_num):
+        for i in range(robot_num):
             checkn = i - 1
             s = ''
             if (i >= 1):
@@ -159,20 +148,20 @@ def generate_scene(args,agent):
             sc.setVrepHandles(i, s)
 
     # sc.renderScene(waitTime = 3000)
-    tf = args.sim_time  ## must lager than 3
+    tf = sim_time  ## must lager than 3
 
     CheckerEnabled = False
     initRef(sc)  # sc.resetPosition(robot_num*np.sqrt(2)) # Random initial position
-    sc.resetPosition(args.position_range)
+    sc.resetPosition(position_range)
     return sc
-def simulate(args,sc):
+def simulate(sim_time,sim_dt,stop_waiting_time,desire_distance,stop_thresh,sc):
     try:
-        tf = args.sim_time ## must lager than 3
+        tf = sim_time ## must lager than 3
         initRef(sc) #sc.resetPosition(robot_num*np.sqrt(2)) # Random initial position
         # sp.plot(4, tf,expert=args.expert_only)
-        realstop = int(args.stop_waiting_time/args.sim_dt)
+        realstop = int(stop_waiting_time/sim_dt)
         while sc.simulate():
-            stop=sc.check_stop_condition(args.desire_distance,args.stop_thresh)
+            stop=sc.check_stop_condition(desire_distance,stop_thresh)
             if sc.t > tf or stop:
                 print("stop")
                 if realstop>0:
@@ -197,6 +186,6 @@ def simulate(args,sc):
     return sc
 
 
-demo(args)
+Test(args)
 
 
