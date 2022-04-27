@@ -287,46 +287,49 @@ class Robot():
         print("Average distance")
         print(average_distance_gabreil_error)
         thresh=self.nr*thresh
-        if self.expert_only:
 
-            print("use expert controller")
-            v1 = v1_expert
-            v2 = v2_expert
-
-            if self.expert_velocity_adjust:
-                if self.expert_velocity_adjust:
-                    v1 = v1_expert * min(thresh,
-                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
-                    v2 = v2_expert * min(thresh,
-                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
-        elif not self.use_dagger:
-            print("use model controller")
-            v1 = v1_model
-            v2 = v2_model
-        elif not self.if_train:
-            print("use model controller")
-            v1 = v1_model
-            v2 = v2_model
+        if self.if_train:
+            if not self.use_dagger:
+                print("use expert controller")
+                v1 = v1_expert
+                v2 = v2_expert
+            else:
+                p = self.p  # can be tweaked
+                exp = (self.scene.runNum) // 20
+                # exp = (self.scene.runNum-101)//20
+                exp = max(0, exp)
+                beta = p ** (exp)  # Dagger algorithm paper, page 4
+                expert_controller = np.random.binomial(1, beta)
+                if expert_controller:
+                    print("use expert controller")
+                    v1 = v1_expert
+                    v2 = v2_expert
+                    if self.expert_velocity_adjust:
+                        v1 = v1_expert * min(thresh,
+                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
+                        v2 = v2_expert * min(thresh,
+                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
+                else:
+                    print("use model controller")
+                    v1 = v1_model
+                    v2 = v2_model
         else:
-            p = self.p  # can be tweaked
-            exp = (self.scene.runNum) // 20
-            # exp = (self.scene.runNum-101)//20
-            exp = max(0, exp)
-            beta = p ** (exp)  # Dagger algorithm paper, page 4
-            expert_controller = np.random.binomial(1, beta)
-            if expert_controller:
+            if self.expert_only:
                 print("use expert controller")
                 v1 = v1_expert
                 v2 = v2_expert
                 if self.expert_velocity_adjust:
-                    v1 = v1_expert * min(thresh,
-                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
-                    v2 = v2_expert * min(thresh,
-                                         abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance)/thresh
+                    if self.expert_velocity_adjust:
+                        v1 = v1_expert * min(thresh,
+                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
+                        v2 = v2_expert * min(thresh,
+                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
             else:
                 print("use model controller")
                 v1 = v1_model
                 v2 = v2_model
+
+
         if math.fabs(v1)<self.control_vmin:
             v1=0
         if math.fabs(v2)<self.control_vmin:

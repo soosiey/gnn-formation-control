@@ -79,7 +79,7 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
             name=str(i+1)+" to "+str(j+1)
             distance_array=np.sqrt(np.square(pose_array[i,:,0]-pose_array[j,:,0])+np.square(pose_array[i,:,1]-pose_array[j,:,1]))
             distance_dict[name]=distance_array
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(10, 10))
     for key in distance_dict:
         plt.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
@@ -113,7 +113,25 @@ def plot_formation_gabreil(pose_array,save_path):
     plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"))
     plt.close()
     # plt.show()
-
+def plot_trace(dt,position_array,save_path):
+    rob_num=np.shape(position_array)[0]
+    xlist=[]
+    colors=itertools.cycle(mcolors.TABLEAU_COLORS)
+    for i in range(np.shape(position_array)[1]):
+        xlist.append(i*dt)
+    plt.figure(figsize=(10, 10))
+    for i in range(rob_num):
+        color=next(colors)
+        for p in range(np.shape(position_array)[1]):
+            plt.scatter(position_array[i][p][0],position_array[i][p][1],color=color)
+    # plt.legend()
+    plt.title("Trace")
+    plt.xlabel("x(m)")
+    plt.ylabel("y(m)")
+    plt.grid()
+    plt.savefig(os.path.join(save_path, "robot_trace_" + str(rob_num) + ".png"))
+    plt.close()
+    # plt.show()
 def plot_scene(sc,path="",save_path=""):
     if not path=="":
         pose_array=np.load(os.path.join(path,"pose_array_scene.npy"))

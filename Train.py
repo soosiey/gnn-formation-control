@@ -26,10 +26,10 @@ import matplotlib.pyplot as plt
 import argparse
 parser = argparse.ArgumentParser(description='Args for demo')
 
-parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
+parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
 parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
-parser.add_argument('--if_continue', dest='if_continue', default=True,type=bool,help='Continue training')
+parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='last_200.pth',type=str,help='Name of model')
@@ -138,7 +138,7 @@ def Train(args):
     saved_model = os.path.join(args.model_path, saved_model_name)
     fcl.save(saved_model)
     time_file = os.path.join(args.model_path, "time.txt")
-    with open(time_file, 'w') as time_log:
+    with open(time_file, 'a+') as time_log:
         line = saved_model_name + "," + str(time.asctime(time.localtime(time.time()))) + "\n"
         time_log.write(line)
     if sc:
