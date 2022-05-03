@@ -37,8 +37,8 @@ parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Nu
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
-parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
-parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=10.0,type=float,help='Stopping after this time')
+parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.03,type=float,help='Stopping thresh')
+parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=5,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
 parser.add_argument('--train_episode', dest='train_episode', default=1000,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
@@ -55,31 +55,37 @@ def set_robot_positions(sc,position_list):
         sc.robots[i].setPosition(position_list[i])
     return sc
 def Test(args):
-    for iter in range(25,100):
+    for iter in range(0,100):
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num)
         #### Initial Agent
 
-        sc = generate_scene(args.sim_dt,0,args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,args.position_range,
-                            args.desire_distance,args.stop_thresh,args.expert_velocity_adjust,agent=fcl)
+        sc = generate_scene(args.sim_dt,0,args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,
+                            args.position_range,args.desire_distance,args.stop_thresh,True,agent=fcl)
         position_list=[]
         for i in range(len(sc.robots)):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
-        print(position_list)
+        # position_list=[[0,0,0],[4,0,0],[2,3.464,0]]
+        # position_list=[[4.22906923, - 1.62558985,  0.41476232],
+        #                 [-0.04029811,  0.05542705, - 1.98560548],
+        #                 [-2.31006312,0.70398265,1.37160444],
+        #                 [-1.07331026, - 2.924088, 2.22533751],
+        #                 [2.94578195, - 0.68193662,1.73749924]]
         #### Test model result
-        model_type="expert_5"
+        model_type="expert_adjusted_5"
         print(model_type)
+        print(position_list)
         sc=set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iter)))
         plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iter)))
 
-        sc = generate_scene(args.sim_dt, 0, args.robot_num, args.if_train, args.expert_only, args.use_dagger, args.sim_time,
-                            args.position_range,
-                            args.desire_distance, args.stop_thresh, True, agent=fcl)
-        model_type = "expert_adjusted_5"
+        model_type = "expert_5"
         print(model_type)
         print(position_list)
+        sc = generate_scene(args.sim_dt, 0, args.robot_num, args.if_train, args.expert_only, args.use_dagger, args.sim_time,
+                            args.position_range,args.desire_distance, args.stop_thresh, args.expert_velocity_adjust, agent=fcl)
+
         sc=set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iter)))
@@ -115,7 +121,7 @@ def generate_scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,sim_time
     # sc.dynamics = 18 # robot dynamics
     sc.errorType = 0
     for i in range(robot_num):
-        sc.addRobot(np.float32([[-2, 0, 1], [0.0, 0.0, 0.0]]),learnedController=agent.test)
+        sc.addRobot(np.float32([[i, 0, 1], [0.0, 0.0, 0.0]]),learnedController=agent.test)
     # No leader
     I = np.identity(robot_num, dtype=np.int8)
     M = np.ones(robot_num, dtype=np.int8)

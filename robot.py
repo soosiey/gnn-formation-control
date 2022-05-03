@@ -87,12 +87,7 @@ class Robot():
         # v1: left wheel speed
         # v2: right wheel speed
 
-        K3 = 0.0  # interaction between i and j
-        dxypMax = float('inf')
-        K1 = 0
-        K2 = 0
         K3 = 1  # interaction between i and j
-        dxypMax = 0.7
 
         # sort neighbors by distance
 
@@ -107,7 +102,6 @@ class Robot():
                 self.dictDistance[j] = self.xi.distancepTo(robot.xi)
             self.listSortedDistance = sorted(self.dictDistance.items(),
                                              key=operator.itemgetter(1))
-
         # velocity in transformed space
         vxp = 0
         vyp = 0
@@ -116,9 +110,8 @@ class Robot():
         tauiy = 0
         # neighbors sorted by distances in descending order
 
-        # gabriel graph connections
+        #### Use angle to get gabriel graph connections
         lsd = self.listSortedDistance
-
         jList = []
         for i in range(len(lsd)):
             connected = True
@@ -132,17 +125,17 @@ class Robot():
                                self.scene.robots[ri].xi.yp - self.scene.robots[rk].xi.yp])
                 c = np.dot(di, dj) / (np.linalg.norm(di) * np.linalg.norm(dj))
                 angle = np.degrees(np.arccos(c))
-                if (angle > 89 and i != k):
+                if (angle >= 90 and i != k):
                     connected = False
             if (connected):
                 jList.append(lsd[i][0])
-        for j in jList:
 
+        for j in jList:
             robot = self.scene.robots[j]
             pijx = self.xi.xp - robot.xi.xp
             pijy = self.xi.yp - robot.xi.yp
             pij0 = self.xi.distancepTo(robot.xi)
-            pijd0 = self.scene.alpha
+            pijd0 = self.desired_distance
             tauij0 = (pij0 - pijd0) / pij0
             tauix += tauij0 * pijx
             tauiy += tauij0 * pijy
@@ -153,22 +146,9 @@ class Robot():
         vxp += -K3 * tauix
         vyp += -K3 * tauiy
 
-        # Velocity control toward goal
 
-        dxp = self.scene.xid.dpbarx  # + self.l / 2 * dCosTheta
-        dyp = self.scene.xid.dpbary  # + self.l / 2 * dCosTheta
-        # Velocity control toward goal
-        # dxp = self.xi.xp - self.xid.xp
-        # dyp = self.xi.yp - self.xid.yp
-        # Limit magnitude
-        dxp, dyp = saturate(dxp, dyp, dxypMax)
-        vxp += -K1 * dxp
-        vyp += -K1 * dyp
 
-        # Take goal's speed into account
-        vxp += K2 * self.xid.vxp
-        vyp += K2 * self.xid.vyp
-
+        ##### transform speed to wheels
         kk = 1
         theta = self.xi.theta
         M11 = kk * math.sin(theta) + math.cos(theta)
@@ -305,10 +285,9 @@ class Robot():
                     v1 = v1_expert
                     v2 = v2_expert
                     if self.expert_velocity_adjust:
-                        v1 = v1_expert * min(thresh,
-                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
-                        v2 = v2_expert * min(thresh,
-                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
+                        print("use expert velocity adjust ")
+                        v1 = v1_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+                        v2 = v2_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
                 else:
                     print("use model controller")
                     v1 = v1_model
@@ -316,24 +295,24 @@ class Robot():
         else:
             if self.expert_only:
                 print("use expert controller")
+
                 v1 = v1_expert
                 v2 = v2_expert
+
                 if self.expert_velocity_adjust:
-                    if self.expert_velocity_adjust:
-                        v1 = v1_expert * min(thresh,
-                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
-                        v2 = v2_expert * min(thresh,
-                                             abs(average_distance_gabreil_error - self.desired_distance) / self.desired_distance) / thresh
+                    print("use expert velocity adjust ")
+                    v1 = v1_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+                    v2 = v2_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
             else:
                 print("use model controller")
                 v1 = v1_model
                 v2 = v2_model
 
 
-        if math.fabs(v1)<self.control_vmin:
-            v1=0
-        if math.fabs(v2)<self.control_vmin:
-            v2=0
+        # if math.fabs(v1)<self.control_vmin:
+        #     v1=0
+        # if math.fabs(v2)<self.control_vmin:
+        #     v2=0
 
         self.v1Desired = v1
         self.v2Desired = v2

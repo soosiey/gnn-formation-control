@@ -113,17 +113,17 @@ def plot_formation_gabreil(pose_array,save_path):
     plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"))
     plt.close()
     # plt.show()
-def plot_trace(dt,position_array,save_path):
+def plot_trace(position_array,save_path):
     rob_num=np.shape(position_array)[0]
-    xlist=[]
+
     colors=itertools.cycle(mcolors.TABLEAU_COLORS)
-    for i in range(np.shape(position_array)[1]):
-        xlist.append(i*dt)
+
     plt.figure(figsize=(10, 10))
     for i in range(rob_num):
         color=next(colors)
         for p in range(np.shape(position_array)[1]):
-            plt.scatter(position_array[i][p][0],position_array[i][p][1],color=color)
+            plt.scatter(position_array[i][p][0],position_array[i][p][1],s=10,c=color)
+        plt.scatter(position_array[i][0][0], position_array[i][0][1], s=150, c=color,marker="x")
     # plt.legend()
     plt.title("Trace")
     plt.xlabel("x(m)")
@@ -156,8 +156,20 @@ def plot_scene(sc,path="",save_path=""):
     plot_relative_distance_gabreil(dt, pose_array,save_path)
     plot_wheel_speed(dt, velocity_array,save_path)
     plot_formation_gabreil(pose_array,save_path)
+    plot_trace(pose_array,save_path)
 
 # pose_array=np.load(os.path.join("..","pose_array_scene.npy"))
 # velocity_array=np.load(os.path.join("..","velocity_array_scene.npy"))
-# sc=scene
-# plot_scene(sc,path="..",save_path="../fig")
+def plot_load_scene(dt,dir):
+    save_path=os.path.join(dir)
+    pose_array = np.load(os.path.join(dir, "pose_array_scene.npy"))
+    velocity_array = np.load(os.path.join(dir, "velocity_array_scene.npy"))
+    print(pose_array[:,0,:])
+    plot_relative_distance(dt,pose_array,save_path)
+    plot_relative_distance_gabreil(dt, pose_array,save_path)
+    plot_wheel_speed(dt, velocity_array,save_path)
+    plot_formation_gabreil(pose_array,save_path)
+    plot_trace(pose_array,save_path)
+
+if __name__=="__main__":
+    plot_load_scene(0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/expert_old_stop/expert_adjusted_5/42")

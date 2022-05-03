@@ -394,7 +394,6 @@ class Scene():
                         gabriel_graph[u][v] = 0
                         gabriel_graph[v][u] = 0
                         break
-
         stop=True
         for i in range(node_mum):
             for j in range(i+1,node_mum):
