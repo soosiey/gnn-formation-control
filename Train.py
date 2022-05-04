@@ -38,7 +38,7 @@ parser.add_argument('--position_range', dest='position_range', default=5,type=in
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=200,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
-parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=2.0,type=float,help='Stopping after this time')
+parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=5.0,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
 parser.add_argument('--train_episode', dest='train_episode', default=1000,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
