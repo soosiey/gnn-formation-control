@@ -30,6 +30,7 @@ parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,
 parser.add_argument('--use_dagger', dest='use_dagger', default=False,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
+parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=False,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_train_episode-150_robot-5.pth',type=str,help='Name of model')
@@ -56,7 +57,7 @@ def set_robot_positions(sc,position_list):
     return sc
 def Test(args):
     for iter in range(0,100):
-        fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num)
+        fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
         sc = generate_scene(args.sim_dt,0,args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,

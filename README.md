@@ -9,6 +9,8 @@ Ubuntu 18.04LTS\
 Python 3.6
 ### Install coppeliaSim
 https://coppeliarobotics.com/downloads
+### Install Opencv
+sudo apt install python3-opencv
 ### Install Dependencies:
 
 ```
