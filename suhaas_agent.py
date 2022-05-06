@@ -17,7 +17,8 @@ class Agent():
         self.inH = inH
         self.batch_size=batch_size
         self.model = suhaas_model.DecentralPlannerNet(nA = self.nA, inW = self.inW, inH = self.inH).double()
-        if cuda:
+        self.use_cuda=cuda
+        if self.use_cuda:
             self.model = self.model.to('cuda')
 
         self.lr = lr
@@ -43,18 +44,22 @@ class Agent():
             r[0,i,0] = omlist[i][2]
             a[0,i,0] = omlist[i][3]
         xin = torch.from_numpy(x).double()
-        xin = xin.to('cuda')
+        if self.use_cuda:
+            xin = xin.to('cuda')
         S = np.array(S)
         S = S.reshape((self.nA,self.nA))
         S = torch.from_numpy(S)
         S = S.unsqueeze(0)
-        S = S.to('cuda')
+        if self.use_cuda:
+            S = S.to('cuda')
 
         r = torch.from_numpy(r).double()
-        r = r.to('cuda')
+        if self.use_cuda:
+            r = r.to('cuda')
 
         a = torch.from_numpy(a).double()
-        a = a.to('cuda')
+        if self.use_cuda:
+            a = a.to('cuda')
         self.model.eval()
         self.model.addGSO(S)
 
