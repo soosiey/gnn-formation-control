@@ -19,7 +19,7 @@ def gabriel(pose_array):
                     continue
                 if  np.linalg.norm(position_array[w]-m)<np.linalg.norm(position_array[u]-m):
                     gabriel_graph[u][v]=0
-                    gabriel_graph[v][u] = 0
+                    gabriel_graph[v][u]=0
                     break
     return gabriel_graph
 def plot_wheel_speed(dt,velocity_array,save_path):

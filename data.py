@@ -24,26 +24,66 @@ class Data():
         # add communication graph for gnn
         #self.d['graph'] = np.zeros((0, 9), dtype = np.float32) # 9: n by n where n is the # of robots
         self.d['graph'] = np.zeros((0,robot.nr**2), dtype=np.float32)
-    def getObservation(self):
-        obs0 = self.robot.pointCloud.getObservation()
-
-        peer = self.robot
-        psi = peer.xid.theta - peer.xi.theta
-        if psi > math.pi:
-            psi -= 2 * math.pi
-        elif psi < -math.pi:
-            psi += 2 * math.pi
-        dpbar = (peer.scene.xid.dpbarx**2 + peer.scene.xid.dpbary**2)**0.5
-        dstars = []
-        for neighbor in self.robot.neighbors:
-            dstars.append(peer.xid.distancepTo(neighbor.xid))
-#                state = np.array([[dpbar, psi,
-#                                   peer.xi.x, peer.xi.y, peer.xi.theta]])
-        #state = np.array([[dpbar, psi, peer.scene.alpha] + dstars])
-        state = np.array([[psi, peer.scene.alpha]])
-        # print("state")
-        # print(state)
-        ret = (obs0, state)
+    def getObservation(self,mode):
+        # This function can not run after scene has been saved as a pickle file
+        if mode == 0:
+            obs0 = self.robot.pointCloud.getObservation()
+            act0 = self.robot.getV1V2()
+            ret = (obs0, act0)
+        elif mode > 0:
+            obs0 = self.robot.pointCloud.getObservation()
+            xi0 = self.robot.xi
+            # print(self.q.qsize())
+            if self.q.qsize() == mode:
+                xi1 = self.q.get()
+                obs = np.concatenate(xi1, axis=1)
+                ret = (obs, None)
+            else:
+                ret = (None, None)
+            self.q.put(xi0)
+        elif mode < 0:
+            obs0 = self.robot.pointCloud.getObservation()
+            if mode == -1:  # 1x1 Leader's actual speed
+                vLeader = self.robot.leader.getV1V2()
+                state = np.array([[0.5 * (vLeader[0, 0] + vLeader[0, 1])]])
+            elif mode == -2:  # 1x1 Follower's reference speed
+                followerXid = self.robot.xid
+                state = np.array([[(followerXid.vx ** 2 + followerXid.vy ** 2) ** 0.5]])
+            elif mode == -3:  # 1x2 Follower's reference speed
+                followerXid = self.robot.xid
+                state = np.array([[followerXid.vx, followerXid.vy]])
+            elif mode == -4:  # 1x2 Velocities of the leader's two wheels
+                state = self.robot.leader.getV1V2()
+            elif mode == -10:  # Peer's state
+                peer = self.robot
+                phii = math.atan2(peer.xid.y - peer.xi.y, peer.xid.x - peer.xi.x)
+                rhoi = ((peer.xid.x - peer.xi.x) ** 2 + (peer.xid.y - peer.xi.y) ** 2) ** 0.5
+                thetai = peer.xi.theta
+                psi = phii - thetai
+                if psi > math.pi:
+                    psi -= 2 * math.pi
+                elif psi < -math.pi:
+                    psi += 2 * math.pi
+                state = np.array([[peer.xid.vRef, rhoi, psi]])
+            elif mode == -11:  # Peer's state
+                peer = self.robot
+                state = np.array([[peer.xi.x, peer.xi.y, peer.xid.x, peer.xid.y]])
+            elif mode == -12:  # Peer's state
+                peer = self.robot
+                psi = peer.xid.theta - peer.xi.theta
+                if psi > math.pi:
+                    psi -= 2 * math.pi
+                elif psi < -math.pi:
+                    psi += 2 * math.pi
+                dpbar = (peer.scene.xid.dpbarx ** 2 + peer.scene.xid.dpbary ** 2) ** 0.5
+                dstars = []
+                for neighbor in self.robot.neighbors:
+                    dstars.append(peer.xid.distancepTo(neighbor.xid))
+                #                state = np.array([[dpbar, psi,
+                #                                   peer.xi.x, peer.xi.y, peer.xi.theta]])
+                # state = np.array([[dpbar, psi, peer.scene.alpha] + dstars])
+                state = np.array([[psi, peer.scene.alpha]])
+            ret = (obs0, state)
 
         return ret
 
@@ -52,7 +92,7 @@ class Data():
         # This function can only run after the leader state is updated
         # This function can only run before self.robot is desctructed
         # This function can not run after scene has been saved as a pickle file
-        observation, observation2 = self.getObservation()
+        observation, observation2 = self.getObservation(-12)
         if observation is None:
             return
 

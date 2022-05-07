@@ -26,20 +26,20 @@ import matplotlib.pyplot as plt
 import argparse
 parser = argparse.ArgumentParser(description='Args for demo')
 
-parser.add_argument('--expert_only', dest='expert_only', default=True,type=bool,help='Use expert control only')
+parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
 parser.add_argument('--use_dagger', dest='use_dagger', default=False,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
-parser.add_argument('--use_cuda', dest='use_cuda', default=False,type=bool,help='Use cuda')
-parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=False,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
+parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
+parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
-parser.add_argument('--model_name', dest='model_name', default='model_train_episode-150_robot-5.pth',type=str,help='Name of model')
+parser.add_argument('--model_name', dest='model_name', default='model_train_episode-100_robot-5.pth',type=str,help='Name of model')
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
-parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
+parser.add_argument('--sim_time', dest='sim_time', default=20,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
-parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=5,type=float,help='Stopping after this time')
+parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=2,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
 parser.add_argument('--train_episode', dest='train_episode', default=1000,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
@@ -55,42 +55,68 @@ def set_robot_positions(sc,position_list):
     for i in range(len(position_list)):
         sc.robots[i].setPosition(position_list[i])
     return sc
+
+
 def Test(args):
-    for iter in range(0,100):
+    for iteration in range(0,1):
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
-        sc = generate_scene(args.sim_dt,0,args.robot_num,args.if_train,args.expert_only,args.use_dagger,args.sim_time,
-                            args.position_range,args.desire_distance,args.stop_thresh,True,agent=fcl)
+
+
+        ##### Initial and record scene
+        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
+                            expert_only=args.expert_only,
+                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
+                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
+                            expert_velocity_adjust=args.expert_velocity_adjust,
+                            agent=fcl)
         position_list=[]
         for i in range(len(sc.robots)):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
-        # position_list=[[0,0,0],[4,0,0],[2,3.464,0]]
-        # position_list=[[4.22906923, - 1.62558985,  0.41476232],
-        #                 [-0.04029811,  0.05542705, - 1.98560548],
-        #                 [-2.31006312,0.70398265,1.37160444],
-        #                 [-1.07331026, - 2.924088, 2.22533751],
-        #                 [2.94578195, - 0.68193662,1.73749924]]
-        #### Test model result
-        model_type="expert_adjusted_5"
+
+
+
+        ##### Test model
+
+        model_type = "model_" + str(args.robot_num)
         print(model_type)
         print(position_list)
-        sc=set_robot_positions(sc, position_list)
-        sc0 = simulate(args.sim_time,args.sim_dt,args.stop_waiting_time,args.desire_distance,args.stop_thresh,sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iter)))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iter)))
+        if (not args.if_train):
+            # model_name="suhaas_model_v13_dagger_final_more.pth"
+            model_name = args.model_name
+            fcl.model.to('cpu')
+            fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+            fcl.model.to('cuda')
+        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
+                            expert_only=False,
+                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
+                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
+                            expert_velocity_adjust=args.expert_velocity_adjust,
+                            agent=fcl)
 
-        model_type = "expert_5"
-        print(model_type)
-        print(position_list)
-        sc = generate_scene(args.sim_dt, 0, args.robot_num, args.if_train, args.expert_only, args.use_dagger, args.sim_time,
-                            args.position_range,args.desire_distance, args.stop_thresh, args.expert_velocity_adjust, agent=fcl)
-
-        sc=set_robot_positions(sc, position_list)
+        sc = set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iter)))
-        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(iter)))
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
+        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(iteration)))
+
+
+        ##### Test expert
+
+        model_type = "expert_adjusted_" + str(args.robot_num)
+        print(model_type)
+        print(position_list)
+        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
+                            expert_only=True,
+                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
+                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
+                            expert_velocity_adjust=True,
+                            agent=fcl)
+        sc = set_robot_positions(sc, position_list)
+        sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
+        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
 def initRef(sc):

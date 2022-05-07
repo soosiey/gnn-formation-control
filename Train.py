@@ -124,7 +124,7 @@ def Train(args):
             saved_model=os.path.join(args.model_path,saved_model_name)
             time_file=os.path.join(args.model_path,"time.txt")
             fcl.save(saved_model)
-            with open(time_file,'w') as time_log:
+            with open(time_file,'a+') as time_log:
                 line=saved_model_name+","+str(time.asctime(time.localtime(time.time())))+"\n"
                 time_log.write(line)
 

@@ -262,9 +262,9 @@ class Scene():
         if self.vrepConnected == False:
             return
         if "readSensorData_firstCall" not in self.__dict__:
-            self.readSensorData_firstCall = True
+            robot.readSensorData_firstCall = True
         else:
-            self.readSensorData_firstCall = False
+            robot.readSensorData_firstCall = False
 
         # Read robot states
         res, pos = vrep.simxGetObjectPosition(self.clientID,
@@ -283,7 +283,7 @@ class Scene():
         if res != 0:
             raise VrepError("Cannot get object velocity with error code " + str(res))
         ##### Read sensors
-        velodyne_points=None
+
         if self.SENSOR_TYPE == "2d_":
             # self.laserFrontHandle
             # self.laserRearHandle
@@ -425,15 +425,12 @@ class Scene():
             robot.get_sensor_data(pos, ori, vel, omega, velodyne_points)
             # print("vel")
             # print(vel)
-            robot.xid.theta = self.xid.vRefAng
+            # robot.xid.theta = self.xid.vRefAng
             o,g,r,a = robot.getDataObs()
             omlist.append((o,g,r,a))
-        # print("control v1,v2")
         average_distance_gabreil_error = self.get_average_gaberil_distance_error()
         for i in range(len(self.robots)):
-
             o1,o2 = self.robots[i].get_control(omlist,i,average_distance_gabreil_error,self.stop_thresh)
-            # print(o1,o2)
             self.robots[i].record_state()
             self.propagate(self.robots[i],o1,o2)
             if self.robots[i].reachedGoal:

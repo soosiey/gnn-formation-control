@@ -422,7 +422,7 @@ class Robot():
         ##### Get laser/vision sensor data
         # Parse data
         if not velodyne_points==None:
-            res = velodyne_points[0]
+            # res = velodyne_points[0]
             if 'VPL16_counter' not in self.__dict__:
                 self.VPL16_counter = 0
             # reset the counter every fourth time
@@ -432,10 +432,13 @@ class Robot():
                 # Reset point cloud
                 self.pointCloud.clearData()
             self.pointCloud.addRawData(velodyne_points[2]) # will rotate here
+
             if self.VPL16_counter == 3:
                 self.pointCloud.crop()
                 self.pointCloud.updateOccupancyMap() # option 1
             self.VPL16_counter += 1
+            # print("counter")
+            # print(self.VPL16_counter)
             # add for gnn
             ###### (not yet finish)
             self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)
@@ -468,7 +471,7 @@ class Robot():
             return omega1,omega2
     ##### For simulate in scene
     def getDataObs(self):
-        observation, action_1 = self.data.getObservation()
+        observation, action_1 = self.data.getObservation(-12)
         return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
     def save_trace(self,path):
         pose_array=np.array(self.pose_list)
