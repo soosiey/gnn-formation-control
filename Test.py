@@ -30,7 +30,7 @@ parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool
 parser.add_argument('--use_dagger', dest='use_dagger', default=False,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
-parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
+parser.add_argument('--use_cuda', dest='use_cuda', default=False,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_train_episode-100_robot-5.pth',type=str,help='Name of model')
@@ -58,7 +58,7 @@ def set_robot_positions(sc,position_list):
 
 
 def Test(args):
-    for iteration in range(0,1):
+    for iteration in range(0,100):
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
@@ -86,9 +86,15 @@ def Test(args):
         if (not args.if_train):
             # model_name="suhaas_model_v13_dagger_final_more.pth"
             model_name = args.model_name
-            fcl.model.to('cpu')
-            fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-            fcl.model.to('cuda')
+            # fcl.model.to('cpu')
+            # fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+            if args.use_cuda:
+                fcl.model.to('cpu')
+                fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+                fcl.model.to('cuda')
+            else:
+                fcl.model.to('cpu')
+                fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name),map_location=torch.device('cpu')))
         sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
                             expert_only=False,
                             use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
