@@ -271,8 +271,13 @@ class Robot():
         if self.if_train:
             if not self.use_dagger:
                 print("use expert controller")
+
                 v1 = v1_expert
                 v2 = v2_expert
+                if self.expert_velocity_adjust:
+                    print("use expert velocity adjust ")
+                    v1 = v1_expert * min(thresh, abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+                    v2 = v2_expert * min(thresh, abs(average_distance_gabreil_error) / self.desired_distance) / thresh
             else:
                 p = self.p  # can be tweaked
                 exp = (self.scene.runNum) // 20

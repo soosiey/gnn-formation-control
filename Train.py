@@ -27,19 +27,19 @@ import argparse
 parser = argparse.ArgumentParser(description='Args for demo')
 
 parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
-parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
+parser.add_argument('--use_dagger', dest='use_dagger', default=False,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
-parser.add_argument('--if_continue', dest='if_continue', default=True,type=bool,help='Continue training')
+parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
-parser.add_argument('--model_name', dest='model_name', default='last_60.pth',type=str,help='Name of model')
+parser.add_argument('--model_name', dest='model_name', default='last_130.pth',type=str,help='Name of model')
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=200,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
-parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=5.0,type=float,help='Stopping after this time')
+parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=20.0,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
 parser.add_argument('--train_episode', dest='train_episode', default=1000,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
@@ -93,7 +93,7 @@ def Train(args):
                         args.desire_distance,args.stop_thresh,args.expert_velocity_adjust,agent=fcl)
         sc0 = simulate(args,sc)
         sc0.save_robot_states(os.path.join(args.saved_figs,str(args.stop_thresh),str(args.iter)))
-        plot_scene(sc0,"",os.path.join(args.saved_figs,str(args.stop_thresh),str(args.iter)))
+        plot_scene(sc0,"",os.path.join(args.saved_figs,"train",str(args.stop_thresh),str(args.iter)))
         if sc0 is not None:
             # if the list is not empty
             sc = sc0
@@ -180,7 +180,6 @@ def plot(sp, tf,expert): #sp.plot(0, tf) sp.plot(2, tf) # Formation Separation
     sp.plot(7, tf, expert=expert)
     sp.plot(8, tf, expert=expert)
     sp.plot(9, tf, expert=expert)
-
 
 def generate_scene(dt,num_run,robot_num,if_train,expert_only,use_dagger,sim_time,position_range,
                    desired_distance,stop_thresh,expert_velocity_adjust,agent):
