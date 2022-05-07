@@ -99,7 +99,7 @@ def Test(args):
         sc = set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(iteration)))
+        plot_scene(sc0,model_type, "", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
         ##### Test expert
@@ -116,7 +116,7 @@ def Test(args):
         sc = set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(iteration)))
+        plot_scene(sc0,model_type, "", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
 def initRef(sc):

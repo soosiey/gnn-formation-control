@@ -132,7 +132,7 @@ def plot_trace(position_array,save_path):
     plt.savefig(os.path.join(save_path, "robot_trace_" + str(rob_num) + ".png"))
     plt.close()
     # plt.show()
-def plot_scene(sc,path="",save_path=""):
+def plot_scene(sc,model_type,path="",save_path=""):
     if not path=="":
         pose_array=np.load(os.path.join(path,"pose_array_scene.npy"))
         velocity_array=np.load(os.path.join(path,"velocity_array_scene.npy"))
