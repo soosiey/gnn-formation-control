@@ -37,7 +37,7 @@ parser.add_argument('--model_name', dest='model_name', default='model_train_epis
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
-parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
+parser.add_argument('--sim_time', dest='sim_time', default=200,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
 parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=20,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
