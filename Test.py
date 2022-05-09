@@ -58,7 +58,7 @@ def set_robot_positions(sc,position_list):
 
 
 def Test(args):
-    for iteration in range(0,1):
+    for iteration in range(0,100):
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
@@ -76,6 +76,29 @@ def Test(args):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
 
+        ##### Test model
+
+        model_type = "model_dagger" + str(args.robot_num)
+        print(model_type)
+        print(position_list)
+        if (not args.if_train):
+            # model_name="suhaas_model_v13_dagger_final_more.pth"
+            model_name = "dagger_100.pth"
+            fcl.model.to('cpu')
+            fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+            fcl.model.to('cuda')
+        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
+                            expert_only=False,
+                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
+                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
+                            expert_velocity_adjust=args.expert_velocity_adjust,
+                            agent=fcl)
+
+        sc = set_robot_positions(sc, position_list)
+        sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh,
+                       sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
+        plot_scene(sc0, "", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
         ##### Test model
@@ -100,6 +123,7 @@ def Test(args):
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
         plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
+
 
 
         ##### Test expert
@@ -195,7 +219,8 @@ def simulate(sim_time,sim_dt,stop_waiting_time,desire_distance,stop_thresh,sc):
         realstop = int(stop_waiting_time/sim_dt)
         stop=False
         while sc.simulate():
-            stop=sc.check_stop_condition(desire_distance,stop_thresh)
+            if sc.check_stop_condition(desire_distance,stop_thresh):
+                stop=True
             if sc.t > tf or stop:
                 print("stop")
                 if realstop>0:
