@@ -27,7 +27,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Args for demo')
 
 parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
-parser.add_argument('--use_dagger', dest='use_dagger', default=False,type=bool,help='Use dagger for training only')
+parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')

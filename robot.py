@@ -46,7 +46,7 @@ class Robot():
         self.use_dagger=use_dagger
         self.expert_velocity_adjust=expert_velocity_adjust
         self.desired_distance=desired_distance
-        self.p = 0.8
+        self.p = 0.9
         self.control_vmax = 1.2
         self.control_vmin = 0.01
         self.accMax = 0.5
@@ -280,7 +280,7 @@ class Robot():
                     v2 = v2_expert * min(thresh, abs(average_distance_gabreil_error) / self.desired_distance) / thresh
             else:
                 p = self.p  # can be tweaked
-                exp = (self.scene.runNum) // 20
+                exp = (self.scene.runNum) // 50
                 # exp = (self.scene.runNum-101)//20
                 exp = max(0, exp)
                 beta = p ** (exp)  # Dagger algorithm paper, page 4
