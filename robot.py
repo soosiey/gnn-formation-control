@@ -319,8 +319,8 @@ class Robot():
         # if math.fabs(v2)<self.control_vmin:
         #     v2=0
 
-        self.v1Desired = v1
-        self.v2Desired = v2
+        self.v1Desired = v1_expert
+        self.v2Desired = v2_expert
         if self.scene.vrepConnected:
             # print(v1,v2)
             omega1 = v1 * 10.25
