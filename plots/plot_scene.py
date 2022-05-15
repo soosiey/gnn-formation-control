@@ -6,6 +6,7 @@ import itertools
 import scene
 import numpy as np
 import os
+from matplotlib.animation import FuncAnimation
 
 def gabriel(pose_array):
     node_mum = np.shape(pose_array)[0]
@@ -170,6 +171,22 @@ def plot_load_scene(dt,dir):
     plot_wheel_speed(dt, velocity_array,save_path)
     plot_formation_gabreil(pose_array,save_path)
     plot_trace(pose_array,save_path)
+def plot_dynamic_gabreil(path):
+    import matplotlib.pyplot as plt
+    import numpy as np
 
+    x = np.linspace(0, 10 * np.pi, 100)
+    y = np.sin(x)
+
+    plt.ion()
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    line1, = ax.plot(x, y, 'b-')
+
+    for phase in np.linspace(0, 10 * np.pi, 100):
+        line1.set_ydata(np.sin(0.5 * x + phase))
+        fig.canvas.draw()
+        fig.canvas.flush_events()
 if __name__=="__main__":
-    plot_load_scene(0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/expert_old_stop/expert_adjusted_5/42")
+    # plot_load_scene(0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/expert_old_stop/expert_adjusted_5/42")
+    plot_dynamic_gabreil("/home/xinchi/GNN-control/gnn-formation-control/results/5 robots/model_5/58")
