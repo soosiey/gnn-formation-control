@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-pose_array=np.load("/home/xinchi/GNN-control/gnn-formation-control/results/5 robots/model_5/58/pose_array_scene.npy")
+pose_array=np.load("/home/xinchi/GNN-control/gnn-formation-control/results/results2022.5.6/expert compare/expert_5/58/pose_array_scene.npy")
 node_num = np.shape(pose_array)[0]
 iters=pose_array.shape[1]
 # plt.figure(figsize=(10, 10))

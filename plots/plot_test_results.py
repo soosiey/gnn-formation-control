@@ -73,7 +73,7 @@ def box(data,title,save_dir):
     plt.title(title)
     plt.savefig(os.path.join(save_dir,title+'.png'))
 
-dir= '../results/2022.5.8 no dagger/model_5'
+dir= '/home/xinchi/GNN-control/gnn-formation-control/results/model_5'
 converge_time_all,average_formation_all,average_formation_error_all=process_data(dir)
 box(converge_time_all,"converge time",dir)
 box(average_formation_all,"average distance",dir)
