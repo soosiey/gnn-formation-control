@@ -1,6 +1,7 @@
 #/doc
 ~*
 /__pycache__
+/gnn_env
 /data
 /data_scene
 /fig
