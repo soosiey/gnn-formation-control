@@ -34,7 +34,7 @@ parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='seperate_dagger_0.9_50_2022.5.17/model_train_episode-200_robot-5.pth',type=str,help='Name of model')
-parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
+parser.add_argument('--robot_num', dest='robot_num', default=4,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=200,type=float,help='Simulation time for one simulation')
@@ -58,7 +58,7 @@ def set_robot_positions(sc,position_list):
 
 
 def Test(args):
-    for iteration in range(0,100):
+    for iteration in range(1):
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
@@ -77,14 +77,16 @@ def Test(args):
             position_list.append(position)
 
         ##### Test model
-
-
+        path="/home/xinchi/GNN-results/stop_results/4_robots/model_4/67/pose_array_scene.npy"
+        position_array=np.load(path)
+        position_list=position_array[:,0,:]
+        print(position_list)
 
         ##### Test model
 
         model_type = "model_" + str(args.robot_num)
         print(model_type)
-        print(position_list)
+
         if (not args.if_train):
             # model_name="suhaas_model_v13_dagger_final_more.pth"
             model_name = args.model_name
@@ -103,29 +105,34 @@ def Test(args):
                             desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
                             expert_velocity_adjust=args.expert_velocity_adjust,
                             agent=fcl)
-
         sc = set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
+        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, "demo"))
 
 
 
         ##### Test expert
 
-        model_type = "expert_adjusted_" + str(args.robot_num)
-        print(model_type)
-        print(position_list)
-        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
-                            expert_only=True,
-                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
-                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
-                            expert_velocity_adjust=True,
-                            agent=fcl)
-        sc = set_robot_positions(sc, position_list)
-        sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
+        # model_type = "expert_adjusted_" + str(args.robot_num)
+        # print(model_type)
+        # # print(position_list)
+        # sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
+        #                     expert_only=True,
+        #                     use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
+        #                     desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
+        #                     expert_velocity_adjust=True,
+        #                     agent=fcl)
+        #
+        # ####  fix bugs
+        # path = "/home/xinchi/GNN-control/gnn-formation-control/results/model_6/" + str(iteration)
+        # pose_array = np.load(os.path.join(path, "pose_array_scene.npy"))
+        #
+        # position_list=pose_array[:,0,:]
+        # sc = set_robot_positions(sc, position_list)
+        # sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
+        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
+        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
 def initRef(sc):

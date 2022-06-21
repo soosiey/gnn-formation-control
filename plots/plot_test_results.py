@@ -42,7 +42,8 @@ def process_data(dir):
         file=os.path.join(path, "pose_array_scene.npy")
         raw_data=np.load(file)
         sim_time=raw_data.shape[1]*0.05
-        observe_data=raw_data[:,-400:,:2]
+        print(path)
+        observe_data=np.expand_dims(raw_data[:,-100,:2],axis=1)
         gabriel_graph=gabriel(observe_data)
         reference=np.ones(observe_data.shape[1])
         reference=reference*2
@@ -59,22 +60,68 @@ def process_data(dir):
                         distance_error_list.append(distance_error)
         average_formation_error=np.average(np.array(distance_error_list))
         average_formation = np.average(np.array(distance_list))
-        converge_time_all.append(sim_time-20)
+        if sim_time<150:
+            converge_time_all.append(sim_time-5)
         average_formation_error_all.append(average_formation_error)
         average_formation_all.append(average_formation)
-    print(average_formation_all)
-    print(average_formation_error_all)
-    print(converge_time_all)
     return converge_time_all,average_formation_all,average_formation_error_all
     # print(observe_data-reference)
-def box(data,title,save_dir):
-    fig = plt.figure(figsize=(10, 7))
-    plt.boxplot(data)
-    plt.title(title)
+
+def box(data_m,data_e,title,ylabel,save_dir):
+    fig = plt.figure(figsize=(5, 5))
+    labels=[4,5,6]
+    color_model='#1f77b4'
+    color_expert='#ff7f0e'
+    model=plt.boxplot(data_m,
+                      positions=np.array(range(len(data_m))) *2.0-0.4,
+                      boxprops=dict(color=color_model),
+                      capprops=dict(color=color_model),
+                      whiskerprops=dict(color=color_model),
+                      flierprops=dict(color=color_model,markeredgecolor=color_model),
+                      medianprops=dict(color="black"),
+                      widths=0.6)
+    exp=plt.boxplot(data_e,
+                      positions=np.array(range(len(data_e))) *2.0+0.4,
+                      boxprops=dict(color=color_expert),
+                      capprops=dict(color=color_expert),
+                      whiskerprops=dict(color=color_expert),
+                      flierprops=dict(color=color_expert,markeredgecolor=color_expert),
+                      medianprops=dict(color="black"),
+                      widths=0.6)
+    plt.legend([model["boxes"][0], exp["boxes"][0]], ['Model', 'Expert'], loc='upper right')
+    plt.xticks(np.array(range(len(data_m)))*2.0,labels=labels)
+    plt.title(title,fontsize=15)
+    plt.xlabel("Number of robots",fontsize=15)
+    plt.ylabel(ylabel,fontsize=15)
     plt.savefig(os.path.join(save_dir,title+'.png'))
 
-dir= '/home/xinchi/GNN-control/gnn-formation-control/results/model_5'
-converge_time_all,average_formation_all,average_formation_error_all=process_data(dir)
-box(converge_time_all,"converge time",dir)
-box(average_formation_all,"average distance",dir)
-box(average_formation_error_all,"average distance error",dir)
+
+
+dir4= '/home/xinchi/GNN-results/stop_results/4_robots/model_4'
+converge_time_all_4,average_formation_all_4,average_formation_error_all_4=process_data(dir4)
+dir5= '/home/xinchi/GNN-results/stop_results/5_robots/model_5'
+converge_time_all_5,average_formation_all_5,average_formation_error_all_5=process_data(dir5)
+dir6= '/home/xinchi/GNN-results/stop_results/6_robots/model_6'
+converge_time_all_6,average_formation_all_6,average_formation_error_all_6=process_data(dir6)
+converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6]
+average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6]
+average_formation_error_all_model=[average_formation_error_all_4,average_formation_error_all_5,average_formation_error_all_6]
+
+
+# dir= '/home/xinchi/6_robots/model_6'
+dir4_e= '/home/xinchi/GNN-results/stop_results/4_robots/expert_adjusted_4'
+converge_time_all_4_e,average_formation_all_4_e,average_formation_error_all_4_e=process_data(dir4_e)
+dir5_e= '/home/xinchi/GNN-results/stop_results/5_robots/expert_adjusted_5'
+converge_time_all_5_e,average_formation_all_5_e,average_formation_error_all_5_e=process_data(dir5_e)
+dir6_e= '/home/xinchi/GNN-results/stop_results/6_robots/expert_adjusted_6'
+converge_time_all_6_e,average_formation_all_6_e,average_formation_error_all_6_e=process_data(dir6_e)
+converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_time_all_6_e]
+average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e]
+average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e]
+
+print(converge_time_all_6_e)
+print(converge_time_all_6)
+
+box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-results/stop_results")
+box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-results/stop_results")
+box(average_formation_error_all_model,average_formation_error_all_expert,"Average distance error","Distance(m)","/home/xinchi/GNN-results/stop_results/")

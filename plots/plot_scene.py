@@ -84,9 +84,11 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
     for key in distance_dict:
         plt.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
-    plt.title("Relative distance gabreil")
-    plt.xlabel("time(s)")
-    plt.ylabel("distance(m)")
+    plt.title("Relative distance gabreil",fontsize=35)
+    plt.xlabel("time(s)",fontsize=35)
+    plt.ylabel("distance(m)",fontsize=35)
+    plt.xticks(fontsize=25)
+    plt.yticks(fontsize=25)
     plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_gabreil_" + str(rob_num) + ".png"))
     plt.close()
@@ -96,8 +98,9 @@ def plot_formation_gabreil(pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
     gabriel_graph = gabriel(pose_array)
     position_array = pose_array[:, -1, :2]
+    print(pose_array.shape)
     plt.figure(figsize=(10, 10))
-    plt.scatter(position_array[:,0],position_array[:,1])
+    plt.scatter(position_array[:,0],position_array[:,1],s=100)
     for i in range(rob_num):
         for j in range(i + 1, rob_num):
             if gabriel_graph[i][j] == 0:
@@ -105,11 +108,13 @@ def plot_formation_gabreil(pose_array,save_path):
             xlist = [position_array[i][0],position_array[j][0]]
             ylist = [position_array[i][1], position_array[j][1]]
             distance=math.sqrt((xlist[0]-xlist[1])**2+(ylist[0]-ylist[1])**2)
-            plt.plot(xlist,ylist,label="Distane: {d:.2f}".format(d=distance))
-    plt.legend()
-    plt.title("Formation")
-    plt.xlabel("distance(m)")
-    plt.ylabel("distance(m)")
+            plt.plot(xlist,ylist,label="Distane: {d:.2f}".format(d=distance),linewidth=2.5)
+    # plt.legend(fontsize=30)
+    plt.title("Formation",fontsize=35)
+    plt.xlabel("distance(m)",fontsize=35)
+    plt.ylabel("distance(m)",fontsize=35)
+    plt.xlim(-5, 5)
+    plt.ylim(-5, 5)
     plt.grid()
     plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"))
     plt.close()
@@ -165,12 +170,12 @@ def plot_load_scene(dt,dir):
     save_path=os.path.join(dir)
     pose_array = np.load(os.path.join(dir, "pose_array_scene.npy"))
     velocity_array = np.load(os.path.join(dir, "velocity_array_scene.npy"))
-    print(pose_array[:,0,:])
+
     plot_relative_distance(dt,pose_array,save_path)
     plot_relative_distance_gabreil(dt, pose_array,save_path)
     plot_wheel_speed(dt, velocity_array,save_path)
     plot_formation_gabreil(pose_array,save_path)
-    plot_trace(pose_array,save_path)
+    # plot_trace(pose_array,save_path)
 def plot_dynamic_gabreil(path):
     import matplotlib.pyplot as plt
     import numpy as np
@@ -188,5 +193,6 @@ def plot_dynamic_gabreil(path):
         fig.canvas.draw()
         fig.canvas.flush_events()
 if __name__=="__main__":
-    # plot_load_scene(0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/expert_old_stop/expert_adjusted_5/42")
-    plot_dynamic_gabreil("/home/xinchi/GNN-control/gnn-formation-control/results/5 robots/model_5/58")
+    for i in range(0,100):
+        plot_load_scene(0.05,"/home/xinchi/GNN-results/stop_results/expert_adjusted_6/"+str(i))
+    # plot_dynamic_gabreil("/home/xinchi/GNN-control/gnn-formation-control/results/5 robots/model_5/58")
