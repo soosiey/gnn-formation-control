@@ -4,7 +4,7 @@ import os
 import csv
 import matplotlib.pyplot as plt
 import matplotlib.font_manager
-matplotlib.font_manager._rebuild()
+# matplotlib.font_manager._rebuild()
 plt.rcParams['font.family'] = "serif"
 
 import matplotlib.ticker as ticker
