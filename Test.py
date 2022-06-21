@@ -207,13 +207,14 @@ def simulate(sim_time,sim_dt,stop_waiting_time,desire_distance,stop_thresh,sc):
             # if sc.check_stop_condition(desire_distance,stop_thresh):
             #     stop=True
             if sc.t > tf or stop:
-                print("stop")
-                if realstop>0:
-                    realstop-=1
-                else:
-                    print("Stop at")
-                    print(sc.t)
-                    break
+                break
+                # print("stop")
+                # if realstop>0:
+                #     realstop-=1
+                # else:
+                #     print("Stop at")
+                #     print(sc.t)
+                #     break
     except KeyboardInterrupt:
         x = input('Quit?(y/n)')
         if x == 'y' or x == 'Y':
