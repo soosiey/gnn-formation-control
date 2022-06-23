@@ -29,7 +29,7 @@ def plot_wheel_speed(dt,velocity_array,save_path):
     colors=itertools.cycle(mcolors.TABLEAU_COLORS)
     for i in range(np.shape(velocity_array)[1]):
         xlist.append(i*dt)
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(5, 2))
     for i in range(rob_num):
         color=next(colors)
         plt.plot(xlist, velocity_array[i, :, 0], color=color, label="Robot " + str(i) + " left wheel speed")
@@ -39,7 +39,7 @@ def plot_wheel_speed(dt,velocity_array,save_path):
     plt.xlabel("time(s)")
     plt.ylabel("velocity(m)")
     plt.grid()
-    plt.savefig(os.path.join(save_path, "wheel_speed_" + str(rob_num) + ".png"))
+    plt.savefig(os.path.join(save_path, "wheel_speed_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
     # plt.show()
 def plot_relative_distance(dt,pose_array,save_path):
@@ -53,7 +53,7 @@ def plot_relative_distance(dt,pose_array,save_path):
             name=str(i+1)+" to "+str(j+1)
             distance_array=np.sqrt(np.square(pose_array[i,:,0]-pose_array[j,:,0])+np.square(pose_array[i,:,1]-pose_array[j,:,1]))
             distance_dict[name]=distance_array
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(5, 2))
     for key in distance_dict:
         plt.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
@@ -61,7 +61,7 @@ def plot_relative_distance(dt,pose_array,save_path):
     plt.xlabel("time(s)")
     plt.ylabel("distance(m)")
     plt.grid()
-    plt.savefig(os.path.join(save_path, "relative_distance_" + str(rob_num) + ".png"))
+    plt.savefig(os.path.join(save_path, "relative_distance_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
     # plt.show()
     # fig = plt.gcf()
@@ -80,17 +80,17 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
             name=str(i+1)+" to "+str(j+1)
             distance_array=np.sqrt(np.square(pose_array[i,:,0]-pose_array[j,:,0])+np.square(pose_array[i,:,1]-pose_array[j,:,1]))
             distance_dict[name]=distance_array
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(5, 2))
     for key in distance_dict:
         plt.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
-    plt.title("Relative distance gabreil",fontsize=35)
-    plt.xlabel("time(s)",fontsize=35)
-    plt.ylabel("distance(m)",fontsize=35)
-    plt.xticks(fontsize=25)
-    plt.yticks(fontsize=25)
+    plt.title("Relative distance gabreil",fontsize=15)
+    plt.xlabel("time(s)",fontsize=15)
+    plt.ylabel("distance(m)",fontsize=15)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
     plt.grid()
-    plt.savefig(os.path.join(save_path, "relative_distance_gabreil_" + str(rob_num) + ".png"))
+    plt.savefig(os.path.join(save_path, "relative_distance_gabreil_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
     # plt.show()
 
@@ -110,13 +110,15 @@ def plot_formation_gabreil(pose_array,save_path):
             distance=math.sqrt((xlist[0]-xlist[1])**2+(ylist[0]-ylist[1])**2)
             plt.plot(xlist,ylist,label="Distane: {d:.2f}".format(d=distance),linewidth=2.5)
     # plt.legend(fontsize=30)
-    plt.title("Formation",fontsize=35)
-    plt.xlabel("distance(m)",fontsize=35)
-    plt.ylabel("distance(m)",fontsize=35)
+    plt.title("Formation",fontsize=15)
+    plt.xlabel("distance(m)",fontsize=15)
+    plt.ylabel("distance(m)",fontsize=15)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
     plt.xlim(-5, 5)
     plt.ylim(-5, 5)
     plt.grid()
-    plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"))
+    plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
     # plt.show()
 def plot_trace(position_array,save_path):
@@ -193,6 +195,5 @@ def plot_dynamic_gabreil(path):
         fig.canvas.draw()
         fig.canvas.flush_events()
 if __name__=="__main__":
-    for i in range(0,100):
-        plot_load_scene(0.05,"/home/xinchi/GNN-results/stop_results/expert_adjusted_6/"+str(i))
-    # plot_dynamic_gabreil("/home/xinchi/GNN-control/gnn-formation-control/results/5 robots/model_5/58")
+    # for i in range(0,100):
+    plot_load_scene(0.05,"/home/xinchi/GNN-results/stop_results/4_robots/model_4/"+str(0))

@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/data_scene" />
       <excludeFolder url="file://$MODULE_DIR$/fig" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.6 (gnnvenv)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.8 (gnn-formation-control)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
