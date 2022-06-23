@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import math
 # # Creating dataset
 # np.random.seed(10)
 # data = np.random.normal(100, 20, 200)
@@ -28,22 +29,40 @@ def gabriel(pose_array):
                     gabriel_graph[v][u]=0
                     break
     return gabriel_graph
+def get_convergence_time(data,desired_distance=2,tolerrance=0.05):
+    time_steps=data.shape[1]
+    gabriel_graph = gabriel(data)
+    for time_step in range(time_steps):
+        observe_data=np.expand_dims(data[:,time_step,:],axis=1)
+        gabriel_graph = gabriel(observe_data)
+        stop=True
+        for i in range(len(gabriel_graph)):
+            for j in range(i, len(gabriel_graph)):
+                if not i == j:
+                    if gabriel_graph[i][j] == 1:
+                        distance = ((observe_data[i, :, 0] - observe_data[j, :, 0])**2 + (observe_data[i, :, 1] - observe_data[j, :, 1])**2)**0.5
+                        if math.fabs(distance-desired_distance)/desired_distance>tolerrance:
+                            stop=False
+        if stop:
+            break
+    return time_step/20
 def process_data(dir):
     paths = os.walk(dir)
     path_list=[]
     for path, dir_lst, file_lst in paths:
         for dir_name in dir_lst:
-            print(os.path.join(path, dir_name))
+
             path_list.append(os.path.join(path, dir_name))
     converge_time_all=[]
     average_formation_all=[]
     average_formation_error_all=[]
     for path in path_list:
+        print(path)
         file=os.path.join(path, "pose_array_scene.npy")
         raw_data=np.load(file)
         sim_time=raw_data.shape[1]*0.05
-        print(path)
-        observe_data=np.expand_dims(raw_data[:,-100,:2],axis=1)
+
+        observe_data=np.expand_dims(raw_data[:,-200:,:2],axis=1)
         gabriel_graph=gabriel(observe_data)
         reference=np.ones(observe_data.shape[1])
         reference=reference*2
@@ -60,8 +79,7 @@ def process_data(dir):
                         distance_error_list.append(distance_error)
         average_formation_error=np.average(np.array(distance_error_list))
         average_formation = np.average(np.array(distance_list))
-        if sim_time<150:
-            converge_time_all.append(sim_time-5)
+        converge_time_all.append(get_convergence_time(raw_data))
         average_formation_error_all.append(average_formation_error)
         average_formation_all.append(average_formation)
     return converge_time_all,average_formation_all,average_formation_error_all
@@ -119,8 +137,6 @@ converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_t
 average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e]
 average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e]
 
-print(converge_time_all_6_e)
-print(converge_time_all_6)
 
 box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-results/stop_results")
 box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-results/stop_results")
