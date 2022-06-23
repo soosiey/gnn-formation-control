@@ -68,7 +68,7 @@ def process_data(dir):
     # print(observe_data-reference)
 
 def box(data_m,data_e,title,ylabel,save_dir):
-    fig = plt.figure(figsize=(5, 5))
+    fig = plt.figure(figsize=(5, 2))
     labels=[4,5,6]
     color_model='#1f77b4'
     color_expert='#ff7f0e'
@@ -88,7 +88,7 @@ def box(data_m,data_e,title,ylabel,save_dir):
                       flierprops=dict(color=color_expert,markeredgecolor=color_expert),
                       medianprops=dict(color="black"),
                       widths=0.6)
-    plt.legend([model["boxes"][0], exp["boxes"][0]], ['Model', 'Expert'], loc='upper right')
+    plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper right')
     plt.xticks(np.array(range(len(data_m)))*2.0,labels=labels)
     plt.title(title,fontsize=15)
     plt.xlabel("Number of robots",fontsize=15)
