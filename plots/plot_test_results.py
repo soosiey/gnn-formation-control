@@ -56,32 +56,40 @@ def process_data(dir):
     converge_time_all=[]
     average_formation_all=[]
     average_formation_error_all=[]
+    unsuccess=0
     for path in path_list:
-        print(path)
         file=os.path.join(path, "pose_array_scene.npy")
         raw_data=np.load(file)
         sim_time=raw_data.shape[1]*0.05
 
         observe_data=np.expand_dims(raw_data[:,-200:,:2],axis=1)
-        gabriel_graph=gabriel(observe_data)
-        reference=np.ones(observe_data.shape[1])
-        reference=reference*2
-        distance_error_list=[]
-        distance_list=[]
-        for i in range(len(gabriel_graph)):
-            for j in range(i,len(gabriel_graph)):
-                if not i==j:
-                    if gabriel_graph[i][j]==1:
-                        distance=np.sqrt(np.square(observe_data[i,:,0]-observe_data[j,:,0])+np.square(observe_data[i,:,1]-observe_data[j,:,1]))
-                        # print(distance)
-                        distance_list.append(distance)
-                        distance_error=np.abs(distance-reference)
-                        distance_error_list.append(distance_error)
+        time_steps=observe_data.shape[1]
+        for time_step in range(time_steps):
+            observe_data=observe_data[:,time_step,:]
+            gabriel_graph=gabriel(observe_data)
+            reference=np.ones(observe_data.shape[1])
+            reference=reference*2
+            distance_error_list=[]
+            distance_list=[]
+            for i in range(len(gabriel_graph)):
+                for j in range(i,len(gabriel_graph)):
+                    if not i==j:
+                        if gabriel_graph[i][j]==1:
+                            distance=np.sqrt(np.square(observe_data[i,:,0]-observe_data[j,:,0])+np.square(observe_data[i,:,1]-observe_data[j,:,1]))
+                            # print(distance)
+                            distance_list.append(distance)
+                            distance_error=np.abs(distance-reference)
+                            distance_error_list.append(distance_error)
         average_formation_error=np.average(np.array(distance_error_list))
         average_formation = np.average(np.array(distance_list))
+        if get_convergence_time(raw_data)>50 or average_formation_error>0.1:
+            unsuccess+=1
+            print(path)
+            continue
         converge_time_all.append(get_convergence_time(raw_data))
         average_formation_error_all.append(average_formation_error)
         average_formation_all.append(average_formation)
+    print(dir,unsuccess)
     return converge_time_all,average_formation_all,average_formation_error_all
     # print(observe_data-reference)
 
@@ -115,11 +123,11 @@ def box(data_m,data_e,title,ylabel,save_dir):
 
 
 
-dir4= '/home/xinchi/GNN-results/stop_results/4_robots/model_4'
+dir4= '/home/xinchi/GNN-results-50/model_4'
 converge_time_all_4,average_formation_all_4,average_formation_error_all_4=process_data(dir4)
-dir5= '/home/xinchi/GNN-results/stop_results/5_robots/model_5'
+dir5= '/home/xinchi/GNN-results-50/model_5'
 converge_time_all_5,average_formation_all_5,average_formation_error_all_5=process_data(dir5)
-dir6= '/home/xinchi/GNN-results/stop_results/6_robots/model_6'
+dir6= '/home/xinchi/GNN-results-50/model_6'
 converge_time_all_6,average_formation_all_6,average_formation_error_all_6=process_data(dir6)
 converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6]
 average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6]
@@ -127,17 +135,17 @@ average_formation_error_all_model=[average_formation_error_all_4,average_formati
 
 
 # dir= '/home/xinchi/6_robots/model_6'
-dir4_e= '/home/xinchi/GNN-results/stop_results/4_robots/expert_adjusted_4'
+dir4_e= '/home/xinchi/GNN-results-50/expert_adjusted_4'
 converge_time_all_4_e,average_formation_all_4_e,average_formation_error_all_4_e=process_data(dir4_e)
-dir5_e= '/home/xinchi/GNN-results/stop_results/5_robots/expert_adjusted_5'
+dir5_e= '/home/xinchi/GNN-results-50/expert_adjusted_5'
 converge_time_all_5_e,average_formation_all_5_e,average_formation_error_all_5_e=process_data(dir5_e)
-dir6_e= '/home/xinchi/GNN-results/stop_results/6_robots/expert_adjusted_6'
+dir6_e= '/home/xinchi/GNN-results-50/expert_adjusted_6'
 converge_time_all_6_e,average_formation_all_6_e,average_formation_error_all_6_e=process_data(dir6_e)
 converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_time_all_6_e]
 average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e]
 average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e]
 
 
-box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-results/stop_results")
-box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-results/stop_results")
-box(average_formation_error_all_model,average_formation_error_all_expert,"Average distance error","Distance(m)","/home/xinchi/GNN-results/stop_results/")
+box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-results-50")
+box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-results-50")
+box(average_formation_error_all_model,average_formation_error_all_expert,"Average distance error","Distance(m)","/home/xinchi/GNN-results-50")

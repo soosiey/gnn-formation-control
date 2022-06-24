@@ -97,9 +97,9 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
 def plot_formation_gabreil(pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
     gabriel_graph = gabriel(pose_array)
-    position_array = pose_array[:, -1, :2]
+    position_array = pose_array[:, 0, :2]
     print(pose_array.shape)
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(5, 5))
     plt.scatter(position_array[:,0],position_array[:,1],s=100)
     for i in range(rob_num):
         for j in range(i + 1, rob_num):
@@ -196,4 +196,4 @@ def plot_dynamic_gabreil(path):
         fig.canvas.flush_events()
 if __name__=="__main__":
     # for i in range(0,100):
-    plot_load_scene(0.05,"/home/xinchi/GNN-results/stop_results/4_robots/model_4/"+str(0))
+    plot_load_scene(0.05,"/home/xinchi/GNN-results/model_4/demo")
