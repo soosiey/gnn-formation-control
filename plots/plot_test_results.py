@@ -17,7 +17,7 @@ import math
 def gabriel(pose_array):
     node_mum = np.shape(pose_array)[0]
     gabriel_graph=[[1]*node_mum for _ in range(node_mum)]
-    position_array=pose_array[:,-1,:2]
+    position_array=pose_array[:,:2]
     for u in range(node_mum):
         for v in range(node_mum):
             m=(position_array[u]+position_array[v])/2
@@ -29,22 +29,27 @@ def gabriel(pose_array):
                     gabriel_graph[v][u]=0
                     break
     return gabriel_graph
-def get_convergence_time(data,desired_distance=2,tolerrance=0.05):
-    time_steps=data.shape[1]
-    gabriel_graph = gabriel(data)
+def get_convergence_time(raw_data,desired_distance=2,tolerrance=0.1,check_time=5):
+    time_steps=raw_data.shape[1]
+    realstop = 0
     for time_step in range(time_steps):
-        observe_data=np.expand_dims(data[:,time_step,:],axis=1)
-        gabriel_graph = gabriel(observe_data)
+        data=raw_data[:,time_step,:]
+        gabriel_graph = gabriel(data)
         stop=True
         for i in range(len(gabriel_graph)):
             for j in range(i, len(gabriel_graph)):
                 if not i == j:
                     if gabriel_graph[i][j] == 1:
-                        distance = ((observe_data[i, :, 0] - observe_data[j, :, 0])**2 + (observe_data[i, :, 1] - observe_data[j, :, 1])**2)**0.5
+                        distance = ((data[i,0] - data[j,0])**2 + (data[i, 1] - data[j,1])**2)**0.5
                         if math.fabs(distance-desired_distance)/desired_distance>tolerrance:
                             stop=False
         if stop:
+            realstop+=1
+        else:
+            realstop=0
+        if realstop>=check_time*20:
             break
+        # print(realstop)
     return time_step/20
 def process_data(dir):
     paths = os.walk(dir)
@@ -61,13 +66,17 @@ def process_data(dir):
         file=os.path.join(path, "pose_array_scene.npy")
         raw_data=np.load(file)
         sim_time=raw_data.shape[1]*0.05
-
-        observe_data=np.expand_dims(raw_data[:,-200:,:2],axis=1)
+        convergence_time = get_convergence_time(raw_data)
+        if convergence_time >= 50:
+            unsuccess += 1
+            print(path)
+            continue
+        observe_data=raw_data[:,-100:,:2]
         time_steps=observe_data.shape[1]
         for time_step in range(time_steps):
-            observe_data=observe_data[:,time_step,:]
-            gabriel_graph=gabriel(observe_data)
-            reference=np.ones(observe_data.shape[1])
+            data=observe_data[:,time_step,:]
+            gabriel_graph=gabriel(data)
+            reference=np.ones(data.shape[1])
             reference=reference*2
             distance_error_list=[]
             distance_list=[]
@@ -75,18 +84,14 @@ def process_data(dir):
                 for j in range(i,len(gabriel_graph)):
                     if not i==j:
                         if gabriel_graph[i][j]==1:
-                            distance=np.sqrt(np.square(observe_data[i,:,0]-observe_data[j,:,0])+np.square(observe_data[i,:,1]-observe_data[j,:,1]))
+                            distance=np.sqrt(np.square(data[i,0]-data[j,0])+np.square(data[i,1]-data[j,1]))
                             # print(distance)
                             distance_list.append(distance)
                             distance_error=np.abs(distance-reference)
                             distance_error_list.append(distance_error)
-        average_formation_error=np.average(np.array(distance_error_list))
         average_formation = np.average(np.array(distance_list))
-        if get_convergence_time(raw_data)>50 or average_formation_error>0.1:
-            unsuccess+=1
-            print(path)
-            continue
-        converge_time_all.append(get_convergence_time(raw_data))
+        average_formation_error = np.average(np.array(distance_error_list)) / 2
+        converge_time_all.append(convergence_time)
         average_formation_error_all.append(average_formation_error)
         average_formation_all.append(average_formation)
     print(dir,unsuccess)
@@ -94,12 +99,12 @@ def process_data(dir):
     # print(observe_data-reference)
 
 def box(data_m,data_e,title,ylabel,save_dir):
-    fig = plt.figure(figsize=(5, 2))
+    fig = plt.figure(figsize=(6, 2))
     labels=[4,5,6]
     color_model='#1f77b4'
     color_expert='#ff7f0e'
     model=plt.boxplot(data_m,
-                      positions=np.array(range(len(data_m))) *2.0-0.4,
+                      positions=np.array(range(len(data_m))) *2.0+0.4,
                       boxprops=dict(color=color_model),
                       capprops=dict(color=color_model),
                       whiskerprops=dict(color=color_model),
@@ -107,18 +112,18 @@ def box(data_m,data_e,title,ylabel,save_dir):
                       medianprops=dict(color="black"),
                       widths=0.6)
     exp=plt.boxplot(data_e,
-                      positions=np.array(range(len(data_e))) *2.0+0.4,
+                      positions=np.array(range(len(data_e))) *2.0-0.4,
                       boxprops=dict(color=color_expert),
                       capprops=dict(color=color_expert),
                       whiskerprops=dict(color=color_expert),
                       flierprops=dict(color=color_expert,markeredgecolor=color_expert),
                       medianprops=dict(color="black"),
                       widths=0.6)
-    plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper right')
+    plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper left',borderpad=0.2,labelspacing=0.2)
     plt.xticks(np.array(range(len(data_m)))*2.0,labels=labels)
-    plt.title(title,fontsize=15)
-    plt.xlabel("Number of robots",fontsize=15)
-    plt.ylabel(ylabel,fontsize=15)
+    plt.title(title,fontsize=12)
+    plt.xlabel("Number of robots",fontsize=12)
+    plt.ylabel(ylabel,fontsize=12)
     plt.savefig(os.path.join(save_dir,title+'.png'))
 
 
@@ -148,4 +153,4 @@ average_formation_error_all_expert=[average_formation_error_all_4_e,average_form
 
 box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-results-50")
 box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-results-50")
-box(average_formation_error_all_model,average_formation_error_all_expert,"Average distance error","Distance(m)","/home/xinchi/GNN-results-50")
+box(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error","percentage(%)","/home/xinchi/GNN-results-50")
