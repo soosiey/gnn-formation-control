@@ -70,7 +70,7 @@ def process_data(dir):
         if convergence_time >= 50:
             unsuccess += 1
             print(path)
-            continue
+
         observe_data=raw_data[:,-100:,:2]
         time_steps=observe_data.shape[1]
         for time_step in range(time_steps):
@@ -128,11 +128,11 @@ def box(data_m,data_e,title,ylabel,save_dir):
 
 
 
-dir4= '/home/xinchi/GNN-results-50/model_4'
+dir4= '/home/xinchi/GNN-result-adapt/model_4'
 converge_time_all_4,average_formation_all_4,average_formation_error_all_4=process_data(dir4)
-dir5= '/home/xinchi/GNN-results-50/model_5'
+dir5= '/home/xinchi/GNN-result-adapt/model_5'
 converge_time_all_5,average_formation_all_5,average_formation_error_all_5=process_data(dir5)
-dir6= '/home/xinchi/GNN-results-50/model_6'
+dir6= '/home/xinchi/GNN-result-adapt/model_6'
 converge_time_all_6,average_formation_all_6,average_formation_error_all_6=process_data(dir6)
 converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6]
 average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6]
@@ -140,17 +140,17 @@ average_formation_error_all_model=[average_formation_error_all_4,average_formati
 
 
 # dir= '/home/xinchi/6_robots/model_6'
-dir4_e= '/home/xinchi/GNN-results-50/expert_adjusted_4'
+dir4_e= '/home/xinchi/GNN-result-adapt/expert_adjusted_4'
 converge_time_all_4_e,average_formation_all_4_e,average_formation_error_all_4_e=process_data(dir4_e)
-dir5_e= '/home/xinchi/GNN-results-50/expert_adjusted_5'
+dir5_e= '/home/xinchi/GNN-result-adapt/expert_adjusted_5'
 converge_time_all_5_e,average_formation_all_5_e,average_formation_error_all_5_e=process_data(dir5_e)
-dir6_e= '/home/xinchi/GNN-results-50/expert_adjusted_6'
+dir6_e= '/home/xinchi/GNN-result-adapt/expert_adjusted_6'
 converge_time_all_6_e,average_formation_all_6_e,average_formation_error_all_6_e=process_data(dir6_e)
 converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_time_all_6_e]
 average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e]
 average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e]
 
 
-box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-results-50")
-box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-results-50")
-box(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error","percentage(%)","/home/xinchi/GNN-results-50")
+box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-result-adapt")
+box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-result-adapt")
+box(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error","percentage(%)","/home/xinchi/GNN-result-adapt")
