@@ -34,10 +34,10 @@ parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_train_episode-200_robot-5.pth',type=str,help='Name of model')
-parser.add_argument('--robot_num', dest='robot_num', default=12,type=int,help='Number of robot for simulation')
+parser.add_argument('--robot_num', dest='robot_num', default=4,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
-parser.add_argument('--sim_time', dest='sim_time', default=1000,type=float,help='Simulation time for one simulation')
+parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.1,type=float,help='Stopping thresh')
 parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=5,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
@@ -204,18 +204,19 @@ def simulate(sim_time,sim_dt,stop_waiting_time,desire_distance,stop_thresh,sc):
         realstop = int(stop_waiting_time/sim_dt)
         stop=False
         while sc.simulate():
-            if sc.check_stop_condition(desire_distance,stop_thresh):
-                stop=True
+            # if sc.check_stop_condition(desire_distance,stop_thresh):
+            #     stop=True
             if sc.t > tf or stop:
-                print("stop")
-                if realstop>0:
-                    realstop-=1
-                else:
-                    print("Stop at")
-                    print(sc.t)
-                    break
-            else:
-                realstop=int(stop_waiting_time/sim_dt)
+                break
+                # print("stop")
+                # if realstop>0:
+                #     realstop-=1
+                # else:
+                #     print("Stop at")
+                #     print(sc.t)
+                #     break
+            # else:
+            #     realstop=int(stop_waiting_time/sim_dt)
     except KeyboardInterrupt:
         x = input('Quit?(y/n)')
         if x == 'y' or x == 'Y':
