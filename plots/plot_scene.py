@@ -97,7 +97,7 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
 def plot_formation_gabreil(pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
     gabriel_graph = gabriel(pose_array)
-    position_array = pose_array[:, 0, :2]
+    position_array = pose_array[:, -1, :2]
     print(pose_array.shape)
     plt.figure(figsize=(5, 5))
     plt.scatter(position_array[:,0],position_array[:,1],s=100)
@@ -115,8 +115,8 @@ def plot_formation_gabreil(pose_array,save_path):
     plt.ylabel("distance(m)",fontsize=15)
     plt.xticks(fontsize=10)
     plt.yticks(fontsize=10)
-    plt.xlim(-5, 5)
-    plt.ylim(-5, 5)
+    plt.xlim(-10, 10)
+    plt.ylim(-10, 10)
     plt.grid()
     plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
@@ -196,4 +196,4 @@ def plot_dynamic_gabreil(path):
         fig.canvas.flush_events()
 if __name__=="__main__":
     # for i in range(0,100):
-    plot_load_scene(0.05,"/home/xinchi/GNN-results/model_4/demo")
+    plot_load_scene(0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/model_7/0")

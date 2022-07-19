@@ -66,10 +66,12 @@ class Agent():
         #### Set a threshold to eliminate small movements
         # threshold=0.05
         control=self.model(xin,r,a)[index] ## model output
+
         # torch.where(control<threshold, 0., control)
         # torch.where(control>-threshold, 0., control)
         outs = [control]
         # print("Control",outs)
+        # print(outs)
         return outs
 
     def train(self, data):
@@ -94,7 +96,9 @@ class Agent():
         total_loss = 0
         total = 0
         print("training")
+        iteration=0
         for i,batch in enumerate(tqdm(trainloader)):
+            iteration+=1
             inputs = batch['data'].to('cuda')
             S = batch['graphs'][:,0,:,:].to('cuda')
             actions = batch['actions'].to('cuda')
@@ -112,6 +116,7 @@ class Agent():
             total_loss += loss.item()
 
             total += inputs.size(0)*self.nA
+        print(iteration)
         print('Average training loss:', total_loss / total)
         return total_loss / total
 

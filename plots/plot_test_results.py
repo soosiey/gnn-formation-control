@@ -29,7 +29,38 @@ def gabriel(pose_array):
                     gabriel_graph[v][u]=0
                     break
     return gabriel_graph
-def get_convergence_time(raw_data,desired_distance=2,tolerrance=0.1,check_time=5):
+def get_convergence_time_average(raw_data,desired_distance=2,tolerrance=0.1,check_time=10):
+    time_steps=raw_data.shape[1]
+    check_timesteps=check_time*20
+    check_window=[]
+    for time_step in range(time_steps):
+        data=raw_data[:,time_step,:]
+        gabriel_graph = gabriel(data)
+        stop=True
+        distance_error_list=[]
+        for i in range(len(gabriel_graph)):
+            for j in range(i, len(gabriel_graph)):
+                if not i == j:
+                    if gabriel_graph[i][j] == 1:
+                        distance = ((data[i,0] - data[j,0])**2 + (data[i, 1] - data[j,1])**2)**0.5
+                        distance_error_list.append(math.fabs(distance - desired_distance))
+
+        if len(check_window)<check_timesteps:
+            check_window.append(distance_error_list)
+        else:
+            sum_distance_error=0
+            num_data_point=0
+            for i in range(len(check_window)):
+                for j in range(len(check_window[i])):
+                    sum_distance_error+=check_window[i][j]
+                num_data_point+=len(check_window[i])
+            average_formation_error= sum_distance_error/num_data_point
+            if average_formation_error/desired_distance<=tolerrance:
+                return time_step/20
+            else:
+                check_window.pop(0)
+    return time_step/20
+def get_convergence_time(raw_data,desired_distance=2,tolerrance=0.1,check_time=10):
     time_steps=raw_data.shape[1]
     realstop = 0
     for time_step in range(time_steps):
@@ -66,12 +97,12 @@ def process_data(dir):
         file=os.path.join(path, "pose_array_scene.npy")
         raw_data=np.load(file)
         sim_time=raw_data.shape[1]*0.05
-        convergence_time = get_convergence_time(raw_data)
-        if convergence_time >= 50:
+        convergence_time = get_convergence_time_average(raw_data)
+        if convergence_time >= 100:
             unsuccess += 1
             print(path)
-
-        observe_data=raw_data[:,-100:,:2]
+            continue
+        observe_data=raw_data[:,-200:,:2]
         time_steps=observe_data.shape[1]
         for time_step in range(time_steps):
             data=observe_data[:,time_step,:]
@@ -90,7 +121,7 @@ def process_data(dir):
                             distance_error=np.abs(distance-reference)
                             distance_error_list.append(distance_error)
         average_formation = np.average(np.array(distance_list))
-        average_formation_error = np.average(np.array(distance_error_list)) / 2
+        average_formation_error = 100*np.average(np.array(distance_error_list)) / 2
         converge_time_all.append(convergence_time)
         average_formation_error_all.append(average_formation_error)
         average_formation_all.append(average_formation)
@@ -99,8 +130,8 @@ def process_data(dir):
     # print(observe_data-reference)
 
 def box(data_m,data_e,title,ylabel,save_dir):
-    fig = plt.figure(figsize=(6, 2))
-    labels=[4,5,6]
+    fig = plt.figure(figsize=(10, 5))
+    labels=[4,5,6,7]
     color_model='#1f77b4'
     color_expert='#ff7f0e'
     model=plt.boxplot(data_m,
@@ -119,38 +150,43 @@ def box(data_m,data_e,title,ylabel,save_dir):
                       flierprops=dict(color=color_expert,markeredgecolor=color_expert),
                       medianprops=dict(color="black"),
                       widths=0.6)
-    plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper left',borderpad=0.2,labelspacing=0.2)
-    plt.xticks(np.array(range(len(data_m)))*2.0,labels=labels)
-    plt.title(title,fontsize=12)
-    plt.xlabel("Number of robots",fontsize=12)
-    plt.ylabel(ylabel,fontsize=12)
+    plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper left',borderpad=0.5,labelspacing=0.5)
+    plt.xticks(np.array(range(len(data_m)))*2.0,labels=labels,fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.title(title,fontsize=18)
+    plt.xlabel("Number of robots",fontsize=18)
+    plt.ylabel(ylabel,fontsize=18)
     plt.savefig(os.path.join(save_dir,title+'.png'))
 
+root_dir="/home/xinchi/GNN-control/data"
 
-
-dir4= '/home/xinchi/GNN-result-adapt/model_4'
+dir4= os.path.join(root_dir,"model_4")
 converge_time_all_4,average_formation_all_4,average_formation_error_all_4=process_data(dir4)
-dir5= '/home/xinchi/GNN-result-adapt/model_5'
+dir5= os.path.join(root_dir,"model_5")
 converge_time_all_5,average_formation_all_5,average_formation_error_all_5=process_data(dir5)
-dir6= '/home/xinchi/GNN-result-adapt/model_6'
+dir6= os.path.join(root_dir,"model_6")
 converge_time_all_6,average_formation_all_6,average_formation_error_all_6=process_data(dir6)
-converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6]
-average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6]
-average_formation_error_all_model=[average_formation_error_all_4,average_formation_error_all_5,average_formation_error_all_6]
+dir7= os.path.join(root_dir,"model_7")
+converge_time_all_7,average_formation_all_7,average_formation_error_all_7=process_data(dir7)
+converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6,converge_time_all_7]
+average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6,average_formation_all_7]
+average_formation_error_all_model=[average_formation_error_all_4,average_formation_error_all_5,average_formation_error_all_6,average_formation_error_all_7]
 
 
 # dir= '/home/xinchi/6_robots/model_6'
-dir4_e= '/home/xinchi/GNN-result-adapt/expert_adjusted_4'
+dir4_e= os.path.join(root_dir,"expert_adjusted_4")
 converge_time_all_4_e,average_formation_all_4_e,average_formation_error_all_4_e=process_data(dir4_e)
-dir5_e= '/home/xinchi/GNN-result-adapt/expert_adjusted_5'
+dir5_e= os.path.join(root_dir,"expert_adjusted_5")
 converge_time_all_5_e,average_formation_all_5_e,average_formation_error_all_5_e=process_data(dir5_e)
-dir6_e= '/home/xinchi/GNN-result-adapt/expert_adjusted_6'
+dir6_e= os.path.join(root_dir,"expert_adjusted_6")
 converge_time_all_6_e,average_formation_all_6_e,average_formation_error_all_6_e=process_data(dir6_e)
-converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_time_all_6_e]
-average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e]
-average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e]
+dir7_e= os.path.join(root_dir,"expert_adjusted_7")
+converge_time_all_7_e,average_formation_all_7_e,average_formation_error_all_7_e=process_data(dir7_e)
+converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_time_all_6_e,converge_time_all_7_e]
+average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e,average_formation_all_7_e]
+average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e,average_formation_error_all_7_e]
 
 
-box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)","/home/xinchi/GNN-result-adapt")
-box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)","/home/xinchi/GNN-result-adapt")
-box(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error","percentage(%)","/home/xinchi/GNN-result-adapt")
+box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)",root_dir)
+box(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)",root_dir)
+box(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error","percentage(%)",root_dir)

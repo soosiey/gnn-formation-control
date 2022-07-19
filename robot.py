@@ -80,6 +80,15 @@ class Robot():
         return moving
     #### Expert Controller
     def expert_control(self,omlist,index):
+
+        action = self.learnedController(omlist, index)
+        # action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
+        # action = np.array([[0, 0]])
+        action = action[0].cpu().detach().numpy()
+        v1nn = action[0][0]
+        v2nn = action[0][1]
+        if v1nn==v2nn==0:
+            return 0,0
         ############## MODEL-BASED CONTROLLER (Most frequently used dynamics model) ##########
         ######################################################################################
         # For e-puk dynamics
@@ -191,14 +200,14 @@ class Robot():
         v1nn = action[0][0]
         v2nn = action[0][1]
         # smoothing
-        self.ctrl1_sm.append(v1nn)
-        self.ctrl2_sm.append(v2nn)
-        if len(self.ctrl1_sm) < 10:
-            v1nn = sum(self.ctrl1_sm) / len(self.ctrl1_sm)
-            v2nn = sum(self.ctrl2_sm) / len(self.ctrl2_sm)
-        else:
-            v1nn = sum(self.ctrl1_sm[len(self.ctrl1_sm) - 10:len(self.ctrl1_sm)]) / 10
-            v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm) - 10:len(self.ctrl2_sm)]) / 10
+        # self.ctrl1_sm.append(v1nn)
+        # self.ctrl2_sm.append(v2nn)
+        # if len(self.ctrl1_sm) < 10:
+        #     v1nn = sum(self.ctrl1_sm) / len(self.ctrl1_sm)
+        #     v2nn = sum(self.ctrl2_sm) / len(self.ctrl2_sm)
+        # else:
+        #     v1nn = sum(self.ctrl1_sm[len(self.ctrl1_sm) - 10:len(self.ctrl1_sm)]) / 10
+        #     v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm) - 10:len(self.ctrl2_sm)]) / 10
 
         # stopping condition
         current_position = (self.xi.xp ** 2 + self.xi.yp ** 2) ** 0.5
