@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 19 23:08:18 2017
-
-@author: cz
-"""
 
 try:
     import cv2
@@ -22,9 +17,6 @@ from pointcloud import PointCloud
 #import random
 
 
-LIMIT_MAX_ACC = False
-accMax = 0.5 # m/s^2
-
 def saturate(dxp, dyp, dxypMax):
     dxyp = (dxp**2 + dyp**2)**0.5
     if dxyp > dxypMax:
@@ -33,196 +25,92 @@ def saturate(dxp, dyp, dxypMax):
     return dxp, dyp
 
 class Robot():
-    def __init__(self, scene,numRobots):
+    def __init__(self, scene,robot_num,if_train,expert_only,use_dagger,desired_distance,expert_velocity_adjust):
+
+        ##### useful artribute
+
+        self.index=None
         self.scene = scene
-        self.dynamics = 18
-        self.numNN = 0
-        self.numMod = 0
-        # dynamics parameters
         self.l = 0.331
-        self.nr = numRobots
+        self.nr = robot_num
         # state
         self.xi = State(0, 0, 0, self)
-        #self.xi = State(random.random()*100, random.random()*100,2*math.pi*random.random(),self)
         self.xid = State(3, 0, 0, self)
-        self.xid0 = State(3, 0, math.pi/4, self)
+        self.wheel_velocity_1 = 0
+        self.wheel_velocity_2 = 0
         self.reachedGoal = False
+        self.neighbors = []
         # Control parameters
-        self.kRho = 1
-        self.kAlpha = 6
-        self.kPhi = -1
-        self.kV = 3.8
-        self.gamma = 0.15
-
-        #
+        self.if_train=if_train
+        self.expert_only=expert_only
+        self.use_dagger=use_dagger
+        self.expert_velocity_adjust=expert_velocity_adjust
+        self.desired_distance=desired_distance
+        self.p = 0.9
+        self.control_vmax = 1.2
+        self.control_vmin = 0.01
+        self.accMax = 0.5
+        ##### for future need
         self.pointCloud = PointCloud(self)
-
+        # control parameters
 
         # Data to be recorded
+        self.pose_list=[]
+        self.velocity_list=[]
+
+
         self.recordData = False
         self.data = Data(self)
         self.v1Desired = 0
         self.v2Desired = 0
         self.v1Desirednn = 0
         self.v2Desirednn = 0
+        # self.position_hist = []
+        #### Robot's neighbor
 
-        self.role = None
-        self.neighbors = []
-        self.leader = None # Only for data recording purposes
+        # self.leader = None # Only for data recording purposes
 
         self.ctrl1_sm = []
         self.ctrl2_sm = []
-
-        self.position_hist = []
-
-    def propagateDesired(self):
-        if self.dynamics == 5:
-            pass
-        elif self.dynamics == 4 or self.dynamics == 11:
-            # Circular desired trajectory, depricated.
-            t = self.scene.t
-            radius = 2
-            omega = 0.2
-            theta0 = math.atan2(self.xid0.y, self.xid0.x)
-            rho0 = (self.xid0.x ** 2 + self.xid0.y ** 2) ** 0.5
-            self.xid.x = (radius * math.cos(omega * t) +
-                          rho0 * math.cos(omega * t + theta0))
-            self.xid.y = (radius * math.sin(omega * t) +
-                          rho0 * math.sin(omega * t + theta0))
-            self.xid.vx = -(radius * omega * math.sin(omega * t) +
-                            rho0 * omega * math.sin(omega * t + theta0))
-            self.xid.vy = (radius * omega * math.cos(omega * t) +
-                           rho0 * omega * math.cos(omega * t + theta0))
-            self.xid.theta = math.atan2(self.xid.vy, self.xid.vx)
-            #self.xid.omega = omega
-
-            c = self.l/2
-            self.xid.vxp = self.xid.vx - c * math.sin(self.xid.theta) * omega
-            self.xid.vyp = self.xid.vy + c * math.cos(self.xid.theta) * omega
-        elif self.dynamics == 16:
-            # Linear desired trajectory
-            t = self.scene.t
-            #dt = self.scene.dt
-            x = self.scene.xid.x
-            y = self.scene.xid.y
-            #print('x = ', x, 'y = ', y)
-            theta = self.scene.xid.theta
-            #print('theta = ', theta)
-            sDot = self.scene.xid.sDot
-            thetaDot = self.scene.xid.thetaDot
-
-            phii = math.atan2(self.xid0.y, self.xid0.x)
-            rhoi = (self.xid0.x ** 2 + self.xid0.y ** 2) ** 0.5
-            #print('phii = ', phii)
-            self.xid.x = x + rhoi * math.cos(phii)
-            self.xid.y = y + rhoi * math.sin(phii)
-            self.xid.vx = sDot * math.cos(theta)
-            self.xid.vy = sDot * math.sin(theta)
-            #print('vx: ', self.xid.vx, 'vy:', self.xid.vy)
-            #print('v', self.index, ' = ', (self.xid.vx**2 + self.xid.vy**2)**0.5)
-
-            dpbarx = -self.scene.xid.dpbarx
-            dpbary = -self.scene.xid.dpbary
-            if (dpbarx**2 + dpbary**2)**0.5 > 1e-1:
-                self.xid.theta = math.atan2(dpbary, dpbarx)
-            #if (self.xid.vx**2 + self.xid.vy**2)**0.5 > 1e-3:
-            #    self.xid.theta = math.atan2(self.xid.vy, self.xid.vx)
-            #self.xid.omega = omega
-
-            c = self.l/2
-            self.xid.vxp = self.xid.vx - c * math.sin(self.xid.theta) * thetaDot
-            self.xid.vyp = self.xid.vy + c * math.cos(self.xid.theta) * thetaDot
-            self.xid.vRef = self.scene.xid.vRef
-        elif self.dynamics == 17 or self.dynamics == 18:
-            self.xid.theta = self.scene.xid.vRefAng
-
-
-    def precompute(self):
-        self.xi.transform()
-        self.xid.transform()
-        self.updateNeighbors()
-
-    def propagate(self,omega1,omega2):
-        if self.scene.vrepConnected == False:
-            self.xi.propagate(self.control)
-        else:
-            vrep.simxSetJointTargetVelocity(self.scene.clientID,
-                                            self.motorLeftHandle,
-                                            omega1, vrep.simx_opmode_oneshot)
-            vrep.simxSetJointTargetVelocity(self.scene.clientID,
-                                            self.motorRightHandle,
-                                            omega2, vrep.simx_opmode_oneshot)
-
-    def setControl(self,omlist,i):
-        if self.scene.vrepConnected == False:
-            self.xi.propagate(self.control)
-        else:
-            omega1, omega2 = self.control(omlist,i)
-            return omega1,omega2
-    def updateNeighbors(self):
-        self.neighbors = []
-        self.leader = None
-        for j in range(len(self.scene.robots)):
-            if self.scene.adjMatrix[self.index, j] == 0:
-                continue
-            robot = self.scene.robots[j] # neighbor
-            self.neighbors.append(robot)
-            if robot.role == self.scene.ROLE_LEADER:
-                if self.leader is not None:
-                    raise Exception('There cannot be more than two leaders in a scene!')
-                self.leader = robot
-    def getDataObs(self):
-        observation, action_1 = self.data.getObservation(-12)
-        return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
-
     def checkMove(self,hist,num = 1,thresh = .01):
         moving = False
-        #if(abs(hist[0] - hist[-1]) > thresh):
-        #   moving = True
         for i in range(1,len(hist)):
             if(abs(hist[i] - hist[i - 1]) > thresh):
                 moving = True
         return moving
+    #### Expert Controller
+    def expert_control(self,omlist,index):
 
-    def control(self,omlist,index):
-
+        action = self.learnedController(omlist, index)
+        # action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
+        # action = np.array([[0, 0]])
+        action = action[0].cpu().detach().numpy()
+        v1nn = action[0][0]
+        v2nn = action[0][1]
+        if v1nn==v2nn==0:
+            return 0,0
         ############## MODEL-BASED CONTROLLER (Most frequently used dynamics model) ##########
         ######################################################################################
         # For e-puk dynamics
         # Feedback linearization
         # v1: left wheel speed
         # v2: right wheel speed
-        K3 = 0.0 # interaction between i and j
 
-        dxypMax = float('inf')
-        if self.role == self.scene.ROLE_LEADER: # I am a leader
-            K1 = 1
-            K2 = 1
-        elif self.role == self.scene.ROLE_FOLLOWER:
-            K1 = 0 # Reference position information is forbidden
-            K2 = 1
-        elif self.role == self.scene.ROLE_PEER:
-            K1 = 0
-            K2 = 0
-            K3 = 1  # interaction between i and j
-            dxypMax = 0.7
-
+        K3 = 1  # interaction between i and j
 
         # sort neighbors by distance
 
-
         # need all neighbors, but only diagonal of adjmatrix is 0 so it is okay
-        if True: #not hasattr(self, 'dictDistance'):
+        if True:  # not hasattr(self, 'dictDistance'):
             self.dictDistance = dict()
             for j in range(len(self.scene.robots)):
-                #if self.scene.adjMatrix[self.index, j] == 0:
+                # if self.scene.adjMatrix[self.index, j] == 0:
                 if self.index == j:
                     continue
-                robot = self.scene.robots[j] # neighbor
+                robot = self.scene.robots[j]  # neighbor
                 self.dictDistance[j] = self.xi.distancepTo(robot.xi)
             self.listSortedDistance = sorted(self.dictDistance.items(),
-                                    key=operator.itemgetter(1))
-
+                                             key=operator.itemgetter(1))
         # velocity in transformed space
         vxp = 0
         vyp = 0
@@ -231,7 +119,7 @@ class Robot():
         tauiy = 0
         # neighbors sorted by distances in descending order
 
-        #gabriel graph connections
+        #### Use angle to get gabriel graph connections
         lsd = self.listSortedDistance
         jList = []
         for i in range(len(lsd)):
@@ -241,223 +129,135 @@ class Robot():
                     continue
                 ri = lsd[i][0]
                 rk = lsd[k][0]
-                di = np.array([self.xi.xp - self.scene.robots[rk].xi.xp,self.xi.yp - self.scene.robots[rk].xi.yp])
-                dj = np.array([self.scene.robots[ri].xi.xp - self.scene.robots[rk].xi.xp,self.scene.robots[ri].xi.yp - self.scene.robots[rk].xi.yp])
-                c = np.dot(di,dj)/(np.linalg.norm(di)*np.linalg.norm(dj))
+                di = np.array([self.xi.xp - self.scene.robots[rk].xi.xp, self.xi.yp - self.scene.robots[rk].xi.yp])
+                dj = np.array([self.scene.robots[ri].xi.xp - self.scene.robots[rk].xi.xp,
+                               self.scene.robots[ri].xi.yp - self.scene.robots[rk].xi.yp])
+                c = np.dot(di, dj) / (np.linalg.norm(di) * np.linalg.norm(dj))
                 angle = np.degrees(np.arccos(c))
-                if(angle > 89 and i != k):
+                if (angle >= 90 and i != k):
                     connected = False
-            if(connected):
+            if (connected):
                 jList.append(lsd[i][0])
-            #if lsd[i][1] < 8: #3: # r=1.5*d
-            #    jList.append(lsd[i][0])
-        #print(self.listSortedDistance)
+
         for j in jList:
             robot = self.scene.robots[j]
             pijx = self.xi.xp - robot.xi.xp
             pijy = self.xi.yp - robot.xi.yp
             pij0 = self.xi.distancepTo(robot.xi)
-            if self.dynamics == 18:
-                pijd0 = self.scene.alpha
-            else:
-                pijd0 = self.xid.distancepTo(robot.xid)
+            pijd0 = self.desired_distance
             tauij0 = (pij0 - pijd0) / pij0
             tauix += tauij0 * pijx
             tauiy += tauij0 * pijy
-            #print(np.array([tauix,tauiy]))
-            #tauij0 = 2 * (pij0**4 - pijd0**4) / pij0**3
-            #tauix += tauij0 * pijx / pij0
-            #tauiy += tauij0 * pijy / pij0
-        #jList = [lsd[0][0], lsd[1][0]]
-        #m = 2
-        #while m < len(lsd) and lsd[m][1] < 1.414 * lsd[1][1]:
-        #    jList.append(lsd[m][0])
-        #    m += 1
-        ##print(self.listSortedDistance)
-        #for j in jList:
-        #    robot = self.scene.robots[j]
-        #    pijx = self.xi.xp - robot.xi.xp
-        #    pijy = self.xi.yp - robot.xi.yp
-        #    pij0 = self.xi.distancepTo(robot.xi)
-        #    if self.dynamics == 18:
-        #        pijd0 = self.scene.alpha
-        #    else:
-        #        pijd0 = self.xid.distancepTo(robot.xid)
-        #    tauij0 = 2 * (pij0**4 - pijd0**4) / pij0**3
-        #    tauix += tauij0 * pijx / pij0
-        #    tauiy += tauij0 * pijy / pij0
+
 
         # Achieve and keep formation
-        #tauix, tauiy = saturate(tauix, tauiy, dxypMax)
+        # tauix, tauiy = saturate(tauix, tauiy, dxypMax)
         vxp += -K3 * tauix
         vyp += -K3 * tauiy
 
-        # Velocity control toward goal
-        #dCosTheta = math.cos(self.xi.theta) - math.cos(self.xid.theta)
-        #print("dCosTheta: ", dCosTheta)
-        #print("theta: ", self.xi.theta, "thetad: ", self.xid.theta)
-        dxp = self.scene.xid.dpbarx #+ self.l / 2 * dCosTheta
-        dyp = self.scene.xid.dpbary #+ self.l / 2 * dCosTheta
-        # Velocity control toward goal
-        #dxp = self.xi.xp - self.xid.xp
-        #dyp = self.xi.yp - self.xid.yp
-        # Limit magnitude
-        dxp, dyp = saturate(dxp, dyp, dxypMax)
-        vxp += -K1 * dxp
-        vyp += -K1 * dyp
 
-        # Take goal's speed into account
-        vxp += K2 * self.xid.vxp
-        vyp += K2 * self.xid.vyp
 
+        ##### transform speed to wheels
         kk = 1
         theta = self.xi.theta
         M11 = kk * math.sin(theta) + math.cos(theta)
-        M12 =-kk * math.cos(theta) + math.sin(theta)
-        M21 =-kk * math.sin(theta) + math.cos(theta)
+        M12 = -kk * math.cos(theta) + math.sin(theta)
+        M21 = -kk * math.sin(theta) + math.cos(theta)
         M22 = kk * math.cos(theta) + math.sin(theta)
 
         v1 = M11 * vxp + M12 * vyp
         v2 = M21 * vxp + M22 * vyp
 
+        vmax = self.control_vmax  # wheel's max linear speed in m/s
+        vmin = self.control_vmin # wheel's min linear speed in m/s
 
-        ###############################################################################
-        ###############################################################################
-
-        ####################### NN CONTROLLER ###########################################
-        #################################################################################
-        if self.learnedController is not None:
-            observation, action_1 = self.data.getObservation(-12)
-            #if observation is None:
-            #    action = np.array([[0, 0]])
-            #else:
-            action = self.learnedController(omlist,index)
-            #action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
-            #action = np.array([[0, 0]])
-            action = action[0].cpu().detach().numpy()
-            v1nn = action[0][0]
-            v2nn = action[0][1]
-            # smoothing
-            self.ctrl1_sm.append(v1nn)
-            self.ctrl2_sm.append(v2nn)
-            if len(self.ctrl1_sm) < 10:
-                v1nn = sum(self.ctrl1_sm) / len(self.ctrl1_sm)
-                v2nn = sum(self.ctrl2_sm) / len(self.ctrl2_sm)
-            else:
-                v1nn = sum(self.ctrl1_sm[len(self.ctrl1_sm)-10:len(self.ctrl1_sm)]) / 10
-                v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm)-10:len(self.ctrl2_sm)]) / 10
-
-            # stopping condition
-
-            current_position = (self.xi.xp**2 + self.xi.yp**2)**0.5
-            self.position_hist.append(current_position)
-            hist_len = len(self.position_hist)
-            lcheck = 10
-            if(hist_len > 100):
-                currhist = self.position_hist[-1*lcheck:]
-                if(not self.checkMove(currhist,num=lcheck,thresh=.00001)):
-                    v1nn = 0
-                    v2nn = 0
-                #for pos in range(1,len(currhist)):
-                #    if(abs(currhist[pos] - currhist[pos - 1]) > .005):
-                #        moving = True
-                #if(not moving):
-
-                #        print('stopped')
-                #        v1nn = 0
-                #        v2nn = 0
-                #if(abs(self.position_hist[hist_len - 1] - self.position_hist[hist_len-2]) / self.position_hist[hist_len-1] < .0001):
-                #    v1nn = 0
-                #    v2nn = 0
-            ### post-processing ###
-            vm = 1.2 # wheel's max linear speed in m/s
-            # Find the factor for converting linear speed to angular speed
-            if math.fabs(v2nn) >= math.fabs(v1nn) and math.fabs(v2nn) > vm:
-                alpha = vm / math.fabs(v2nn)
-            elif math.fabs(v2nn) < math.fabs(v1nn) and math.fabs(v1nn) > vm:
-                alpha = vm / math.fabs(v1nn)
-            else:
-                alpha = 1
-            v1nn = alpha * v1nn
-            v2nn = alpha * v2nn
-
-            # Limit maximum acceleration (deprecated)
-
-            if LIMIT_MAX_ACC:
-
-                dvMax = accMax * self.scene.dt
-
-                # limit v1nn
-                dv1nn = v1nn - self.v1Desirednn
-                if dv1nn > dvMax:
-                    self.v1Desirednn += dvMax
-                elif dv1nn < -dvMax:
-                    self.v1Desirednn -= dvMax
-                else:
-                    self.v1Desirednn = v1nn
-                v1nn = self.v1Desired
-
-                # limit v2nn
-                dv2nn = v2nn - self.v2Desirednn
-                if dv2nn > dvMax:
-                    self.v2Desirednn += dvMax
-                elif dv2nn < -dvMax:
-                    self.v2Desirednn -= dvMax
-                else:
-                    self.v2Desirednn = v2nn
-                v2nn = self.v2Desirednn
-            elif not LIMIT_MAX_ACC:
-                self.v1Desirednn = v1nn
-                self.v2Desirednn = v2nn
-
-
-        #############################################################################
-        #############################################################################
-
-
-
-        #print("v1 = %.3f" % v1, "m/s, v2 = %.3f" % v2)
-
-        vm = 1.2 # wheel's max linear speed in m/s
         # Find the factor for converting linear speed to angular speed
-        if math.fabs(v2) >= math.fabs(v1) and math.fabs(v2) > vm:
-            alpha = vm / math.fabs(v2)
-        elif math.fabs(v2) < math.fabs(v1) and math.fabs(v1) > vm:
-            alpha = vm / math.fabs(v1)
+        if math.fabs(v2) >= math.fabs(v1) and math.fabs(v2) > vmax:
+            alpha = vmax / math.fabs(v2)
+        elif math.fabs(v2) < math.fabs(v1) and math.fabs(v1) > vmax:
+            alpha = vmax / math.fabs(v1)
         else:
             alpha = 1
         v1 = alpha * v1
         v2 = alpha * v2
+        # if math.fabs(v1)<vmin:
+        #     v1=0
+        # if math.fabs(v2)<vmin:
+        #     v2=0
+        return v1,v2
+    def gnn_control(self,omlist,index):
+        ####################### NN CONTROLLER ###########################################
+        #################################################################################
 
+        # observation, action_1 = self.data.getObservation()
+        # if observation is None:
+        #    action = np.array([[0, 0]])
+        # else:
+        action = self.learnedController(omlist, index)
+        # action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
+        # action = np.array([[0, 0]])
+        action = action[0].cpu().detach().numpy()
+        v1nn = action[0][0]
+        v2nn = action[0][1]
+        # smoothing
+        # self.ctrl1_sm.append(v1nn)
+        # self.ctrl2_sm.append(v2nn)
+        # if len(self.ctrl1_sm) < 10:
+        #     v1nn = sum(self.ctrl1_sm) / len(self.ctrl1_sm)
+        #     v2nn = sum(self.ctrl2_sm) / len(self.ctrl2_sm)
+        # else:
+        #     v1nn = sum(self.ctrl1_sm[len(self.ctrl1_sm) - 10:len(self.ctrl1_sm)]) / 10
+        #     v2nn = sum(self.ctrl2_sm[len(self.ctrl2_sm) - 10:len(self.ctrl2_sm)]) / 10
+
+        # stopping condition
+        current_position = (self.xi.xp ** 2 + self.xi.yp ** 2) ** 0.5
+        # self.position_hist.append(current_position)
+        # hist_len = len(self.position_hist)
+        # lcheck = 10
+        # if (hist_len > 100):
+        #     currhist = self.position_hist[-1 * lcheck:]
+        #     if (not self.checkMove(currhist, num=lcheck, thresh=.00001)):
+        #         v1nn = 0
+        #         v2nn = 0
+            # for pos in range(1,len(currhist)):
+            #    if(abs(currhist[pos] - currhist[pos - 1]) > .005):
+            #        moving = True
+            # if(not moving):
+            #        print('stopped')
+            #        v1nn = 0
+            #        v2nn = 0
+            # if(abs(self.position_hist[hist_len - 1] - self.position_hist[hist_len-2]) / self.position_hist[hist_len-1] < .0001):
+            #    v1nn = 0
+            #    v2nn = 0
+        ### post-processing ###
+
+
+        vmax = self.control_vmax  # wheel's max linear speed in m/s
+        vmin = self.control_vmin  # wheel's min linear speed in m/s
+
+        # Find the factor for converting linear speed to angular speed
+        if math.fabs(v2nn) >= math.fabs(v1nn) and math.fabs(v2nn) > vmax:
+            alpha = vmax / math.fabs(v2nn)
+        elif math.fabs(v2nn) < math.fabs(v1nn) and math.fabs(v1nn) > vmax:
+            alpha = vmax / math.fabs(v1nn)
+        else:
+            alpha = 1
+        v1nn = alpha * v1nn
+        v2nn = alpha * v2nn
+        # if math.fabs(v1nn) < vmin:
+        #     v1nn = 0
+        # if math.fabs(v2nn) < vmin:
+        #     v2nn = 0
         # Limit maximum acceleration (deprecated)
 
-        if LIMIT_MAX_ACC:
 
-            dvMax = accMax * self.scene.dt
+        self.v1Desirednn = v1nn
+        self.v2Desirednn = v2nn
 
-            # limit v1
-            dv1 = v1 - self.v1Desired
-            if dv1 > dvMax:
-                self.v1Desired += dvMax
-            elif dv1 < -dvMax:
-                self.v1Desired -= dvMax
-            else:
-                self.v1Desired = v1
-            v1 = self.v1Desired
-
-            # limit v2
-            dv2 = v2 - self.v2Desired
-            if dv2 > dvMax:
-                self.v2Desired += dvMax
-            elif dv2 < -dvMax:
-                self.v2Desired -= dvMax
-            else:
-                self.v2Desired = v2
-            v2 = self.v2Desired
-        elif not LIMIT_MAX_ACC:
-            self.v1Desired = v1
-            self.v2Desired = v2
-
+        return v1nn,v2nn
+    def control(self,omlist,index,average_distance_gabreil_error,thresh):
+        v1_expert,v2_expert=self.expert_control(omlist,index)
+        v1_model,v2_model=self.gnn_control(omlist,index)
 
         # Record data
         if (self.scene.vrepConnected and
@@ -473,72 +273,239 @@ class Robot():
         #print('\n Expert output: ', v1, v2)
 
         ####### TO ADD THE CONTROLLER SELECTION MECHANISM HERE #############
-        # use binomial distribution with probability \beta
-        p = 0.8 # can be tweaked
-        exp = (self.scene.runNum) // 20
-        #exp = (self.scene.runNum-101)//20
-        exp = max(0,exp)
-        beta = p**(exp)  # Dagger algorithm paper, page 4
-        model_controller = np.random.binomial(1, beta)
-        TRAIN = False
-        DAGGER = True
-        if (model_controller and TRAIN) or (not DAGGER):
-            #print('\n Model-based control seleceted')
-            self.numMod += 1
+        print("Average distance")
+        print(average_distance_gabreil_error)
+        thresh=self.nr*thresh
+
+        if self.if_train:
+            if not self.use_dagger:
+                print("use expert controller")
+
+                v1 = v1_expert
+                v2 = v2_expert
+                if self.expert_velocity_adjust:
+                    print("use expert velocity adjust ")
+                    v1 = v1_expert * min(thresh, abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+                    v2 = v2_expert * min(thresh, abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+            else:
+                p = self.p  # can be tweaked
+                exp = (self.scene.runNum) // 50
+                # exp = (self.scene.runNum-101)//20
+                exp = max(0, exp)
+                beta = p ** (exp)  # Dagger algorithm paper, page 4
+                expert_controller = np.random.binomial(1, beta)
+                if expert_controller:
+                    print("use expert controller")
+                    v1 = v1_expert
+                    v2 = v2_expert
+                    if self.expert_velocity_adjust:
+                        print("use expert velocity adjust ")
+                        v1 = v1_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+                        v2 = v2_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+                else:
+                    print("use model controller")
+                    v1 = v1_model
+                    v2 = v2_model
         else:
-            v1 = v1nn
-            v2 = v2nn
-            #print('\n NN control selected')
-            self.numNN += 1
+            if self.expert_only:
+                print("use expert controller")
+
+                v1 = v1_expert
+                v2 = v2_expert
+
+                if self.expert_velocity_adjust:
+                    print("use expert velocity adjust ")
+                    v1 = v1_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+                    v2 = v2_expert * min(thresh,abs(average_distance_gabreil_error) / self.desired_distance) / thresh
+            else:
+                print("use model controller")
+                v1 = v1_model
+                v2 = v2_model
 
 
+        # if math.fabs(v1)<self.control_vmin:
+        #     v1=0
+        # if math.fabs(v2)<self.control_vmin:
+        #     v2=0
+
+        self.v1Desired = v1_expert
+        self.v2Desired = v2_expert
         if self.scene.vrepConnected:
+            # print(v1,v2)
             omega1 = v1 * 10.25
             omega2 = v2 * 10.25
+            # omega1 = v1
+            # omega2 = v2
             # return angular speeds of the two wheels
             self.nnv1 = omega1
             self.nnv2 = omega2
-            return omega1/5, omega2/5
+            self.wheel_velocity_1=v1
+            self.wheel_velocity_2=v2
+            # return omega1, omega2
+            return omega1, omega2
         else:
             # return linear speeds of the two wheels
+            self.wheel_velocity_1=v1
+            self.wheel_velocity_2=v2
             return v1, v2
 
-    def draw(self, image, drawType):
-        if drawType == 1:
-            xi = self.xi
-            #color = (0, 0, 255)
-            color = self.scene.getRobotColor(self.index, 255, True)
-        elif drawType == 2:
-            xi = self.xid
-            color = (0, 255, 0)
-        r = self.l/2
-        rPix = round(r * self.scene.m2pix())
-        dx = -r * math.sin(xi.theta)
-        dy = r * math.cos(xi.theta)
-        p1 = np.float32([[xi.x + dx, xi.y + dy]])
-        p2 = np.float32([[xi.x - dx, xi.y - dy]])
-        p0 = np.float32([[xi.x, xi.y]])
-        p3 = np.float32([[xi.x + dy/2, xi.y - dx/2]])
-        p1Pix = self.scene.m2pix(p1)
-        p2Pix = self.scene.m2pix(p2)
-        p0Pix = self.scene.m2pix(p0)
-        p3Pix = self.scene.m2pix(p3)
-        if USE_CV2 == True:
-            if self.dynamics <= 1 or self.dynamics == 4 or self.dynamics == 5:
-                cv2.circle(image, tuple(p0Pix[0]), rPix, color)
-            else:
-                cv2.line(image, tuple(p1Pix[0]), tuple(p2Pix[0]), color)
-                cv2.line(image, tuple(p0Pix[0]), tuple(p3Pix[0]), color)
+    ##### (not yet finish) For update_state
+    #### Set one robot's Position and Orientation
+    def update_pose(self,stateVector):
+        """
+        For update_state. Update robot state and return robots pose for scene to execute
+        Args:
+            stateVector: [x,y,theta] the desire pose of robot
+        Returns:
+            self.index
+            handle:
+            position:
+            orientation:
 
-    def setPosition(self, stateVector = None):
-        # stateVector = [x, y, theta]
-
+        """
         z0 = 0.1587
         if stateVector == None:
             x0 = self.xi.x
             y0 = self.xi.y
             theta0 = self.xi.theta
         elif len(stateVector) == 3:
+            x0 = stateVector[0]
+            y0 = stateVector[1]
+            theta0 = stateVector[2]
+            self.xi.x = x0
+            self.xi.y = y0
+            self.xi.theta = theta0
+        else:
+            raise Exception('Argument error!')
+        position = [x0, y0, z0]
+        orientation = [0, 0, theta0]
+        handle = self.robotHandle
+
+        return self.index, handle, position, orientation
+    #### Set one robot's neighbors
+    ##### (not yet finish) For update_state
+    def update_neighbors(self,adjmatrix,robot_list):
+        """
+        Set the neighbors of one robot according to the adjmatrix
+        Args:
+            adjmatrix: Scene's adjacent matrix
+            robot_list: All robots in the scene
+
+        Returns: None
+
+        """
+        self.neighbors = []
+        self.leader = None
+        for j in range(len(robot_list)):
+            if adjmatrix[self.index, j] == 0:
+                continue
+            robot = robot_list[j]  # neighbor
+            self.neighbors.append(robot)
+    #### (not yet finish)
+    def update_state(self,stateVector):
+        self.update_pose(stateVector)
+        # self.update_neighbors(adjmatrix, robot_list)
+    def record_state(self):
+        self.pose_list.append([self.xi.x,self.xi.y,self.xi.theta])
+        self.velocity_list.append([self.wheel_velocity_1,self.wheel_velocity_2])
+#### Get one robot's Position, Orientation and Lidar reading
+    def get_sensor_data(self,pos,ori,vel,omega,velodyne_points):
+        """
+        Get pose from simulator and sensor
+        Args:
+            pos: robot position from simulator
+            ori: robot orientation from simulator
+            vel: robot linear velocity from simulator
+            omega: robot angular velocity from simulator
+            velodyne_points: sensor data
+
+        Returns: None
+
+        """
+        ##### Get absolute pose from simulator
+        self.xi.x = pos[0]
+        self.xi.y = pos[1]
+        self.xi.alpha = ori[0]
+        self.xi.beta = ori[1]
+        self.xi.theta = ori[2]
+        sgn = np.sign(np.dot(np.asarray(vel[0:2]),
+                             np.asarray([math.cos(self.xi.theta),
+                                         math.sin(self.xi.theta)])))
+        self.vActual = sgn * (vel[0]**2 + vel[1]**2)**0.5
+        self.omegaActual = omega[2]
+        ##### Get laser/vision sensor data
+        # Parse data
+        if not velodyne_points==None:
+            # res = velodyne_points[0]
+            if 'VPL16_counter' not in self.__dict__:
+                self.VPL16_counter = 0
+            # reset the counter every fourth time
+            if self.VPL16_counter == 4:
+                self.VPL16_counter = 0
+            if self.VPL16_counter == 0:
+                # Reset point cloud
+                self.pointCloud.clearData()
+            self.pointCloud.addRawData(velodyne_points[2]) # will rotate here
+
+            if self.VPL16_counter == 3:
+                self.pointCloud.crop()
+                self.pointCloud.updateOccupancyMap() # option 1
+            self.VPL16_counter += 1
+            # print("counter")
+            # print(self.VPL16_counter)
+            # add for gnn
+            ###### (not yet finish)
+            self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)
+    def getV1V2(self):
+        v1 = self.vActual + self.omegaActual * self.l / 2
+        v2 = self.vActual - self.omegaActual * self.l / 2
+        return np.array([[v1, v2]])
+##### might move to scene
+##### pending decide
+    # def propagateDesired(self):
+    #     """
+    #     Update robot desire pose
+    #     Returns:None
+    #
+    #     """
+    #     self.xid.theta = self.scene.xid.vRefAng
+
+##### For simulate
+    def precompute(self,adjmatrix,robot_list):
+        self.xi.transform()
+        self.xid.transform()
+        self.update_neighbors(adjmatrix,robot_list)
+#### Set the linear velocity of 2 wheels
+
+    def get_control(self,omlist,i,average_distance_gabreil_error,thresh):
+        if self.scene.vrepConnected == False:
+            self.xi.propagate(self.control)
+        else:
+            omega1, omega2 = self.control(omlist,i,average_distance_gabreil_error,thresh)
+            return omega1,omega2
+    ##### For simulate in scene
+    def getDataObs(self):
+        observation, action_1 = self.data.getObservation(-12)
+        return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
+    def save_trace(self,path):
+        pose_array=np.array(self.pose_list)
+        velocity_array=np.array(self.velocity_list)
+        pose_path = path + "pose_array_robot_" + str(self.index) + ".npy"
+        velocity_path = path + "velocity_array_robot_" + str(self.index) + ".npy"
+        np.save(pose_path,pose_array)
+        np.save(velocity_path,velocity_array)
+        print("Pose array of robot "+str(self.index)+" saved at "+pose_path)
+        print("Velocity array of robot " + str(self.index) + " saved at " + velocity_path)
+
+    def setPosition(self, stateVector = None):
+        # stateVector = [x, y, theta]
+
+        z0 = 0.1587
+        # if stateVector == None:
+        #     x0 = self.xi.x
+        #     y0 = self.xi.y
+        #     theta0 = self.xi.theta
+        if len(stateVector) == 3:
             x0 = stateVector[0]
             y0 = stateVector[1]
             theta0 = stateVector[2]
@@ -557,118 +524,6 @@ class Robot():
         message += "[{0:.3f}, {1:.3f}, {2:.3f}]".format(x0, y0, theta0)
         self.scene.log(message)
 
-    def readSensorData(self):
-        if self.scene.vrepConnected == False:
-            return
-        if "readSensorData_firstCall" not in self.__dict__:
-            self.readSensorData_firstCall = True
-        else:
-            self.readSensorData_firstCall = False
-
-        # Read robot states
-        res, pos = vrep.simxGetObjectPosition(self.scene.clientID,
-                                              self.robotHandle, -1,
-                                              vrep.simx_opmode_blocking)
-        if res != 0:
-            raise VrepError("Cannot get object position with error code " + str(res))
-        res, ori = vrep.simxGetObjectOrientation(self.scene.clientID,
-                                              self.robotHandle, -1,
-                                              vrep.simx_opmode_blocking)
-        if res != 0:
-            raise VrepError("Cannot get object orientation with error code " + str(res))
-        res, vel, omega = vrep.simxGetObjectVelocity(self.scene.clientID,
-                                                     self.robotHandle,
-                                                     vrep.simx_opmode_blocking)
-        if res != 0:
-            raise VrepError("Cannot get object velocity with error code " + str(res))
-        #print("Linear speed: %.3f" % (vel[0]**2 + vel[1]**2)**0.5,
-        #      "m/s. Angular speed: %.3f" % omega[2])
-        #print("pos: %.2f" % pos[0], ", %.2f" % pos[1])
-        #print("Robot #", self.index, " ori: %.3f" % ori[0], ", %.3f" % ori[1], ", %.3f" % ori[2])
-
-        self.xi.x = pos[0]
-        self.xi.y = pos[1]
-        self.xi.alpha = ori[0]
-        self.xi.beta = ori[1]
-        self.xi.theta = ori[2]
-        sgn = np.sign(np.dot(np.asarray(vel[0:2]),
-                             np.asarray([math.cos(self.xi.theta),
-                                         math.sin(self.xi.theta)])))
-        self.vActual = sgn * (vel[0]**2 + vel[1]**2)**0.5
-        self.omegaActual = omega[2]
-        # Read laser/vision sensor data
-        if self.scene.SENSOR_TYPE == "2d_":
-            # self.laserFrontHandle
-            # self.laserRearHandle
-
-            if self.readSensorData_firstCall:
-                opmode = vrep.simx_opmode_streaming
-            else:
-                opmode = vrep.simx_opmode_buffer
-            laserFront_points = vrep.simxGetStringSignal(
-                    self.scene.clientID, self.laserFrontName + '_signal', opmode)
-            print(self.laserFrontName + '_signal: ', len(laserFront_points[1]))
-            laserRear_points = vrep.simxGetStringSignal(
-                    self.scene.clientID, self.laserRearName + '_signal', opmode)
-            print(self.laserRearName + '_signal: ', len(laserRear_points[1]))
-        elif self.scene.SENSOR_TYPE == "2d": # deprecated
-            raise Exception('2d sensor is not supported!!!!')
-        elif self.scene.SENSOR_TYPE == "VPL16":
-            # self.pointCloudHandle
-            velodyne_points = vrep.simxCallScriptFunction(
-                    self.scene.clientID, self.pointCloudName, 1,
-                    'getVelodyneData_function', [], [], [], 'abc',
-                    vrep.simx_opmode_blocking)
-            #print(len(velodyne_points[2]))
-            #print(velodyne_points[2])
-            res = velodyne_points[0]
-
-            # Parse data
-            if 'VPL16_counter' not in self.__dict__:
-                self.VPL16_counter = 0
-            # reset the counter every fourth time
-            if self.VPL16_counter == 4:
-                self.VPL16_counter = 0
-            if self.VPL16_counter == 0:
-                # Reset point cloud
-                self.pointCloud.clearData()
-            #print('VPL16_counter = ', self.VPL16_counter)
-            self.pointCloud.addRawData(velodyne_points[2]) # will rotate here
-
-            if self.VPL16_counter == 3:
-
-                #print("Length of point cloud is " + str(len(self.pointCloud.data)))
-                if res != 0:
-                    raise VrepError("Cannot get point cloud with error code " + str(res))
-
-                #start = time.clock()
-                self.pointCloud.crop()
-                #end = time.clock()
-                #self.pointCloud.updateScanVector() # option 2
-                self.pointCloud.updateOccupancyMap() # option 1
-                #print('Time elapsed: ', end - start)
-            self.VPL16_counter += 1
-            # add for gnn
-            #self.graph_matrix = np.ones((3, 3), dtype = np.float32)-np.identity(3)
-            #self.graph_matrix = self.graph_matrix.reshape(1,9) # 9: n by n where n is the # of robots
-            self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)
-            #self.graph_matrix = self.scene.readADjMatrix(MaxRange=100)
-
-        elif self.scene.SENSOR_TYPE == "kinect":
-            pass
-        else:
-            return
-    def getV1V2(self):
-        v1 = self.vActual + self.omegaActual * self.l / 2
-        v2 = self.vActual - self.omegaActual * self.l / 2
-        return np.array([[v1, v2]])
 
 
-
-
-class VrepError(Exception):
-    # Exception raised for errors related vrep.
-
-    def __init__(self, message):
-        self.message = message
 

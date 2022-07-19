@@ -1,0 +1,119 @@
+Collecting ipywidgets
+  Downloading https://files.pythonhosted.org/packages/86/7d/06b48ec5fd605775c7e85b3ea397d8f0294f66d570bcee59496eb5195fc5/ipywidgets-7.7.0-py2.py3-none-any.whl (123kB)
+Collecting ipython>=4.0.0; python_version >= "3.3" (from ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/53/09/958a4802489d28b2484114ee6414c7502ef57de6f2dbc9095b718640060c/ipython-7.16.3-py3-none-any.whl (783kB)
+Collecting nbformat>=4.2.0 (from ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/e7/c7/dd50978c637a7af8234909277c4e7ec1b71310c13fb3135f3c8f5b6e045f/nbformat-5.1.3-py3-none-any.whl (178kB)
+Collecting ipython-genutils~=0.2.0 (from ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/fa/bc/9bd3b5c2b4774d5f33b2d544f1460be9df7df2fe42f352135381c347c69a/ipython_genutils-0.2.0-py2.py3-none-any.whl
+Collecting widgetsnbextension~=3.6.0 (from ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/4e/69/273f584c28805939c6cb45717638cb8edbd78147f02c564b8c7763e1872e/widgetsnbextension-3.6.0-py2.py3-none-any.whl (1.6MB)
+Collecting traitlets>=4.3.1 (from ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/ca/ab/872a23e29cec3cf2594af7e857f18b687ad21039c1f9b922fac5b9b142d5/traitlets-4.3.3-py2.py3-none-any.whl (75kB)
+Collecting jupyterlab-widgets>=1.0.0; python_version >= "3.6" (from ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/5f/2c/7331aa9c5041e8b107d712d853268e137f55014b858407816b5487289d11/jupyterlab_widgets-1.1.0-py3-none-any.whl (245kB)
+Collecting ipykernel>=4.5.1 (from ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/e9/ad/9101e0ab5e84dd117462bb3a1379d31728a849b6886458452e3d97dc6bba/ipykernel-5.5.6-py3-none-any.whl (121kB)
+Collecting pexpect; sys_platform != "win32" (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/39/7b/88dbb785881c28a102619d46423cb853b46dbccc70d3ac362d99773a78ce/pexpect-4.8.0-py2.py3-none-any.whl (59kB)
+Collecting decorator (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl
+Collecting backcall (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/4c/1c/ff6546b6c12603d8dd1070aa3c3d273ad4c07f5771689a7b69a550e8c951/backcall-0.2.0-py2.py3-none-any.whl
+Collecting setuptools>=18.5 (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/b0/3a/88b210db68e56854d0bcf4b38e165e03be377e13907746f825790f3df5bf/setuptools-59.6.0-py3-none-any.whl (952kB)
+Collecting pickleshare (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/9a/41/220f49aaea88bc6fa6cba8d05ecf24676326156c23b991e80b3f2fc24c77/pickleshare-0.7.5-py2.py3-none-any.whl
+Collecting prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0 (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/3f/2d/dcb44d69f388ca2ee1a4a4d3c204ab66b36975c0d5166781eaeeff76b882/prompt_toolkit-3.0.29-py3-none-any.whl (381kB)
+Collecting pygments (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/5c/8e/1d9017950034297fffa336c72e693a5b51bbf85141b24a763882cf1977b5/Pygments-2.12.0-py3-none-any.whl (1.1MB)
+Collecting jedi<=0.17.2,>=0.10 (from ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/c3/d4/36136b18daae06ad798966735f6c3fb96869c1be9f8245d2a8f556e40c36/jedi-0.17.2-py2.py3-none-any.whl (1.4MB)
+Collecting jupyter-core (from nbformat>=4.2.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/60/7d/bee50351fe3ff6979e949b9c4c00c556a7a9732ba39b547d07d93450de23/jupyter_core-4.9.2-py3-none-any.whl (86kB)
+Collecting jsonschema!=2.5.0,>=2.4 (from nbformat>=4.2.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/e0/d9/05587ac378b9fd2c352c6f024f13240168365bd753a7e8007522b7025267/jsonschema-4.0.0-py3-none-any.whl (69kB)
+Collecting notebook>=4.4.1 (from widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/27/b7/7e602dc8b868bba8a542269205237b400be3427d8489b5851de5f7587996/notebook-6.4.10-py3-none-any.whl (9.9MB)
+Collecting six (from traitlets>=4.3.1->ipywidgets)
+  Using cached https://files.pythonhosted.org/packages/d9/5a/e7c31adbe875f2abbb91bd84cf2dc52d792b5a01506781dbcf25c91daf11/six-1.16.0-py2.py3-none-any.whl
+Collecting tornado>=4.2 (from ipykernel>=4.5.1->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/01/d1/8750ad20cbcefb499bb8b405e243f83c2c89f78d139e6f8c8d800640f554/tornado-6.1-cp36-cp36m-manylinux1_x86_64.whl (427kB)
+Collecting jupyter-client (from ipykernel>=4.5.1->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/56/a7/f4d3790ce7bb925d3ffe299244501a264f23ee7ec401914f7d788881ea31/jupyter_client-7.1.2-py3-none-any.whl (130kB)
+Collecting ptyprocess>=0.5 (from pexpect; sys_platform != "win32"->ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/22/a6/858897256d0deac81a172289110f31629fc4cee19b6f01283303e18c8db3/ptyprocess-0.7.0-py2.py3-none-any.whl
+Collecting wcwidth (from prompt-toolkit!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0->ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/59/7c/e39aca596badaf1b78e8f547c807b04dae603a433d3e7a7e04d67f2ef3e5/wcwidth-0.2.5-py2.py3-none-any.whl
+Collecting parso<0.8.0,>=0.7.0 (from jedi<=0.17.2,>=0.10->ipython>=4.0.0; python_version >= "3.3"->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/93/d1/e635bdde32890db5aeb2ffbde17e74f68986305a4466b0aa373b861e3f00/parso-0.7.1-py2.py3-none-any.whl (109kB)
+Collecting importlib-metadata; python_version < "3.8" (from jsonschema!=2.5.0,>=2.4->nbformat>=4.2.0->ipywidgets)
+  Using cached https://files.pythonhosted.org/packages/a0/a1/b153a0a4caf7a7e3f15c2cd56c7702e2cf3d89b1b359d1f1c5e59d68f4ce/importlib_metadata-4.8.3-py3-none-any.whl
+Collecting attrs>=17.4.0 (from jsonschema!=2.5.0,>=2.4->nbformat>=4.2.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/be/be/7abce643bfdf8ca01c48afa2ddf8308c2308b0c3b239a44e57d020afa0ef/attrs-21.4.0-py2.py3-none-any.whl (60kB)
+Collecting pyrsistent!=0.17.0,!=0.17.1,!=0.17.2,>=0.14.0 (from jsonschema!=2.5.0,>=2.4->nbformat>=4.2.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/6c/19/1af501f6f388a40ede6d0185ba481bdb18ffc99deab0dd0d092b173bc0f4/pyrsistent-0.18.0-cp36-cp36m-manylinux1_x86_64.whl (117kB)
+Collecting nest-asyncio>=1.5 (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/be/1e/a83058de46b40a392bdefcaac44d1d42db4bf8562cb68c95d6bae4b93276/nest_asyncio-1.5.5-py3-none-any.whl
+Collecting nbconvert>=5 (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/13/2f/acbe7006548f3914456ee47f97a2033b1b2f3daf921b12ac94105d87c163/nbconvert-6.0.7-py3-none-any.whl (552kB)
+Collecting prometheus-client (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/19/e5/7d4b4b3b0d8d2fdc55395cdb4271c6dbfde3c3ff7d6a6dbe63d19c4e2288/prometheus_client-0.14.1-py3-none-any.whl (59kB)
+Collecting jinja2 (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/20/9a/e5d9ec41927401e41aea8af6d16e78b5e612bca4699d417f646a9610a076/Jinja2-3.0.3-py3-none-any.whl (133kB)
+Collecting argon2-cffi (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/a8/07/946d5a9431bae05a776a59746ec385fbb79b526738d25e4202d3e0bbf7f4/argon2_cffi-21.3.0-py3-none-any.whl
+Collecting Send2Trash>=1.8.0 (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/47/26/3435896d757335ea53dce5abf8d658ca80757a7a06258451b358f10232be/Send2Trash-1.8.0-py3-none-any.whl
+Collecting pyzmq>=17 (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/4b/d3/0cf139d9149bbf3f052b385842afa4e202ea743d85632815d98d0e67685a/pyzmq-22.3.0-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl (1.1MB)
+Collecting terminado>=0.8.3 (from notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/02/6c/c3b012d026678d5cac6d4e26d6857145e22b94ccef195e7c483c3f6c3731/terminado-0.13.0-py3-none-any.whl
+Collecting python-dateutil>=2.1 (from jupyter-client->ipykernel>=4.5.1->ipywidgets)
+  Using cached https://files.pythonhosted.org/packages/36/7a/87837f39d0296e723bb9b62bbb257d0355c7f6128853c78955f57342a56d/python_dateutil-2.8.2-py2.py3-none-any.whl
+Collecting entrypoints (from jupyter-client->ipykernel>=4.5.1->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/35/a8/365059bbcd4572cbc41de17fd5b682be5868b218c3c5479071865cab9078/entrypoints-0.4-py3-none-any.whl
+Collecting zipp>=0.5 (from importlib-metadata; python_version < "3.8"->jsonschema!=2.5.0,>=2.4->nbformat>=4.2.0->ipywidgets)
+  Using cached https://files.pythonhosted.org/packages/bd/df/d4a4974a3e3957fd1c1fa3082366d7fff6e428ddb55f074bf64876f8e8ad/zipp-3.6.0-py3-none-any.whl
+Collecting typing-extensions>=3.6.4; python_version < "3.8" (from importlib-metadata; python_version < "3.8"->jsonschema!=2.5.0,>=2.4->nbformat>=4.2.0->ipywidgets)
+  Using cached https://files.pythonhosted.org/packages/45/6b/44f7f8f1e110027cf88956b59f2fad776cca7e1704396d043f89effd3a0e/typing_extensions-4.1.1-py3-none-any.whl
+Collecting testpath (from nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/86/43/1ebfb29c2ca1df2bdb33dbcb2b526b77ee96873ba7b9e25650ddd4ae7156/testpath-0.6.0-py3-none-any.whl (83kB)
+Collecting pandocfilters>=1.4.1 (from nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/5e/a8/878258cffd53202a6cc1903c226cf09e58ae3df6b09f8ddfa98033286637/pandocfilters-1.5.0-py2.py3-none-any.whl
+Collecting mistune<2,>=0.8.1 (from nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/09/ec/4b43dae793655b7d8a25f76119624350b4d65eb663459eb9603d7f1f0345/mistune-0.8.4-py2.py3-none-any.whl
+Collecting defusedxml (from nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl
+Collecting jupyterlab-pygments (from nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/a8/6f/c34288766797193b512c6508f5994b830fb06134fdc4ca8214daba0aa443/jupyterlab_pygments-0.1.2-py2.py3-none-any.whl
+Collecting bleach (from nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/64/cc/74d634e1e5659742973a23bb441404c53a7bedb6cd3962109ca5efb703e8/bleach-4.1.0-py2.py3-none-any.whl (157kB)
+Collecting nbclient<0.6.0,>=0.5.0 (from nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/27/70/69c3561f43ea305da4b360820e67b57244c5308faf1fa890bc444e7cf842/nbclient-0.5.9-py3-none-any.whl (69kB)
+Collecting MarkupSafe>=2.0 (from jinja2->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/fc/d6/57f9a97e56447a1e340f8574836d3b636e2c14de304943836bd645fa9c7e/MarkupSafe-2.0.1-cp36-cp36m-manylinux1_x86_64.whl
+Collecting dataclasses; python_version < "3.7" (from argon2-cffi->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Using cached https://files.pythonhosted.org/packages/fe/ca/75fac5856ab5cfa51bbbcefa250182e50441074fdc3f803f6e76451fab43/dataclasses-0.8-py3-none-any.whl
+Collecting argon2-cffi-bindings (from argon2-cffi->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/b9/e9/184b8ccce6683b0aa2fbb7ba5683ea4b9c5763f1356347f1312c32e3c66e/argon2-cffi-bindings-21.2.0.tar.gz (1.8MB)
+Collecting webencodings (from bleach->nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl
+Collecting packaging (from bleach->nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/05/8e/8de486cbd03baba4deef4142bd643a3e7bbe954a784dc1bb17142572d127/packaging-21.3-py3-none-any.whl (40kB)
+Collecting async-generator; python_version < "3.7" (from nbclient<0.6.0,>=0.5.0->nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/71/52/39d20e03abd0ac9159c162ec24b93fbcaa111e8400308f2465432495ca2b/async_generator-1.10-py3-none-any.whl
+Collecting cffi>=1.0.1 (from argon2-cffi-bindings->argon2-cffi->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/49/7b/449daf9cacfd7355cea1b4106d2be614315c29ac16567e01756167f6daab/cffi-1.15.0-cp36-cp36m-manylinux_2_5_x86_64.manylinux1_x86_64.whl (405kB)
+Collecting pyparsing!=3.0.5,>=2.0.2 (from packaging->bleach->nbconvert>=5->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/6c/10/a7d0fa5baea8fe7b50f448ab742f26f52b80bfca85ac2be9d35cdd9a3246/pyparsing-3.0.9-py3-none-any.whl (98kB)
+Collecting pycparser (from cffi>=1.0.1->argon2-cffi-bindings->argon2-cffi->notebook>=4.4.1->widgetsnbextension~=3.6.0->ipywidgets)
+  Downloading https://files.pythonhosted.org/packages/62/d5/5f610ebe421e85889f2e55e33b7f9a6795bd982198517d912eb1c76e1a53/pycparser-2.21-py2.py3-none-any.whl (118kB)
+Building wheels for collected packages: argon2-cffi-bindings
+  Running setup.py bdist_wheel for argon2-cffi-bindings: started
+  Running setup.py bdist_wheel for argon2-cffi-bindings: finished with status 'done'
+  Stored in directory: /home/xinchi/.cache/pip/wheels/26/f9/3c/bbbffbf3f8fbe065773fdfba1a9ae8a40d317b03e9feffc93e
+Successfully built argon2-cffi-bindings
+Installing collected packages: decorator, six, ipython-genutils, traitlets, ptyprocess, pexpect, backcall, setuptools, pickleshare, wcwidth, prompt-toolkit, pygments, parso, jedi, ipython, jupyter-core, zipp, typing-extensions, importlib-metadata, attrs, pyrsistent, jsonschema, nbformat, nest-asyncio, tornado, MarkupSafe, jinja2, testpath, pandocfilters, mistune, entrypoints, defusedxml, jupyterlab-pygments, webencodings, pyparsing, packaging, bleach, async-generator, python-dateutil, pyzmq, jupyter-client, nbclient, nbconvert, prometheus-client, ipykernel, dataclasses, pycparser, cffi, argon2-cffi-bindings, argon2-cffi, Send2Trash, terminado, notebook, widgetsnbextension, jupyterlab-widgets, ipywidgets
+Successfully installed MarkupSafe-2.0.1 Send2Trash-1.8.0 argon2-cffi-21.3.0 argon2-cffi-bindings-21.2.0 async-generator-1.10 attrs-21.4.0 backcall-0.2.0 bleach-4.1.0 cffi-1.15.0 dataclasses-0.8 decorator-5.1.1 defusedxml-0.7.1 entrypoints-0.4 importlib-metadata-4.8.3 ipykernel-5.5.6 ipython-7.16.3 ipython-genutils-0.2.0 ipywidgets-7.7.0 jedi-0.17.2 jinja2-3.0.3 jsonschema-4.0.0 jupyter-client-7.1.2 jupyter-core-4.9.2 jupyterlab-pygments-0.1.2 jupyterlab-widgets-1.1.0 mistune-0.8.4 nbclient-0.5.9 nbconvert-6.0.7 nbformat-5.1.3 nest-asyncio-1.5.5 notebook-6.4.10 packaging-21.3 pandocfilters-1.5.0 parso-0.7.1 pexpect-4.8.0 pickleshare-0.7.5 prometheus-client-0.14.1 prompt-toolkit-3.0.29 ptyprocess-0.7.0 pycparser-2.21 pygments-2.12.0 pyparsing-3.0.9 pyrsistent-0.18.0 python-dateutil-2.8.2 pyzmq-22.3.0 setuptools-59.6.0 six-1.16.0 terminado-0.13.0 testpath-0.6.0 tornado-6.1 traitlets-4.3.3 typing-extensions-4.1.1 wcwidth-0.2.5 webencodings-0.5.1 widgetsnbextension-3.6.0 zipp-3.6.0

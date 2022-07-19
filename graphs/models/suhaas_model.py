@@ -8,7 +8,7 @@ from graphs.weights_initializer import weights_init
 import numpy as np
 import utils.graphUtils.graphML as gml
 import utils.graphUtils.graphTools
-from torchsummaryX import summary
+# from torchsummaryX import summary
 
 class DecentralPlannerNet(nn.Module):
     def __init__(self, nA = 3, inW = 100, inH = 100):
@@ -142,8 +142,6 @@ class DecentralPlannerNet(nn.Module):
 
         self.actionsMLP = nn.Sequential(*actionsfc)
         self.apply(weights_init)
-
-
 
 
     def addGSO(self, S):

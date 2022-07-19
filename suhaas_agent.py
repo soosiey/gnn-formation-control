@@ -10,13 +10,17 @@ from tqdm import tqdm
 
 class Agent():
 
-    def __init__(self, criterion = 'mse', optimizer = 'rms', inW = 100, inH = 100,  nA = 3, lr = .01):
+    def __init__(self, criterion = 'mse', optimizer = 'rms', inW = 100, inH = 100, batch_size=16,  nA = 3, lr = .01,cuda=True):
         self.points_per_ep = None
         self.nA = nA
         self.inW = inW
         self.inH = inH
+        self.batch_size=batch_size
         self.model = suhaas_model.DecentralPlannerNet(nA = self.nA, inW = self.inW, inH = self.inH).double()
-        self.model = self.model.to('cuda')
+        self.use_cuda=cuda
+        if self.use_cuda:
+            self.model = self.model.to('cuda')
+
         self.lr = lr
         if(criterion == 'mse'):
             self.criterion = nn.MSELoss()
@@ -27,6 +31,7 @@ class Agent():
         self.lr_schedule = {0:.0001, 10:.0001, 20:.0001}
         self.currentAgent = -1
 
+    ### model controller
     def test(self,omlist,index):
         self.currentAgent += 1
         self.currentAgent = self.currentAgent % self.nA
@@ -39,56 +44,34 @@ class Agent():
             r[0,i,0] = omlist[i][2]
             a[0,i,0] = omlist[i][3]
         xin = torch.from_numpy(x).double()
-        xin = xin.to('cuda')
+        if self.use_cuda:
+            xin = xin.to('cuda')
         S = np.array(S)
         S = S.reshape((self.nA,self.nA))
         S = torch.from_numpy(S)
         S = S.unsqueeze(0)
-        S = S.to('cuda')
+        if self.use_cuda:
+            S = S.to('cuda')
 
         r = torch.from_numpy(r).double()
-        r = r.to('cuda')
+        if self.use_cuda:
+            r = r.to('cuda')
 
         a = torch.from_numpy(a).double()
-        a = a.to('cuda')
+        if self.use_cuda:
+            a = a.to('cuda')
         self.model.eval()
         self.model.addGSO(S)
-        outs = [self.model(xin,r,a)[index]]
-        return outs
 
-    def test1(self, x, S, refs, alphas):
+        #### Set a threshold to eliminate small movements
+        # threshold=0.05
+        control=self.model(xin,r,a)[index] ## model output
 
-        self.currentAgent += 1
-        self.currentAgent = self.currentAgent % 3
-        xin = np.zeros((1, 1, self.inW, self.inH))
-
-        x = x[0]
-        #x = x.reshape((1000,1000))[::10,::10]
-        x = x.reshape((self.inW, self.inH))
-        xin[0,0] = x
-        xin = torch.from_numpy(xin).double()
-        #xin = xin.unsqueeze(0)
-        #xin = xin.unsqueeze(0)
-        xin = xin.to('cuda')
-        S = np.array(S)
-        S = S.reshape((3,3))
-        S = np.roll(S,-1*self.currentAgent,axis=0)
-        S = torch.from_numpy(S)
-        S = S.unsqueeze(0)
-        S = S.to('cuda')
-
-        r = np.zeros((1,3,1))
-        r[0,0,0] = refs
-        r = torch.from_numpy(r).double()
-        r = r.to('cuda')
-
-        a = np.zeros((1,3,1))
-        a[0,0,0] = alphas
-        a = torch.from_numpy(a).double()
-        a = a.to('cuda')
-        self.model.eval()
-        self.model.addGSO(S)
-        outs = [self.model.forward_one(xin,r,a)[0]]
+        # torch.where(control<threshold, 0., control)
+        # torch.where(control>-threshold, 0., control)
+        outs = [control]
+        # print("Control",outs)
+        # print(outs)
         return outs
 
     def train(self, data):
@@ -108,11 +91,14 @@ class Agent():
         #np.save('inputs.npy', inputs)
         #np.save('graphs.npy', graphs)
         trainset = custom_dataset.RobotDataset(inputs,actions,graphs,refs,alphas,self.nA,inW = self.inW, inH = self.inH,transform = self.transform)
-        trainloader = DataLoader(trainset, batch_size = 16, shuffle = True, drop_last = True)
+        trainloader = DataLoader(trainset, batch_size = self.batch_size, shuffle = True, drop_last = True)
         self.model.train()
         total_loss = 0
         total = 0
+        print("training")
+        iteration=0
         for i,batch in enumerate(tqdm(trainloader)):
+            iteration+=1
             inputs = batch['data'].to('cuda')
             S = batch['graphs'][:,0,:,:].to('cuda')
             actions = batch['actions'].to('cuda')
@@ -121,15 +107,18 @@ class Agent():
             self.model.addGSO(S)
             self.optimizer.zero_grad()
             outs = self.model(inputs,refs,alphas)
+            print(outs[0],actions[:,0])
             loss = self.criterion(outs[0], actions[:,0])
             for i in range(1,self.nA):
                 loss += self.criterion(outs[i], actions[:,i])
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
+
             total += inputs.size(0)*self.nA
+        print(iteration)
         print('Average training loss:', total_loss / total)
         return total_loss / total
 
     def save(self,pth):
-        torch.save(self.model.state_dict(), 'models/' + pth)
+        torch.save(self.model.state_dict(), pth)
