@@ -29,25 +29,25 @@ parser = argparse.ArgumentParser(description='Args for demo')
 parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool,help='Use expert control only')
 parser.add_argument('--use_dagger', dest='use_dagger', default=True,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='Control demo mod(train/test)')
-parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
+parser.add_argument('--if_continue', dest='if_continue', default=True,type=bool,help='Continue training')
 parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=False,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
-parser.add_argument('--model_name', dest='model_name', default='model_train_episode-0_robot-5.pth',type=str,help='Name of model')
+parser.add_argument('--model_name', dest='model_name', default='model_train_episode-10_robot-7.pth',type=str,help='Name of model')
 parser.add_argument('--robot_num', dest='robot_num', default=7,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
-parser.add_argument('--sim_time', dest='sim_time', default=10,type=float,help='Simulation time for one simulation')
-parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
+parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
+parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.1,type=float,help='Stopping thresh')
 parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=0.0,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
 parser.add_argument('--train_episode', dest='train_episode', default=200,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
-parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
+parser.add_argument('--iter', dest='iter', default=10,type=int,help='Iter for testing multiple round')
 parser.add_argument('--inW', dest='inW', default=100,type=int,help='Dataset shape')
 parser.add_argument('--inH', dest='inH', default=100,type=int,help='Dataset shape')
 parser.add_argument('--save_iteration', dest='save_iteration', default=10,type=int,help='Save after certain iterations')
-parser.add_argument('--saved_figs', dest='saved_figs', default="results",type=str,help='Save after certain iterations')
+parser.add_argument('--saved_figs', dest='saved_figs', default="results",type=str,help='Save figs folder')
 # # modelname='model_'+str(robot_num)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
 args = parser.parse_args()
 
@@ -105,14 +105,14 @@ def Train(args):
                             expert_velocity_adjust=args.expert_velocity_adjust,
                             agent=fcl)
         position_list = []
-        for i in range(len(sc.robots)):
-            position = [sc.robots[i].xi.x, sc.robots[i].xi.y, sc.robots[i].xi.theta]
+        for robot_i in range(len(sc.robots)):
+            position = [sc.robots[robot_i].xi.x, sc.robots[robot_i].xi.y, sc.robots[robot_i].xi.theta]
             position_list.append(position)
         theta=random.random()
-        # position_list[0] = [-6*math.cos(theta), -6*math.sin(theta), 0]
-        # position_list[1] = [6*math.cos(theta), 6*math.sin(theta), 0]
-        position_list[0] = [-6, -6, 0]
-        position_list[1] = [6, 6, 0]
+        position_list[0] = [-8*math.cos(theta), -8*math.sin(theta), 0]
+        position_list[1] = [8*math.cos(theta), 8*math.sin(theta), 0]
+        # position_list[0] = [-6, -6, 0]
+        # position_list[1] = [6, 6, 0]
         print(position_list)
 
 
@@ -141,21 +141,21 @@ def Train(args):
         ##########################################################################
         ##### Step 2: Start training the NN model (e.g., supervised learning) #####
         ##########################################################################
-        if (args.if_train):
+        if args.if_train:
             start=time.time()
             l = fcl.train(dataListEpisode)
             end=time.time()
             print(time)
             print(end-start)
             lossList.append(l)
-        if (i % args.save_iteration == 0 and args.if_train):
+        if i % args.save_iteration == 0 and args.if_train:
             if not os.path.exists(args.model_path):
                 os.makedirs(args.model_path)
             saved_model_name="model_train"+"_episode-"+str(i)+"_robot-"+str(args.robot_num)+".pth"
             saved_model=os.path.join(args.model_path,saved_model_name)
             time_file=os.path.join(args.model_path,"time.txt")
             fcl.save(saved_model)
-            with open(time_file,'a+') as time_log:
+            with open(time_file,'a') as time_log:
                 line=saved_model_name+","+str(time.asctime(time.localtime(time.time())))+"\n"
                 time_log.write(line)
 
@@ -170,7 +170,7 @@ def Train(args):
     saved_model = os.path.join(args.model_path, saved_model_name)
     fcl.save(saved_model)
     time_file = os.path.join(args.model_path, "time.txt")
-    with open(time_file, 'a+') as time_log:
+    with open(time_file, 'a') as time_log:
         line = saved_model_name + "," + str(time.asctime(time.localtime(time.time()))) + "\n"
         time_log.write(line)
     if sc:

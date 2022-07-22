@@ -131,7 +131,7 @@ def process_data(dir):
 
 def box(data_m,data_e,title,ylabel,save_dir):
     fig = plt.figure(figsize=(10, 5))
-    labels=[4,5,6,7]
+    labels=[4,5,6,7,8]
     color_model='#1f77b4'
     color_expert='#ff7f0e'
     model=plt.boxplot(data_m,
@@ -158,7 +158,7 @@ def box(data_m,data_e,title,ylabel,save_dir):
     plt.ylabel(ylabel,fontsize=18)
     plt.savefig(os.path.join(save_dir,title+'.png'))
 
-root_dir="/home/xinchi/GNN-control/data"
+root_dir="/home/xinchi/GNN-control/data_final"
 
 dir4= os.path.join(root_dir,"model_4")
 converge_time_all_4,average_formation_all_4,average_formation_error_all_4=process_data(dir4)
@@ -168,9 +168,11 @@ dir6= os.path.join(root_dir,"model_6")
 converge_time_all_6,average_formation_all_6,average_formation_error_all_6=process_data(dir6)
 dir7= os.path.join(root_dir,"model_7")
 converge_time_all_7,average_formation_all_7,average_formation_error_all_7=process_data(dir7)
-converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6,converge_time_all_7]
-average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6,average_formation_all_7]
-average_formation_error_all_model=[average_formation_error_all_4,average_formation_error_all_5,average_formation_error_all_6,average_formation_error_all_7]
+dir8= os.path.join(root_dir,"model_8")
+converge_time_all_8,average_formation_all_8,average_formation_error_all_8=process_data(dir8)
+converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6,converge_time_all_7,converge_time_all_8]
+average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6,average_formation_all_7,average_formation_all_8]
+average_formation_error_all_model=[average_formation_error_all_4,average_formation_error_all_5,average_formation_error_all_6,average_formation_error_all_7,average_formation_error_all_8]
 
 
 # dir= '/home/xinchi/6_robots/model_6'
@@ -182,9 +184,11 @@ dir6_e= os.path.join(root_dir,"expert_adjusted_6")
 converge_time_all_6_e,average_formation_all_6_e,average_formation_error_all_6_e=process_data(dir6_e)
 dir7_e= os.path.join(root_dir,"expert_adjusted_7")
 converge_time_all_7_e,average_formation_all_7_e,average_formation_error_all_7_e=process_data(dir7_e)
-converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_time_all_6_e,converge_time_all_7_e]
-average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e,average_formation_all_7_e]
-average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e,average_formation_error_all_7_e]
+dir8_e= os.path.join(root_dir,"expert_adjusted_8")
+converge_time_all_8_e,average_formation_all_8_e,average_formation_error_all_8_e=process_data(dir8_e)
+converge_time_all_expert=[converge_time_all_4_e,converge_time_all_5_e,converge_time_all_6_e,converge_time_all_7_e,converge_time_all_8_e]
+average_formation_all_expert=[average_formation_all_4_e,average_formation_all_5_e,average_formation_all_6_e,average_formation_all_7_e,average_formation_all_8_e]
+average_formation_error_all_expert=[average_formation_error_all_4_e,average_formation_error_all_5_e,average_formation_error_all_6_e,average_formation_error_all_7_e,average_formation_error_all_8_e]
 
 
 box(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)",root_dir)
