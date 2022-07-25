@@ -32,16 +32,16 @@ parser.add_argument('--if_train', dest='if_train', default=True,type=bool,help='
 parser.add_argument('--if_continue', dest='if_continue', default=True,type=bool,help='Continue training')
 parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=False,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
-parser.add_argument('--model_path', dest='model_path', default='/home/xinchi/GNN-control/gnn-formation-control/models/seperate_dagger_0.9_50_2022.5.17',type=str,help='Path to save model')
-parser.add_argument('--model_name', dest='model_name', default='model_train_episode-0_robot-5.pth',type=str,help='Name of model')
+parser.add_argument('--model_path', dest='model_path', default='model',type=str,help='Path to save model')
+parser.add_argument('--model_name', dest='model_name', default='model_train_episode-120_robot-5.pth',type=str,help='Name of model')
 parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
-parser.add_argument('--sim_time', dest='sim_time', default=10,type=float,help='Simulation time for one simulation')
+parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.05,type=float,help='Stopping thresh')
 parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=0.0,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
-parser.add_argument('--train_episode', dest='train_episode', default=1,type=int,help='Episode for training')
+parser.add_argument('--train_episode', dest='train_episode', default=200,type=int,help='Episode for training')
 parser.add_argument('--batch_size', dest='batch_size', default=16,type=int,help='Batch size for training')
 parser.add_argument('--iter', dest='iter', default=1,type=int,help='Iter for testing multiple round')
 parser.add_argument('--inW', dest='inW', default=100,type=int,help='Dataset shape')
@@ -51,9 +51,12 @@ parser.add_argument('--saved_figs', dest='saved_figs', default="results",type=st
 # # modelname='model_'+str(robot_num)+'robots_'+str(simTime)+'s_'+str(trainEpisode)+'rounds'+'.pth'
 args = parser.parse_args()
 
+def set_robot_positions(sc,position_list):
+    for i in range(len(position_list)):
+        sc.robots[i].setPosition(position_list[i])
+    return sc
 
-
-def Train(args,model_iter):
+def Train(args):
     #### store robot pose
     numRun = args.train_episode if args.if_train else 1
     #### training data will be stored
@@ -76,7 +79,7 @@ def Train(args,model_iter):
                     episode=int(file.split("_")[1].split(".")[0])
                     model_name=file
         fcl.model.to('cpu')
-        model_name='model_train_episode-'+str(model_iter)+'_robot-5.pth'
+        print(model_name)
         fcl.model.load_state_dict(torch.load(os.path.join(args.model_path,model_name)))
         fcl.model.to('cuda')
         print('Loaded model')
@@ -121,7 +124,7 @@ def Train(args,model_iter):
             print(end-start)
             lossList.append(l)
             with open('document.csv', 'a') as fd:
-                fd.write(str(model_iter)+","+str(l)+"\n")
+                fd.write(str(i)+","+str(l)+"\n")
         if (i % args.save_iteration == 0 and args.if_train):
             if not os.path.exists(args.model_path):
                 os.makedirs(args.model_path)
@@ -335,7 +338,6 @@ def simulate(args,sc):
 
     return sc
 
-
-Train(args,i)
+Train(args)
 
 

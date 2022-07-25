@@ -77,7 +77,7 @@ def Test(args):
             position_list.append(position)
 
         ##### Test model
-
+        print(position_list)
 
 
         ##### Test model
