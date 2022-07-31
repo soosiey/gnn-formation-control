@@ -58,7 +58,7 @@ def set_robot_positions(sc,position_list):
 
 
 def Test(args):
-    for iteration in range(1,0,-1):
+
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
@@ -77,6 +77,12 @@ def Test(args):
             position_list.append(position)
 
         ##### Test model
+        position_list=[[-4.5,-4.5,0],
+                       [-4.5,4,1],
+                       [4,4.5,2],
+                       [4,-4,3],]
+                       # [-0.5,-0.5,4],]
+                       # [0.5,0.5,5]]
         print(position_list)
 
 
@@ -106,26 +112,9 @@ def Test(args):
 
         sc = set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, 'demo'))
+        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, 'demo'))
 
-
-
-        ##### Test expert
-
-        model_type = "expert_adjusted_" + str(args.robot_num)
-        print(model_type)
-        print(position_list)
-        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
-                            expert_only=True,
-                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
-                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
-                            expert_velocity_adjust=True,
-                            agent=fcl)
-        sc = set_robot_positions(sc, position_list)
-        sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
 def initRef(sc):
@@ -234,5 +223,6 @@ def simulate(sim_time,sim_dt,stop_waiting_time,desire_distance,stop_thresh,sc):
 
 
 Test(args)
+
 
 
