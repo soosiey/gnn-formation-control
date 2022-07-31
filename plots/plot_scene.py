@@ -121,6 +121,53 @@ def plot_formation_gabreil(pose_array,save_path):
     plt.savefig(os.path.join(save_path, "formation_gabreil_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
     # plt.show()
+
+def plot_triangle(ax,pose,length,color):
+    x=pose[0]
+    y=pose[1]
+    theta=pose[2]
+    p1=[x+2*length*math.cos(theta),y+2*length*math.sin(theta)]
+    p2=[x+length*math.cos(theta-2*math.pi/3),y+length*math.sin(theta-2*math.pi/3)]
+    p3 = [x + length * math.cos(theta + 2*math.pi / 3), y + length * math.sin(theta + 2*math.pi / 3)]
+    # ax.scatter(x,y,c=color)
+    ax.plot([p1[0],p2[0]],[p1[1],p2[1]],color=color)
+    ax.plot([p2[0],p3[0]],[p2[1],p3[1]],color=color)
+    ax.plot([p3[0],p1[0]],[p3[1],p1[1]],color=color)
+def plot_trace_triangle(position_array,save_path,stop_time):
+    rob_num = np.shape(position_array)[0]
+    colors = itertools.cycle(mcolors.TABLEAU_COLORS)
+    fig,ax=plt.subplots(figsize=(10, 10))
+    for i in range(rob_num):
+        color = next(colors)
+        xtrace = []
+        ytrace = []
+        for p in range(0,stop_time*20,100):
+            pose=position_array[i][p]
+            plot_triangle(ax, pose, 0.3, color)
+            xtrace.append(position_array[i][p][0])
+            ytrace.append(position_array[i][p][1])
+            ax.plot(xtrace,ytrace,color=color,linestyle='--')
+    gabriel_graph = gabriel(pose_array)
+    position_array = pose_array[:, stop_time*20, :2]
+    for i in range(rob_num):
+        for j in range(i + 1, rob_num):
+            if gabriel_graph[i][j] == 0:
+                continue
+            xlist = [position_array[i][0], position_array[j][0]]
+            ylist = [position_array[i][1], position_array[j][1]]
+            distance = math.sqrt((xlist[0] - xlist[1]) ** 2 + (ylist[0] - ylist[1]) ** 2)
+            ax.plot(xlist, ylist,color="black")
+    plt.title("Trace", fontsize=15)
+    plt.xlabel("x(m)", fontsize=15)
+    plt.ylabel("y(m)", fontsize=15)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.xlim(-8, 8)
+    plt.ylim(-8, 8)
+    plt.grid()
+    plt.savefig(os.path.join(save_path, "robot_trace_" + str(rob_num) + ".png"))
+    plt.close()
+    # plt.show()
 def plot_trace(position_array,save_path):
     rob_num=np.shape(position_array)[0]
 
@@ -172,28 +219,14 @@ def plot_load_scene(dt,dir):
     save_path=os.path.join(dir)
     pose_array = np.load(os.path.join(dir, "pose_array_scene.npy"))
     velocity_array = np.load(os.path.join(dir, "velocity_array_scene.npy"))
-
     plot_relative_distance(dt,pose_array,save_path)
     plot_relative_distance_gabreil(dt, pose_array,save_path)
     plot_wheel_speed(dt, velocity_array,save_path)
     plot_formation_gabreil(pose_array,save_path)
-    # plot_trace(pose_array,save_path)
-def plot_dynamic_gabreil(path):
-    import matplotlib.pyplot as plt
-    import numpy as np
+    plot_trace_triangle(pose_array, save_path, 40)
 
-    x = np.linspace(0, 10 * np.pi, 100)
-    y = np.sin(x)
-
-    plt.ion()
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    line1, = ax.plot(x, y, 'b-')
-
-    for phase in np.linspace(0, 10 * np.pi, 100):
-        line1.set_ydata(np.sin(0.5 * x + phase))
-        fig.canvas.draw()
-        fig.canvas.flush_events()
 if __name__=="__main__":
     # for i in range(0,100):
-    plot_load_scene(0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/model_7/0")
+    plot_load_scene(0.05,"/home/xinchi/GNN-control/demo_data/model_5")
+
+

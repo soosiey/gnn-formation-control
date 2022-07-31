@@ -9,9 +9,10 @@ with open("../document.csv") as file:
             break
         model.append(int(line.strip().split(",")[0]))
         loss.append(float(line.strip().split(",")[1]))
+
 plt.figure(figsize=(7, 4))
-plt.title("Loss")
-plt.xlabel("Episode")
-plt.ylabel("Loss")
-plt.plot(model, loss)
+
+# plt.xlabel("Episode")
+# plt.ylabel("Loss")
+plt.plot(model[-100:], loss[-100:])
 plt.savefig("loss_fig.png")
