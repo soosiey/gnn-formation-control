@@ -34,7 +34,7 @@ parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_train_episode-200_robot-5.pth',type=str,help='Name of model')
-parser.add_argument('--robot_num', dest='robot_num', default=5,type=int,help='Number of robot for simulation')
+parser.add_argument('--robot_num', dest='robot_num', default=6,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
@@ -55,7 +55,11 @@ def set_robot_positions(sc,position_list):
     for i in range(len(position_list)):
         sc.robots[i].setPosition(position_list[i])
     return sc
+def empty_controller(omlist,index):
+    control=np.array([[0,0]])
+    control_tensor=torch.tensor(control)
 
+    return [control_tensor]
 
 def Test(args):
     for iteration in range(1,0,-1):
@@ -76,6 +80,8 @@ def Test(args):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
 
+        position_list[0] = [0, 0, 0]
+        sc.robots[0].learnedController = empty_controller
         ##### Test model
         print(position_list)
 
