@@ -130,7 +130,7 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
 def plot_formation_gabreil(pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
     gabriel_graph = gabriel(pose_array)
-    position_array = pose_array[:, 800, :2]
+    position_array = pose_array[:, -1, :2]
     print(pose_array.shape)
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.scatter(position_array[:,0],position_array[:,1],s=100)
