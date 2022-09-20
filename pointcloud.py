@@ -44,6 +44,7 @@ class PointCloud():
         self.dataCropped = []
 
     def addRawData(self, rawData):
+        # print(rawData)
         newData = []
         for i in range(0, len(rawData), 3):
             x = rawData[i]
@@ -102,6 +103,7 @@ class PointCloud():
         #self.show()
 
     def crop(self):
+
         self.dataCropped = []
         for i in range(len(self.data)):
             x = float(self.data[i][0])
@@ -113,6 +115,8 @@ class PointCloud():
             elif (x < MIN and y < MIN and x > -MIN and y > -MIN):
                 continue
             self.dataCropped.append(np.float32([x, y]))
+
+        print(len(self.dataCropped))
         #print('dataCropped length:', len(self.dataCropped))
     def getRotationMatrix(self, axis, theta):
         """

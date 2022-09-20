@@ -267,8 +267,9 @@ class Robot():
         vy_circle = tauiy
         # Achieve and keep formation
         # tauix, tauiy = saturate(tauix, tauiy, dxypMax)
-        vxp += -K3 * (vx_relative+6*vx_circle)
-        vyp += -K3 * (vy_relative+6*vy_circle)
+        k_circle=10
+        vxp += -K3 * (vx_relative+k_circle*vx_circle)
+        vyp += -K3 * (vy_relative+k_circle*vy_circle)
 
 
 
@@ -558,7 +559,6 @@ class Robot():
                 # Reset point cloud
                 self.pointCloud.clearData()
             self.pointCloud.addRawData(velodyne_points[2]) # will rotate here
-
             if self.VPL16_counter == 3:
                 self.pointCloud.crop()
                 self.pointCloud.updateOccupancyMap() # option 1
@@ -598,6 +598,7 @@ class Robot():
     ##### For simulate in scene
     def getDataObs(self):
         observation, action_1 = self.data.getObservation(-12)
+
         return observation, self.graph_matrix, action_1[0][0],self.scene.alpha
     def save_trace(self,path):
         pose_array=np.array(self.pose_list)

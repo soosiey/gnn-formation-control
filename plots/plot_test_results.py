@@ -102,7 +102,7 @@ def process_data(dir):
             unsuccess += 1
             print(path)
             continue
-        observe_data=raw_data[:,-200:,:2]
+        observe_data=raw_data[:,-400:,:2]
         time_steps=observe_data.shape[1]
         for time_step in range(time_steps):
             data=observe_data[:,time_step,:]
@@ -125,38 +125,47 @@ def process_data(dir):
         converge_time_all.append(convergence_time)
         average_formation_error_all.append(average_formation_error)
         average_formation_all.append(average_formation)
+        # break
     print(dir,unsuccess)
     return converge_time_all,average_formation_all,average_formation_error_all
     # print(observe_data-reference)
 
-def box_1(data_m,data_e,title,ylabel,save_dir):
-    fig = plt.figure(figsize=(10, 6))
+def box_1(data_m,title,ylabel,save_dir):
+    fig = plt.figure(figsize=(5, 3))
     labels=[4,5,6,7,8,9]
     color_model='#1f77b4'
     color_expert='#ff7f0e'
     model=plt.boxplot(data_m,
-                      positions=np.array(range(len(data_m))) * 2.0,
+                      positions=np.array(range(len(data_m))) * 1.0,
                       boxprops=dict(color=color_model),
                       capprops=dict(color=color_model),
                       whiskerprops=dict(color=color_model),
                       flierprops=dict(color=color_model,markeredgecolor=color_model),
                       medianprops=dict(color="black"),
                       widths=0.6)
-
+    plt.subplots_adjust(left=0.18,
+                        bottom=0.18,
+                        right=0.99,
+                        top=0.99,
+                        wspace=0.0,
+                        hspace=0.0)
     # plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper left',borderpad=0.5,labelspacing=0.5)
-    plt.xticks(np.array(range(len(data_m)))*2.0,labels=labels,fontsize=18)
-    plt.yticks(fontsize=18)
+    plt.xticks(np.array(range(len(data_m)))*1.0,labels=labels,fontsize=15)
+    plt.yticks(fontsize=15)
     # plt.title(title,fontsize=18)
-    plt.xlabel("Number of robots",fontsize=18)
-    plt.ylabel(ylabel,fontsize=18)
+    plt.xlabel("Number of robots",fontsize=15)
+    plt.ylabel(ylabel,fontsize=15)
     plt.savefig(os.path.join(save_dir,title+'.png'))
 def box_2(data_m,data_e,title,ylabel,save_dir):
-    fig = plt.figure(figsize=(4, 4))
-    labels=["expert","model"]
+    fig = plt.figure(figsize=(2.5, 3))
+    labels=["Expert","DNN"]
     color_model='#1f77b4'
     color_expert='#ff7f0e'
+    print(title)
+    print(sum(data_m[0])/len(data_m[0]))
+    print(sum(data_e[0])/len(data_e[0]))
     model=plt.boxplot(data_m,
-                      positions=np.array(range(len(data_m))) *1.0+0.3,
+                      positions= [2.0],
                       boxprops=dict(color=color_model),
                       capprops=dict(color=color_model),
                       whiskerprops=dict(color=color_model),
@@ -164,26 +173,27 @@ def box_2(data_m,data_e,title,ylabel,save_dir):
                       medianprops=dict(color="black"),
                       widths=0.4)
     exp=plt.boxplot(data_e,
-                      positions=np.array(range(len(data_e))) *1.0-0.3,
+                      positions= [1.0],
                       boxprops=dict(color=color_expert),
                       capprops=dict(color=color_expert),
                       whiskerprops=dict(color=color_expert),
                       flierprops=dict(color=color_expert,markeredgecolor=color_expert),
                       medianprops=dict(color="black"),
                       widths=0.4)
-    plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper left',borderpad=2,labelspacing=2)
+    # plt.legend([model["boxes"][0], exp["boxes"][0]], ['GNN', 'Expert'], loc='upper left',borderpad=2,labelspacing=2)
+    plt.xticks([1,2], labels=labels, fontsize=15)
     plt.yticks(fontsize=15)
-    plt.tick_params(
-        axis='x',  # changes apply to the x-axis
-        which='both',  # both major and minor ticks are affected
-        bottom=False,  # ticks along the bottom edge are off
-        top=False,  # ticks along the top edge are off
-        labelbottom=False)  # labels along the bottom edge are off
+    # plt.tick_params(
+    #     axis='x',  # changes apply to the x-axis
+    #     which='both',  # both major and minor ticks are affected
+    #     bottom=False,  # ticks along the bottom edge are off
+    #     top=False,  # ticks along the top edge are off
+    #     labelbottom=False)  # labels along the bottom edge are off
     # plt.title(title,fontsize=18)
     # plt.xlabel("Number of robots",fontsize=18)
 
-    plt.subplots_adjust(left=0.15,
-                        bottom=0.01,
+    plt.subplots_adjust(left=0.3,
+                        bottom=0.1,
                         right=0.99,
                         top=0.99,
                         wspace=0.0,
@@ -191,7 +201,7 @@ def box_2(data_m,data_e,title,ylabel,save_dir):
     plt.ylabel(ylabel,fontsize=15)
     plt.savefig(os.path.join(save_dir,title+'.png'))
 root_dir="/home/xinchi/GNN-control/data_final"
-#
+
 # dir4= os.path.join(root_dir,"model_4")
 # converge_time_all_4,average_formation_all_4,average_formation_error_all_4=process_data(dir4)
 # dir5= os.path.join(root_dir,"model_5")
@@ -207,9 +217,9 @@ root_dir="/home/xinchi/GNN-control/data_final"
 # converge_time_all_model=[converge_time_all_4,converge_time_all_5,converge_time_all_6,converge_time_all_7,converge_time_all_8,converge_time_all_9]
 # average_formation_all_model=[average_formation_all_4,average_formation_all_5,average_formation_all_6,average_formation_all_7,average_formation_all_8,average_formation_all_9]
 # average_formation_error_all_model=[average_formation_error_all_4,average_formation_error_all_5,average_formation_error_all_6,average_formation_error_all_7,average_formation_error_all_8,average_formation_error_all_9]
-#
-#
-# # dir= '/home/xinchi/6_robots/model_6'
+
+
+# dir= '/home/xinchi/6_robots/model_6'
 # dir4_e= os.path.join(root_dir,"expert_adjusted_4")
 # converge_time_all_4_e,average_formation_all_4_e,average_formation_error_all_4_e=process_data(dir4_e)
 # dir5_e= os.path.join(root_dir,"expert_adjusted_5")
@@ -244,9 +254,9 @@ average_formation_error_all_expert=[average_formation_error_all_5_e]
 
 
 #
-# box_1(converge_time_all_model,converge_time_all_expert,"Converge time","Time(s)",root_dir)
-# box_1(average_formation_all_model,average_formation_all_expert,"Average distance","Distance(m)",root_dir)
-# box_1(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error","percentage(%)",root_dir)
-box_2(converge_time_all_model,converge_time_all_expert,"Converge time 5","Time(s)",root_dir)
+# box_1(converge_time_all_model,"Converge time","Convergence Time(s)",root_dir)
+# box_1(average_formation_all_model,"Average distance","Distance(m)",root_dir)
+# box_1(average_formation_error_all_model,"Average group formation error","Formation Error(%)",root_dir)
+box_2(converge_time_all_model,converge_time_all_expert,"Converge time 5","Convergence Time(s)",root_dir)
 box_2(average_formation_all_model,average_formation_all_expert,"Average distance 5","Distance(m)",root_dir)
-box_2(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error 5","percentage(%)",root_dir)
+box_2(average_formation_error_all_model,average_formation_error_all_expert,"Average group formation error 5","Formation Error(%)",root_dir)

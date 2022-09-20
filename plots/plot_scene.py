@@ -43,10 +43,10 @@ def plot_wheel_speed(dt,velocity_array,save_path):
                         top=0.99,
                         wspace=0.0,
                         hspace=0.0)
-    plt.xlabel("time(s)", fontsize=12)
-    plt.ylabel("speed(m/s)", fontsize=12)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.xlabel("time(s)", fontsize=15)
+    plt.ylabel("speed(m/s)", fontsize=15)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
     plt.savefig(os.path.join(save_path, "wheel_speed_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
     # plt.show()
@@ -64,11 +64,16 @@ def plot_wheel_speed_super(dt,velocity_array,save_path):
         ax[i].set_ylim(-1.5,1.5)
         ax[i].grid()
     # plt.legend()
-    plt.subplots_adjust(wspace=0.0,
+
+    plt.subplots_adjust(left=0.1,
+                        bottom=0.1,
+                        right=0.98,
+                        top=0.98,
+                        wspace=0.0,
                         hspace=0.0)
-    plt.xlabel("time(s)", fontsize=12)
-    plt.xticks(fontsize=12)
-    fig.text(0.05, 0.5, 'speed(m/s)', va='center', rotation='vertical',fontsize=12)
+    plt.xlabel("time(s)", fontsize=15)
+    plt.xticks(fontsize=15)
+    fig.text(0.01, 0.5, 'wheel control(m/s)', va='center', rotation='vertical',fontsize=15)
     plt.savefig(os.path.join(save_path, "wheel_speed_super_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
 def plot_relative_distance(dt,pose_array,save_path):
@@ -82,12 +87,12 @@ def plot_relative_distance(dt,pose_array,save_path):
             name=str(i+1)+" to "+str(j+1)
             distance_array=np.sqrt(np.square(pose_array[i,:,0]-pose_array[j,:,0])+np.square(pose_array[i,:,1]-pose_array[j,:,1]))
             distance_dict[name]=distance_array
-    plt.figure(figsize=(6, 3))
+    plt.figure(figsize=(5, 3))
     for key in distance_dict:
         plt.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
-    plt.xlabel("time(s)",fontsize=10)
-    plt.ylabel("distance(m)",fontsize=10)
+    plt.xlabel("time(s)",fontsize=15)
+    plt.ylabel("distance(m)",fontsize=15)
     plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
@@ -108,20 +113,20 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
             name=str(i+1)+" to "+str(j+1)
             distance_array=np.sqrt(np.square(pose_array[i,:,0]-pose_array[j,:,0])+np.square(pose_array[i,:,1]-pose_array[j,:,1]))
             distance_dict[name]=distance_array
-    fig, ax = plt.subplots(figsize=(5, 2))
+    fig, ax = plt.subplots(figsize=(5, 3))
     for key in distance_dict:
         ax.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
-    plt.subplots_adjust(left=0.15,
-                        bottom=0.25,
-                        right=0.99,
-                        top=0.99,
+    plt.subplots_adjust(left=0.1,
+                        bottom=0.18,
+                        right=0.98,
+                        top=0.98,
                         wspace=0.0,
                         hspace=0.0)
     plt.xlabel("time(s)",fontsize=15)
     plt.ylabel("distance(m)",fontsize=15)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
     plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_gabreil_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
@@ -130,9 +135,9 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
 def plot_formation_gabreil(pose_array,save_path):
     rob_num=np.shape(pose_array)[0]
     gabriel_graph = gabriel(pose_array)
-    position_array = pose_array[:, 800, :2]
+    position_array = pose_array[:, -1, :2]
     print(pose_array.shape)
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(5, 5))
     ax.scatter(position_array[:,0],position_array[:,1],s=100)
     for i in range(rob_num):
         for j in range(i + 1, rob_num):
@@ -143,16 +148,16 @@ def plot_formation_gabreil(pose_array,save_path):
             distance=math.sqrt((xlist[0]-xlist[1])**2+(ylist[0]-ylist[1])**2)
             ax.plot(xlist,ylist,label="Distane: {d:.2f}".format(d=distance),linewidth=2.5)
     # plt.legend(fontsize=30)
-    plt.subplots_adjust(left=0.22,
-                        bottom=0.22,
-                        right=0.95,
-                        top=0.95,
+    plt.subplots_adjust(left=0.13,
+                        bottom=0.11,
+                        right=0.98,
+                        top=0.98,
                         wspace=0.0,
                         hspace=0.0)
-    plt.xlabel("x(m)",fontsize=30)
-    plt.ylabel("y(m)",fontsize=30)
-    plt.xticks(fontsize=30)
-    plt.yticks(fontsize=30)
+    plt.xlabel("x(m)",fontsize=15)
+    plt.ylabel("y(m)",fontsize=15)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
     plt.xlim(-6, 6)
     plt.ylim(-6, 6)
     plt.grid()
@@ -186,7 +191,7 @@ def plot_trace_triangle(pose_array,save_path,stop_time):
             ytrace.append(pose_array[i][p][1])
             ax.plot(xtrace,ytrace,color=color,linestyle='--')
     gabriel_graph = gabriel(pose_array)
-    position_array = pose_array[:, stop_time*20, :2]
+    position_array = pose_array[:, stop_time*20-1, :2]
     for i in range(rob_num):
         for j in range(i + 1, rob_num):
             if gabriel_graph[i][j] == 0:
@@ -195,12 +200,20 @@ def plot_trace_triangle(pose_array,save_path,stop_time):
             ylist = [position_array[i][1], position_array[j][1]]
             distance = math.sqrt((xlist[0] - xlist[1]) ** 2 + (ylist[0] - ylist[1]) ** 2)
             ax.plot(xlist, ylist,color="black")
+
+    plt.subplots_adjust(left=0.13,
+                        bottom=0.11,
+                        right=0.98,
+                        top=0.98,
+                        wspace=0.0,
+                        hspace=0.0)
     plt.xlabel("x(m)", fontsize=15)
     plt.ylabel("y(m)", fontsize=15)
-    plt.xticks(fontsize=10)
-    plt.yticks(fontsize=10)
-    plt.xlim(-8, 8)
-    plt.ylim(-8, 8)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+
+    plt.xlim(-6, 6)
+    plt.ylim(-6, 6)
     plt.grid()
     plt.savefig(os.path.join(save_path, "robot_trace_" + str(rob_num) + ".png"))
     plt.close()
@@ -252,19 +265,20 @@ def plot_scene(sc,path="",save_path=""):
 
 # pose_array=np.load(os.path.join("..","pose_array_scene.npy"))
 # velocity_array=np.load(os.path.join("..","velocity_array_scene.npy"))
-def plot_load_scene(dt,dir):
+def plot_load_scene(time,dt,dir):
     save_path=os.path.join(dir)
     pose_array = np.load(os.path.join(dir, "pose_array_scene.npy"))
     velocity_array = np.load(os.path.join(dir, "velocity_array_scene.npy"))
-    plot_relative_distance(dt,pose_array,save_path)
-    plot_relative_distance_gabreil(dt, pose_array,save_path)
-    plot_wheel_speed(dt, velocity_array,save_path)
-    plot_wheel_speed_super(dt, velocity_array, save_path)
-    plot_formation_gabreil(pose_array,save_path)
-    plot_trace_triangle(pose_array, save_path, 40)
+
+    plot_relative_distance(dt,pose_array[:,:int(time/dt),:],save_path)
+    plot_relative_distance_gabreil(dt, pose_array[:,:int(time/dt),:],save_path)
+    plot_wheel_speed(dt, velocity_array[:,:int(time/dt),:],save_path)
+    plot_wheel_speed_super(dt, velocity_array[:,:int(time/dt),:], save_path)
+    plot_formation_gabreil(pose_array[:,:int(time/dt),:],save_path)
+    plot_trace_triangle(pose_array[:,:int(time/dt),:], save_path, time)
 
 if __name__=="__main__":
     # for i in range(0,100):
-    plot_load_scene(0.05,"/home/xinchi/GNN-control/demo_data/model_6")
+    plot_load_scene(50,0.05,"/home/xinchi/GNN-control/demo_data/model_5")
 
 
