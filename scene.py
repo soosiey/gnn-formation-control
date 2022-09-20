@@ -127,9 +127,6 @@ class Scene():
                            (y1 - self.robots[j].xi.y) ** 2) ** 0.5
                     if dij < minDij:
                         minDij = dij  # find the smallest dij for all j
-                dij = ((x1) ** 2 +(y1) ** 2) ** 0.5
-                if dij < minDij:
-                    minDij = dij  # find the smallest dij for all j
                 print('Min distance: ', minDij, 'from robot #', i, 'to other robots.')
                 # if the smallest dij is greater than allowed,
                 if i == 0:
