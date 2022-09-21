@@ -34,10 +34,10 @@ parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_train_episode-200_robot-5.pth',type=str,help='Name of model')
-parser.add_argument('--robot_num', dest='robot_num', default=4,type=int,help='Number of robot for simulation')
+parser.add_argument('--robot_num', dest='robot_num', default=9,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
-parser.add_argument('--sim_time', dest='sim_time', default=100,type=float,help='Simulation time for one simulation')
+parser.add_argument('--sim_time', dest='sim_time', default=50,type=float,help='Simulation time for one simulation')
 parser.add_argument('--stop_thresh', dest='stop_thresh', default=0.1,type=float,help='Stopping thresh')
 parser.add_argument('--stop_waiting_time', dest='stop_waiting_time', default=5,type=float,help='Stopping after this time')
 parser.add_argument('--desire_distance', dest='desire_distance', default=2.0,type=float,help='Desire formation distance')
@@ -80,9 +80,12 @@ def Test(args):
         position_list=[[-4.5,-4.5,0],
                        [-4.5,4,1],
                        [4,4.5,2],
-                       [4,-4,3],]
-                       # [-0.5,-0.5,4],]
-                       # [0.5,0.5,5]]
+                       [4,-4,3],
+                       [-0.5,-0.5,4],
+                       [0.5,0.5,5],
+                        [1,3,1],
+                        [-1,2.5,2],
+                        [-2,-3,1]]
         print(position_list)
 
 
@@ -100,6 +103,7 @@ def Test(args):
                 fcl.model.to('cpu')
                 fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
                 fcl.model.to('cuda')
+                print("HPU")
             else:
                 fcl.model.to('cpu')
                 fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name),map_location=torch.device('cpu')))
@@ -113,7 +117,7 @@ def Test(args):
         sc = set_robot_positions(sc, position_list)
         sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, 'demo'))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, 'demo'))
+        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, 'demo'))
 
 
 

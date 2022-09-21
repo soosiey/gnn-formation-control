@@ -81,51 +81,51 @@ def Test(args):
 
 
         ##### Test model
-        #
-        # model_type = "model_" + str(args.robot_num)
-        # print(model_type)
-        # print(position_list)
-        # if (not args.if_train):
-        #     # model_name="suhaas_model_v13_dagger_final_more.pth"
-        #     model_name = args.model_name
-        #     # fcl.model.to('cpu')
-        #     # fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        #     if args.use_cuda:
-        #         fcl.model.to('cpu')
-        #         fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
-        #         fcl.model.to('cuda')
-        #     else:
-        #         fcl.model.to('cpu')
-        #         fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name),map_location=torch.device('cpu')))
-        # sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
-        #                     expert_only=False,
-        #                     use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
-        #                     desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
-        #                     expert_velocity_adjust=args.expert_velocity_adjust,
-        #                     agent=fcl)
-        #
-        # sc = set_robot_positions(sc, position_list)
-        # sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
+
+        model_type = "model_" + str(args.robot_num)
+        print(model_type)
+        print(position_list)
+        if (not args.if_train):
+            # model_name="suhaas_model_v13_dagger_final_more.pth"
+            model_name = args.model_name
+            # fcl.model.to('cpu')
+            # fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+            if args.use_cuda:
+                fcl.model.to('cpu')
+                fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name)))
+                fcl.model.to('cuda')
+            else:
+                fcl.model.to('cpu')
+                fcl.model.load_state_dict(torch.load(os.path.join(args.model_path, model_name),map_location=torch.device('cpu')))
+        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
+                            expert_only=False,
+                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
+                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
+                            expert_velocity_adjust=args.expert_velocity_adjust,
+                            agent=fcl)
+
+        sc = set_robot_positions(sc, position_list)
+        sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
+        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, "demo"))
+        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, "demo"))
 
 
 
         ##### Test expert
 
-        model_type = "expert_adjusted_" + str(args.robot_num)
-        print(model_type)
-        print(position_list)
-        sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
-                            expert_only=True,
-                            use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
-                            desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
-                            expert_velocity_adjust=True,
-                            agent=fcl)
-        sc = set_robot_positions(sc, position_list)
-        sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
+        # model_type = "expert_adjusted_" + str(args.robot_num)
+        # print(model_type)
+        # print(position_list)
+        # sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
+        #                     expert_only=True,
+        #                     use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
+        #                     desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
+        #                     expert_velocity_adjust=True,
+        #                     agent=fcl)
+        # sc = set_robot_positions(sc, position_list)
+        # sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
+        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
+        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
 def initRef(sc):

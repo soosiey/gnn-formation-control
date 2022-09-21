@@ -46,10 +46,10 @@ class Agent():
         xin = torch.from_numpy(x).double()
         if self.use_cuda:
             xin = xin.to('cuda')
-        print("neighbor")
+        # print("neighbor")
         S = np.array(S)
         S = S.reshape((self.nA,self.nA))
-        print(S)
+        # print(S)
         S = torch.from_numpy(S)
         S = S.unsqueeze(0)
         if self.use_cuda:
