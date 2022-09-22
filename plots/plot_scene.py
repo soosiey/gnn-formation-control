@@ -117,16 +117,16 @@ def plot_relative_distance_gabreil(dt,pose_array,save_path):
     for key in distance_dict:
         ax.plot(xlist,distance_dict[key],label=key)
     # plt.legend()
-    plt.subplots_adjust(left=0.1,
-                        bottom=0.18,
+    plt.subplots_adjust(left=0.15,
+                        bottom=0.20,
                         right=0.98,
                         top=0.98,
                         wspace=0.0,
                         hspace=0.0)
-    plt.xlabel("time(s)",fontsize=15)
-    plt.ylabel("distance(m)",fontsize=15)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
+    plt.xlabel("time(s)",fontsize=20)
+    plt.ylabel("distance(m)",fontsize=20)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
     plt.grid()
     plt.savefig(os.path.join(save_path, "relative_distance_gabreil_" + str(rob_num) + ".png"),pad_inches=0.0)
     plt.close()
@@ -146,18 +146,18 @@ def plot_formation_gabreil(pose_array,save_path):
             xlist = [position_array[i][0],position_array[j][0]]
             ylist = [position_array[i][1], position_array[j][1]]
             distance=math.sqrt((xlist[0]-xlist[1])**2+(ylist[0]-ylist[1])**2)
-            ax.plot(xlist,ylist,label="Distane: {d:.2f}".format(d=distance),linewidth=2.5)
+            ax.plot(xlist,ylist,label="Distane: {d:.2f}".format(d=distance),linewidth=3)
     # plt.legend(fontsize=30)
-    plt.subplots_adjust(left=0.13,
-                        bottom=0.11,
-                        right=0.98,
+    plt.subplots_adjust(left=0.16,
+                        bottom=0.16,
+                        right=0.95,
                         top=0.98,
                         wspace=0.0,
                         hspace=0.0)
-    plt.xlabel("x(m)",fontsize=15)
-    plt.ylabel("y(m)",fontsize=15)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
+    plt.xlabel("x(m)",fontsize=20)
+    plt.ylabel("y(m)",fontsize=20)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
     plt.xlim(-6, 6)
     plt.ylim(-6, 6)
     plt.grid()
@@ -279,6 +279,6 @@ def plot_load_scene(time,dt,dir):
 
 if __name__=="__main__":
     # for i in range(0,100):
-    plot_load_scene(50,0.05,"/home/xinchi/GNN-control/demo_data/model_5")
+    plot_load_scene(50,0.05,"../results/model_8/demo")
 
 

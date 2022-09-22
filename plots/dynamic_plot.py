@@ -7,7 +7,7 @@ import itertools
 import gc
 from matplotlib import animation
 
-path="/home/xinchi/GNN-control/demo_data/model_6"
+path="/home/xinchi/demo_data/circle"
 
 # velocity_array=np.load(os.path.join(path,"velocity_array_scene.npy"))
 
@@ -32,7 +32,7 @@ def formation(path,time,dt):
     pose_array = np.load(os.path.join(path, "pose_array_scene.npy"))
     node_num = np.shape(pose_array)[0]
     iters=int(min(pose_array.shape[1],time/dt))
-    fig,ax=plt.subplots(figsize=(10, 10))
+    fig,ax=plt.subplots(figsize=(5, 5))
     plt.pause(3)
     for time_step in range(iters):
         gabriel_graph = [[1] * node_num for _ in range(node_num)]
@@ -48,7 +48,7 @@ def formation(path,time,dt):
                         gabriel_graph[v][u] = 0
                         break
         rob_num=node_num
-        ax.scatter(position_array[:, 0], position_array[:, 1])
+        ax.scatter(position_array[:, 0], position_array[:, 1],s=10**2)
         for i in range(rob_num):
             for j in range(i + 1, rob_num):
                 if gabriel_graph[i][j] == 0:
@@ -56,22 +56,22 @@ def formation(path,time,dt):
                 xlist = [position_array[i][0], position_array[j][0]]
                 ylist = [position_array[i][1], position_array[j][1]]
                 distance = math.sqrt((xlist[0] - xlist[1]) ** 2 + (ylist[0] - ylist[1]) ** 2)
-                ax.plot(xlist, ylist, label="Distane: {d:.2f}".format(d=distance))
-        ax.legend(fontsize=20)
+                ax.plot(xlist, ylist, label="Distane: {d:.2f}".format(d=distance),linewidth=3)
+        # ax.legend(fontsize=20)
         ax.grid()
         ax.set_xlim(-5,5)
         ax.set_ylim(-5,5)
-        plt.xlabel("x(m)", fontsize=30)
-        plt.ylabel("y(m)", fontsize=30)
-        ax.text(-1,4,'Time={:.2f}s'.format(time_step*dt),size=20)
-        plt.subplots_adjust(left=0.12,
-                            bottom=0.1,
-                            right=0.98,
-                            top=0.98,
+        plt.xlabel("x(m)", fontsize=20)
+        plt.ylabel("y(m)", fontsize=20)
+        ax.text(-2,5.5,'Time={:.2f}s'.format(time_step*dt),size=20)
+        plt.subplots_adjust(left=0.16,
+                            bottom=0.15,
+                            right=0.95,
+                            top=0.9,
                             wspace=0.0,
                             hspace=0.0)
-        plt.xticks(fontsize=30)
-        plt.yticks(fontsize=30)
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
         # fig.text(0.5, 0.03, 'X(m)', va='center', fontsize=30)
         # fig.text(0.03, 0.5, "Y(m)", va='center', rotation='vertical', fontsize=30)
         plt.pause(0.01)
@@ -94,89 +94,44 @@ def distance(path,time,dt):
             distance_array = np.sqrt(np.square(pose_array[i, :, 0] - pose_array[j, :, 0]) + np.square(
                 pose_array[i, :, 1] - pose_array[j, :, 1]))
             distance_dict[name] = distance_array
-    fig, ax = plt.subplots(figsize=(10, 10))
+    fig, ax = plt.subplots(figsize=(5, 3))
     plt.pause(3)
     xlist = []
     for time_step in range(iters):
         # ax.scatter(position_array[:, 0], position_array[:, 1])
         xlist.append(time_step*dt)
         for key in distance_dict:
-            ax.plot(xlist, distance_dict[key][:time_step+1], label=key)
-        ax.legend(fontsize=20)
+            ax.plot(xlist, distance_dict[key][:time_step+1], label=key,linewidth=5)
+        # ax.legend(fontsize=20)
         # ax.set_title("Time histories of inter-robot distance", size=30)
         # ax.set_xlabel("Time(s)", size=30)
         # ax.set_ylabel("Distance(m)", size=30)
         ax.grid()
-        ax.set_xticklabels([x for x in range(0,time+1, 10)], fontsize=30)
-        ax.set_yticklabels([y for y in range(0, 10, 2)], fontsize=30)
+        ax.set_xticklabels([x for x in range(0,time+1, 5)], fontsize=20)
+        ax.set_yticklabels([y for y in range(0, 10, 2)], fontsize=20)
         ax.set_xlim(0, time+1)
         ax.set_ylim(0, 10)
         # ax.text(20, 9, 'Time={:.2f}s'.format(time_step * 0.05), size=20)
         plt.subplots_adjust(left=0.12,
-                            bottom=0.1,
+                            bottom=0.25,
                             right=0.98,
                             top=0.98,
                             wspace=0.0,
                             hspace=0.0)
-        plt.xticks(fontsize=30)
-        ax.text(20, -1, 'Time(s)', va='center', fontsize=30)
-        ax.text(-5, 5, "Distance(m)", va='center', rotation='vertical', fontsize=30)
+        plt.xticks(fontsize=20)
+        ax.text(15, -2.2, 'Time(s)', va='center', fontsize=20)
+        ax.text(-5, 5, "Distance(m)", va='center', rotation='vertical', fontsize=20)
         plt.pause(0.01)
         plt.cla()
         gc.collect(generation=2)
     plt.draw()
-def distance_anime(path,time,dt):
-    gc.enable()
-    pose_array = np.load(os.path.join(path, "pose_array_scene.npy"))
-    rob_num = np.shape(pose_array)[0]
-    iters = iters = int(min(pose_array.shape[1],time/dt))
-    gabriel_graph = gabriel(pose_array)
-    distance_dict = {}
-    for i in range(rob_num):
-        for j in range(i + 1, rob_num):
-            if gabriel_graph[i][j] == 0:
-                continue
-            name = str(i + 1) + " to " + str(j + 1)
-            distance_array = np.sqrt(np.square(pose_array[i, :, 0] - pose_array[j, :, 0]) + np.square(
-                pose_array[i, :, 1] - pose_array[j, :, 1]))
-            distance_dict[name] = distance_array
-    fig, ax = plt.subplots(figsize=(10, 10))
-    plt.pause(0.01)
-    def plot_one(time_step):
-        xlist=[i for i in range(time_step)]
-        plt.cla()
-        for key in distance_dict:
-            # print(xlist,time_step)
-            # print(distance_dict[key])
-            plt.plot(xlist, distance_dict[key][:time_step], label=key)
-            ax.legend(fontsize=20)
-            # ax.set_title("Time histories of inter-robot distance", size=30)
-            # ax.set_xlabel("Time(s)", size=30)
-            # ax.set_ylabel("Distance(m)", size=30)
-            ax.grid()
-            ax.set_xticklabels([x for x in range(0, time + 1, 10)], fontsize=30)
-            ax.set_yticklabels([y for y in range(0, 10, 2)], fontsize=30)
-            ax.set_xlim(0, time_step + 1)
-            ax.set_ylim(0, 10)
-            plt.subplots_adjust(left=0.12,
-                                bottom=0.1,
-                                right=0.98,
-                                top=0.98,
-                                wspace=0.0,
-                                hspace=0.0)
-            plt.xticks(fontsize=30)
-            fig.text(0.5, 0.03, 'Time(s)', va='center', fontsize=30)
-            fig.text(0.03, 0.5, "Distance(m)", va='center', rotation='vertical', fontsize=30)
 
-
-    anime=animation.FuncAnimation(plt.gcf(),func=plot_one,frames=np.arange(0,iters),interval=50)
-    plt.show()
 def velocity(path,time,dt):
     gc.enable()
     velocity_array=np.load(os.path.join(path,"velocity_array_scene.npy"))
     iters = int(min(velocity_array.shape[1],time/dt))
     rob_num = np.shape(velocity_array)[0]
-    fig, ax = plt.subplots(rob_num, 1,figsize=(10, 10))
+    fig, ax = plt.subplots(rob_num, 1,figsize=(8, 5))
     plt.pause(3)
     xlist = []
     for time_step in range(iters):
@@ -188,20 +143,22 @@ def velocity(path,time,dt):
             ax[i].plot(xlist, velocity_array[i, :time_step+1, 1], '--',color=color,label="Robot " + str(i) + " right wheel speed")
             ax[i].set_xlim(-2, time+2)
             ax[i].set_ylim(-1.5, 1.5)
-            ax[i].set_xticklabels([x for x in range(-10,time+1,10) ],fontsize=30)
-            ax[i].set_yticklabels([-2,-1,0,1],fontsize=20)
+            ax[i].set_xticklabels([x for x in range(-5,time+1,5) ],fontsize=20)
+            ax[i].set_yticklabels([-2,-1,0,1],fontsize=15)
             # ax[i].set_xlabel('Time(s)',size=30)
             # ax[i].set_xlabel('Wheel control(m/s)', size=30)
             ax[i].grid()
         # ax.text(-1, 4, 'Time={:.2f}s'.format(time_step * 0.05), size=20)
-        plt.subplots_adjust(left=0.12,
-                            bottom=0.1,
-                            right=0.98,
+        plt.subplots_adjust(left=0.15,
+                            bottom=0.15,
+                            right=0.95,
                             top=0.98,
                             wspace=0.0,
                             hspace=0.0)
-        ax[rob_num-1].text(20, -3, 'Time(s)', va='center', fontsize=30)
-        ax[rob_num-1].text(-8, 6, 'Wheel control(m/s)', va='center', rotation='vertical', fontsize=30)
+        ax[rob_num-1].text(15, -4, 'Time(s)', va='center', fontsize=20)
+        ax[rob_num-1].text(-8, 10, 'Wheel control(m/s)', va='center', rotation='vertical', fontsize=20)
+        # ax[rob_num - 1].text(42, 18, 'Solid line: \nLeft wheel', va='center', fontsize=20)
+        # ax[rob_num - 1].text(42, 12, 'Dashed line:\nRight wheel', va='center', fontsize=20)
         plt.pause(0.01)
         for i in range(rob_num):
             ax[i].cla()
@@ -259,7 +216,7 @@ def velocity(path,time,dt):
 #         plt.pause(0.05)
 #         ax.cla()
 #     plt.show()
-formation(path,50,0.05)
-# distance(path,50,0.05)
-# velocity(path,50,0.05)
+# formation(path,40,0.05)
+# distance(path,40,0.05)
+velocity(path,40,0.05)
 # triangle_trace(path,50,0.05)
