@@ -67,6 +67,7 @@ class Agent():
 
         #### Set a threshold to eliminate small movements
         # threshold=0.05
+
         control=self.model(xin,r,a)[index] ## model output
 
         # torch.where(control<threshold, 0., control)

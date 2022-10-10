@@ -53,6 +53,7 @@ class PointCloud():
             newData.append(np.float32([x, y, z]))
         #newData = self.rotate(newData)
         self.data = self.data + newData
+        print("data",len(self.data))
 
     def updateOccupancyMap(self):
         self.clearOccupancyMap()
@@ -105,6 +106,7 @@ class PointCloud():
     def crop(self):
 
         self.dataCropped = []
+
         for i in range(len(self.data)):
             x = float(self.data[i][0])
             y = float(self.data[i][1])
@@ -116,8 +118,7 @@ class PointCloud():
                 continue
             self.dataCropped.append(np.float32([x, y]))
 
-        print(len(self.dataCropped))
-        #print('dataCropped length:', len(self.dataCropped))
+        print('dataCropped length:', len(self.dataCropped))
     def getRotationMatrix(self, axis, theta):
         """
         Return the rotation matrix associated with counterclockwise rotation about

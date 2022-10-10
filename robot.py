@@ -184,14 +184,14 @@ class Robot():
     def expert_control_circle(self,omlist,index):
         if index==0:
             return 0, 0
-        action = self.learnedController(omlist, index)
-        # action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
-        # action = np.array([[0, 0]])
-        action = action[0].cpu().detach().numpy()
-        v1nn = action[0][0]
-        v2nn = action[0][1]
-        if v1nn==v2nn==0:
-            return 0,0
+        # action = self.learnedController(omlist, index)
+        # # action = self.learnedController(observation, self.graph_matrix, action_1[0][0],self.scene.alpha)
+        # # action = np.array([[0, 0]])
+        # action = action[0].cpu().detach().numpy()
+        # v1nn = action[0][0]
+        # v2nn = action[0][1]
+        # if v1nn==v2nn==0:
+        #     return 0,0
         ############## MODEL-BASED CONTROLLER (Most frequently used dynamics model) ##########
         ######################################################################################
         # For e-puk dynamics
@@ -549,6 +549,7 @@ class Robot():
         ##### Get laser/vision sensor data
         # Parse data
         if not velodyne_points==None:
+
             # res = velodyne_points[0]
             if 'VPL16_counter' not in self.__dict__:
                 self.VPL16_counter = 0
@@ -563,8 +564,8 @@ class Robot():
                 self.pointCloud.crop()
                 self.pointCloud.updateOccupancyMap() # option 1
             self.VPL16_counter += 1
-            # print("counter")
-            # print(self.VPL16_counter)
+            print("points", len(velodyne_points[2]))
+            print("count",self.VPL16_counter)
             # add for gnn
             ###### (not yet finish)
             self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)

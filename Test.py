@@ -30,7 +30,7 @@ parser.add_argument('--expert_only', dest='expert_only', default=False,type=bool
 parser.add_argument('--use_dagger', dest='use_dagger', default=False,type=bool,help='Use dagger for training only')
 parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help='Control demo mod(train/test)')
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
-parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
+parser.add_argument('--use_cuda', dest='use_cuda', default=False,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_train_episode-200_robot-5.pth',type=str,help='Name of model')
@@ -77,7 +77,11 @@ def Test(args):
             position_list.append(position)
 
         ##### Test model
-        print(position_list)
+        position_list=[[-4, -4, 0],
+                            [-4, 4, 0],
+                            [4, 4, 0],
+                            [4, -4, 0],
+                            [0, 0, 0]]
 
 
         ##### Test model

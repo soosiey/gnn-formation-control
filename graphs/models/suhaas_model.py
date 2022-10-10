@@ -15,7 +15,7 @@ class DecentralPlannerNet(nn.Module):
         super().__init__()
         self.S = None
         self.numAgents = nA
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cpu'
         inW = inW
         inH = inH
 

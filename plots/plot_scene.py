@@ -279,6 +279,6 @@ def plot_load_scene(time,dt,dir):
 
 if __name__=="__main__":
     # for i in range(0,100):
-    plot_load_scene(50,0.05,"../results/model_8/demo")
+    plot_load_scene(50,0.05,"/home/xinchi/GNN-control/demo_data/model_9")
 
 
