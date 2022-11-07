@@ -564,8 +564,8 @@ class Robot():
                 self.pointCloud.crop()
                 self.pointCloud.updateOccupancyMap() # option 1
             self.VPL16_counter += 1
-            print("points", len(velodyne_points[2]))
-            print("count",self.VPL16_counter)
+            # print("points", len(velodyne_points[2]))
+            # print("count",self.VPL16_counter)
             # add for gnn
             ###### (not yet finish)
             self.graph_matrix = self.scene.readADjMatrix(MaxRange=2)

@@ -6,7 +6,7 @@ Created on Tue Feb  6 09:08:39 2018
 """
 import numpy as np
 import math
-
+import cv2
 class PointCloud():
     def __init__(self, robot):
         self.robot = robot
@@ -53,7 +53,7 @@ class PointCloud():
             newData.append(np.float32([x, y, z]))
         #newData = self.rotate(newData)
         self.data = self.data + newData
-        print("data",len(self.data))
+
 
     def updateOccupancyMap(self):
         self.clearOccupancyMap()
@@ -64,6 +64,7 @@ class PointCloud():
                  self.occupancyMap[(pointCloudPix[i][0], pointCloudPix[i][1])] = 0 # option 1
         elif self.robot.scene.occupancyMapType == self.robot.scene.OCCUPANCY_MAP_THREE_CHANNEL:
             self.occupancyMap = np.zeros((self.hPix, self.wPix, 3), np.uint8)
+
 
 
     def updateScanVector(self):
@@ -106,7 +107,7 @@ class PointCloud():
     def crop(self):
 
         self.dataCropped = []
-
+        print("data", len(self.data))
         for i in range(len(self.data)):
             x = float(self.data[i][0])
             y = float(self.data[i][1])

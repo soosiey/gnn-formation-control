@@ -6,7 +6,7 @@ from torchvision import transforms
 import custom_dataset
 import torch.nn as nn
 from tqdm import tqdm
-
+import cv2
 
 class Agent():
 
@@ -41,6 +41,8 @@ class Agent():
         a = np.zeros((1,self.nA,1))
         for i in range(self.nA):
             x[0,i,:,:] = omlist[i][0].reshape((self.inW, self.inH))
+            cv2.imshow(str(i), omlist[i][0].reshape((self.inW, self.inH)))
+            cv2.waitKey(1)
             r[0,i,0] = omlist[i][2]
             a[0,i,0] = omlist[i][3]
         xin = torch.from_numpy(x).double()

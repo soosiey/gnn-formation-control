@@ -7,7 +7,7 @@ import itertools
 import gc
 from matplotlib import animation
 
-path="/home/xinchi/GNN-control/demo_data/line" \
+path="/home/xinchi/GNN-control/gnn-formation-control/results/model_5/demo" \
      ""
 
 # velocity_array=np.load(os.path.join(path,"velocity_array_scene.npy"))

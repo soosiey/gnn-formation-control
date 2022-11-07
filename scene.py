@@ -14,7 +14,7 @@ import random
 import datetime
 import os
 from state import State
-
+import occupancy_map_simulator
 class Scene():
     def __init__(self,dt,runNum,robot_num,if_train,expert_only,use_dagger,desired_distance,stop_thresh,expert_velocity_adjust, fileName = "Untitled", recordData = False):
         ##### useful artributes
@@ -121,7 +121,8 @@ class Scene():
                 rho1 = radius * random.random()
                 x1 = rho1 * math.cos(alpha1)
                 y1 = rho1 * math.sin(alpha1)
-                theta1 = 2 * math.pi * random.random()
+                # theta1 = 2 * math.pi * random.random()
+                theta1=0
                 for j in range(0, i):
                     dij = ((x1 - self.robots[j].xi.x) ** 2 +
                            (y1 - self.robots[j].xi.y) ** 2) ** 0.5
@@ -417,6 +418,8 @@ class Scene():
         self.propagateXid()
         countReachedGoal = 0
         omlist = []
+        global_positions=[]
+        orientation_list=[]
         print(self.t)
         for robot in self.robots:
             robot.precompute(self.adjMatrix,self.robots)
@@ -426,8 +429,21 @@ class Scene():
             # print("vel")
             # print(vel)
             # robot.xid.theta = self.xid.vRefAng
-            o,g,r,a = robot.getDataObs()
-            omlist.append((o,g,r,a))
+            global_positions.append(pos)
+
+            orientation_list.append(ori[2])
+            o, g, r, a = robot.getDataObs()
+
+            omlist.append([o,g,r,a])
+        try:
+            position_lists_local,_ = occupancy_map_simulator.global_to_local(global_positions)
+            maps=occupancy_map_simulator.generate_maps(position_lists_local,orientation_list)
+            maps_flatten=occupancy_map_simulator.flatten_maps(maps)
+
+            for i in range(len(self.robots)):
+                omlist[i][0]=maps_flatten[i]
+        except:
+            pass
         average_distance_gabreil_error = self.get_average_gaberil_distance_error()
         for i in range(len(self.robots)):
             o1,o2 = self.robots[i].get_control(omlist,i,average_distance_gabreil_error,self.stop_thresh)
