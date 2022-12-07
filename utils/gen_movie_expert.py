@@ -15,7 +15,6 @@ import matplotlib.animation as manimation
 import argparse
 import math
 import gc
-import seaborn as sns
 import time
 import scipy.io as sio
 import sys

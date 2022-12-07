@@ -5,7 +5,7 @@ author: Xinchi Huang
 
 import math
 import numpy as np
-import cv2
+# import cv2
 def arctan(x,y):
     if x == 0 and y > 0:
         theta = math.pi / 2

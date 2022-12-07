@@ -6,7 +6,7 @@ Created on Tue Feb  6 09:08:39 2018
 """
 import numpy as np
 import math
-import cv2
+# import cv2
 class PointCloud():
     def __init__(self, robot):
         self.robot = robot
