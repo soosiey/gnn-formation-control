@@ -435,15 +435,15 @@ class Scene():
             o, g, r, a = robot.getDataObs()
 
             omlist.append([o,g,r,a])
-        try:
-            position_lists_local,_ = occupancy_map_simulator.global_to_local(global_positions)
-            maps=occupancy_map_simulator.generate_maps(position_lists_local,orientation_list)
-            maps_flatten=occupancy_map_simulator.flatten_maps(maps)
-
-            for i in range(len(self.robots)):
-                omlist[i][0]=maps_flatten[i]
-        except:
-            pass
+        # try:
+        #     position_lists_local,_ = occupancy_map_simulator.global_to_local(global_positions)
+        #     maps=occupancy_map_simulator.generate_maps(position_lists_local,orientation_list)
+        #     maps_flatten=occupancy_map_simulator.flatten_maps(maps)
+        #
+        #     for i in range(len(self.robots)):
+        #         omlist[i][0]=maps_flatten[i]
+        # except:
+        #     pass
         average_distance_gabreil_error = self.get_average_gaberil_distance_error()
         for i in range(len(self.robots)):
             o1,o2 = self.robots[i].get_control(omlist,i,average_distance_gabreil_error,self.stop_thresh)
