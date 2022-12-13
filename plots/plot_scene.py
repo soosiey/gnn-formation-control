@@ -184,7 +184,8 @@ def plot_trace_triangle(pose_array,save_path,stop_time):
         color = next(colors)
         xtrace = []
         ytrace = []
-        for p in range(0,stop_time*20,100):
+
+        for p in range(0,stop_time*20-1,100):
             pose=pose_array[i][p]
             plot_triangle(ax, pose, 0.3, color)
             xtrace.append(pose_array[i][p][0])
@@ -275,10 +276,10 @@ def plot_load_scene(time,dt,dir):
     plot_wheel_speed(dt, velocity_array[:,:int(time/dt),:],save_path)
     plot_wheel_speed_super(dt, velocity_array[:,:int(time/dt),:], save_path)
     plot_formation_gabreil(pose_array[:,:int(time/dt),:],save_path)
-    plot_trace_triangle(pose_array[:,:int(time/dt),:], save_path, time)
+    # plot_trace_triangle(pose_array[:,:int(time/dt),:], save_path, time)
 
 if __name__=="__main__":
     # for i in range(0,100):
-    plot_load_scene(50,0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/model_5/demo")
+    plot_load_scene(50,0.05,"/home/xinchi/GNN-control/gnn-formation-control/results/model_line6/0")
 
 

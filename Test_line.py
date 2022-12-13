@@ -33,8 +33,8 @@ parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool
 parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
 parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
-parser.add_argument('--model_name', dest='model_name', default='model_circle.pth',type=str,help='Name of model')
-parser.add_argument('--robot_num', dest='robot_num', default=6,type=int,help='Number of robot for simulation')
+parser.add_argument('--model_name', dest='model_name', default='model_line.pth',type=str,help='Name of model')
+parser.add_argument('--robot_num', dest='robot_num', default=7,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=50,type=float,help='Simulation time for one simulation')
@@ -62,7 +62,7 @@ def empty_controller(omlist,index):
     return [control_tensor]
 
 def Test(args):
-    for iteration in range(40,args.iter):
+    for iteration in range(args.iter):
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
@@ -85,7 +85,7 @@ def Test(args):
 
         #### Test model
 
-        model_type = "model_circle" + str(args.robot_num)
+        model_type = "model_line" + str(args.robot_num)
         print(model_type)
         print(position_list)
         if (not args.if_train):
@@ -107,9 +107,15 @@ def Test(args):
                             expert_velocity_adjust=args.expert_velocity_adjust,
                             agent=fcl)
 
-        position_list[0] = [0, 0, 0]
+        theta = random.random()
+        position_list[0] = [-8 * math.cos(theta), -8 * math.sin(theta), 0]
+        position_list[1] = [8 * math.cos(theta), 8 * math.sin(theta), 0]
+        # position_list[0] = [-6, -6, 0]
+        # position_list[1] = [6, 6, 0]
+        print(position_list)
+
         sc.robots[0].learnedController = empty_controller
-        ##### Test model
+        sc.robots[1].learnedController = empty_controller
         print(position_list)
 
         sc = set_robot_positions(sc, position_list)

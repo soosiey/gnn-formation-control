@@ -22,7 +22,7 @@ from easydict import EasyDict
 np.set_printoptions(threshold=np.inf)
 import os
 
-from utils.visualize_expertAlg import Animation
+# from utils.visualize_expertAlg import Animation
 
 if __name__ == "__main__":
     DATA_FOLDER = '/local/scratch/ql295/Data/MultiAgentDataset/Results_best/AnimeDemo/'

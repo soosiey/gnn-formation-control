@@ -15,7 +15,7 @@ class DecentralPlannerNet(nn.Module):
         super().__init__()
         self.S = None
         self.numAgents = nA
-        self.device = 'cpu'
+        self.device = 'cuda'
         inW = inW
         inH = inH
 
