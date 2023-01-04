@@ -107,7 +107,6 @@ class PointCloud():
     def crop(self):
 
         self.dataCropped = []
-        print("data", len(self.data))
         for i in range(len(self.data)):
             x = float(self.data[i][0])
             y = float(self.data[i][1])
@@ -118,8 +117,6 @@ class PointCloud():
             elif (x < MIN and y < MIN and x > -MIN and y > -MIN):
                 continue
             self.dataCropped.append(np.float32([x, y]))
-
-        print('dataCropped length:', len(self.dataCropped))
     def getRotationMatrix(self, axis, theta):
         """
         Return the rotation matrix associated with counterclockwise rotation about

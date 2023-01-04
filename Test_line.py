@@ -32,7 +32,7 @@ parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help=
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
-parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
+parser.add_argument('--model_path', dest='model_path', default='pretrained_model',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_line.pth',type=str,help='Name of model')
 parser.add_argument('--robot_num', dest='robot_num', default=7,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
@@ -124,22 +124,6 @@ def Test(args):
         # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
-
-        # ##### Test expert
-        #
-        # model_type = "expert_adjusted_" + str(args.robot_num)
-        # print(model_type)
-        # print(position_list)
-        # sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
-        #                     expert_only=True,
-        #                     use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
-        #                     desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
-        #                     expert_velocity_adjust=True,
-        #                     agent=fcl)
-        # sc = set_robot_positions(sc, position_list)
-        # sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
 def initRef(sc):

@@ -422,7 +422,7 @@ class Scene():
         omlist = []
         global_positions=[]
         orientation_list=[]
-        print(self.t)
+        print("simulation time ",self.t,"s")
         for robot in self.robots:
             robot.precompute(self.adjMatrix,self.robots)
         for robot in self.robots:

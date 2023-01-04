@@ -32,9 +32,9 @@ parser.add_argument('--if_train', dest='if_train', default=False,type=bool,help=
 parser.add_argument('--if_continue', dest='if_continue', default=False,type=bool,help='Continue training')
 parser.add_argument('--use_cuda', dest='use_cuda', default=True,type=bool,help='Use cuda')
 parser.add_argument('--expert_velocity_adjust', dest='expert_velocity_adjust', default=True,type=bool,help=' Adjust controller output accoring to the ralative distance output when using expert control')
-parser.add_argument('--model_path', dest='model_path', default='models',type=str,help='Path to save model')
+parser.add_argument('--model_path', dest='model_path', default='pretrained_model',type=str,help='Path to save model')
 parser.add_argument('--model_name', dest='model_name', default='model_circle.pth',type=str,help='Name of model')
-parser.add_argument('--robot_num', dest='robot_num', default=6,type=int,help='Number of robot for simulation')
+parser.add_argument('--robot_num', dest='robot_num', default=7,type=int,help='Number of robot for simulation')
 parser.add_argument('--position_range', dest='position_range', default=5,type=int,help='Set robots position within the range')
 parser.add_argument('--sim_dt', dest='sim_dt', default=0.05,type=float,help='Simulation time step')
 parser.add_argument('--sim_time', dest='sim_time', default=50,type=float,help='Simulation time for one simulation')
@@ -62,7 +62,7 @@ def empty_controller(omlist,index):
     return [control_tensor]
 
 def Test(args):
-    for iteration in range(40,args.iter):
+    for iteration in range(0,args.iter):
         fcl = Agent(batch_size=args.batch_size, inW=args.inW, inH=args.inH, nA=args.robot_num,cuda=args.use_cuda)
         #### Initial Agent
 
@@ -79,9 +79,6 @@ def Test(args):
         for i in range(len(sc.robots)):
             position=[sc.robots[i].xi.x,sc.robots[i].xi.y,sc.robots[i].xi.theta]
             position_list.append(position)
-
-
-
 
         #### Test model
 
@@ -117,23 +114,6 @@ def Test(args):
         sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
         # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
 
-
-
-        # ##### Test expert
-        #
-        # model_type = "expert_adjusted_" + str(args.robot_num)
-        # print(model_type)
-        # print(position_list)
-        # sc = generate_scene(dt=args.sim_dt, num_run=0, robot_num=args.robot_num, if_train=args.if_train,
-        #                     expert_only=True,
-        #                     use_dagger=args.use_dagger, sim_time=args.sim_time, position_range=args.position_range,
-        #                     desired_distance=args.desire_distance, stop_thresh=args.stop_thresh,
-        #                     expert_velocity_adjust=True,
-        #                     agent=fcl)
-        # sc = set_robot_positions(sc, position_list)
-        # sc0 = simulate(args.sim_time, args.sim_dt, args.stop_waiting_time, args.desire_distance, args.stop_thresh, sc)
-        # sc0.save_robot_states(os.path.join(args.saved_figs, model_type, str(iteration)))
-        # plot_scene(sc0,"", os.path.join(args.saved_figs, model_type, str(iteration)))
 
 
 def initRef(sc):
